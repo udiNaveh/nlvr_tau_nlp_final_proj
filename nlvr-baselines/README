@@ -1,0 +1,34 @@
+This directory contains files and directories used for the baselines presented
+in our paper. We developed the code with Tensorflow version 0.10.
+
+The following scripts are used to train and evaluate baseline models. All are
+run without command-line arguments.
+  * convnet_model.py -- CNN, RNN, and CNN+RNN models. Two variables within this
+    script (use_image and use_text) are used to control whether the text and/or
+    image is provided to the model.
+  * img_ft_rnn.py -- structured image features alongside text encoded using an
+    RNN.
+  * mlp.py -- MLP model using structured representation + text features.
+
+The following scripts are helper scripts to compute features:
+  * mem_features.py -- used to compute the features used in the maximum entropy
+    and MLP models. Combines structured representation and ngram features of
+    the text. The first argument is the original JSON file of the split, and
+    the second argument is the filename to write to.
+  * ngrams.py -- computes 2-6grams present in the training data (filename
+    provided as the first argument in the command line).
+  * number_grams.py -- computes 2-6 number grams (n-grams which contain a
+    number, with the number removed) present in the training data (filename
+    provided as the first argument in the command line).
+
+The following scripts are used to preprocess data:
+  * rnn_features.py: computes structured image features used in the structured
+    image + text RNN model.
+  * simple_cnn.py: helper functions for CNN, adapted from a Tensorflow tutorial
+    and originally written by Aymeric Damien.
+  * util.py: contains functions such as for loading data and finding the image
+    filenames.
+
+The following directories contain precomputed features:
+  * ngram_data: lists of ngrams and number-grams (2-6) computed by ngrams.py
+    and number_grams.py and used by mem_features.py.
