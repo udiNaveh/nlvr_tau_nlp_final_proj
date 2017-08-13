@@ -36,6 +36,9 @@ class Item:
         self.shape = Shape(dic['type'])
         self.box = None # a pointer to the containing box (List of Items). Added when the box constructor is done.
 
+    def __repr__(self):
+        return "{0} {1} {2}".format(self.size.name, self.color.name, self.shape.name).lower()
+
     @property
     def right(self):
         return self.__x_loc + self.size.value
@@ -109,6 +112,9 @@ class Box:
         for item in self.items:
             item.box = self
 
+    def __repr__(self):
+        return "Box({})".format(self.items)
+
     def __len__(self):
         return len(self.items)
 
@@ -150,6 +156,21 @@ class Image:
 
     def is_tower(self):
         return all([b.is_tower() for b in self.boxes])
+
+
+class Sample:
+
+    def __init__(self, line):
+        self.evals = line["evals"]
+        self.identifier = line["identifier"]
+        self.sentence = line["sentence"]
+        self.label = line["label"] == 'true'
+        self.structured_rep = Image(line["structured_rep"])
+
+
+
+
+
 
 # some basic examples for functions for logical forms
 
