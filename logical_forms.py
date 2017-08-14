@@ -13,6 +13,10 @@ class Location(Enum):
     SECOND = 'second'
     BOTTOM = 'bottom'
 
+class Relation(Enum):
+    ABOVE = 'above'
+    BELOW = 'below'
+
 
 def exist(_set):
     return count(_set) > 0
@@ -241,5 +245,18 @@ def all_same_color(_set):
             return False
     return True
 
-def query_tower(box: Box):
-    return box.is_tower()
+def union(set1, set2):
+    set3=set()
+    for x in set1:
+        set3.add(x)
+    for y in set2:
+        set3.add(y)
+    return list(set3)
+
+def intersect(set1, set2):
+    set3=set()
+    for x in set1:
+        if x in set2:
+            set3.add(x)
+    return list(set3)
+
