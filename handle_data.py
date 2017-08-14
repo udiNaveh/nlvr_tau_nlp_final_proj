@@ -39,8 +39,8 @@ def build_data(data, preprocess = False):
     if preprocess:
         sentences = preprocess_sentences()
 
-    for s in samples:
-        s_index = int(str.split(line["identifier"], "-")[0])
-        s.sentence = sentences[s_index]
+    #for s in samples: # I deleted this part because it puts the same sentence in all of the samples
+    #    s_index = int(str.split(line["identifier"], "-")[0])
+    #    s.sentence = sentences[s_index]
 
     return samples, sentences

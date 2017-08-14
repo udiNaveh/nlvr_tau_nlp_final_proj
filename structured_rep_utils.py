@@ -169,32 +169,3 @@ class Sample:
 
 
 
-
-
-
-# some basic examples for functions for logical forms
-
-
-def exist(_set):
-    return count(_set) > 0
-
-
-def count(_set):
-    return len(_set)
-
-
-def filter(func, _set):
-    return [x for x in _set if func(x)]
-
-
-def filter_color(color : Color, _set):
-    return filter(lambda x : equal_color(x.color, color), _set)
-
-
-def equal_color(color1 : Color, color2 :Color):
-    return color1 == color2
-
-
-def le(a,b):
-    return a<= b
-
