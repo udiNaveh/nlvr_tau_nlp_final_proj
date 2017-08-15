@@ -37,7 +37,7 @@ def build_data(data, preprocess = False):
             sentences[s_index] = line["sentence"]
 
     if preprocess:
-        sentences = preprocess_sentences(sentences, 'r')
+        sentences = preprocess_sentences(sentences)
 
     for s in samples:
         s_index = int(str.split(line["identifier"], "-")[0])

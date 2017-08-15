@@ -96,36 +96,17 @@ def rank_suggestion(suggested_token, prev_token, next_token, unigram_counts, big
               ((1 - p) / 2) * bigram_counts.get((suggested_token, next_token),0)
 
 
-def formalize_sentence(s):
-    s = [w for w in s]
-
-    forms = [(integers, [], 'n'), (shape_words, [], 's'), (color_words, [], 'c')]
-
-    for i,w in enumerate(s):
-        # remove plural and convert integer words:
-        if w.endswith('s') and w[:-1] in shape_words:
-            s[i] = w[:-1]
-        if w in integer_words:
-            s[i] = integers[integer_words.index(s[i])]
-        #formalize
-        for f in forms:
-            if s[i] in f[0]:
-                if s[i] not in f[1]:
-                    f[1].append(s[i])
-                s[i] = f[2] + str(f[1].index(s[i]))
-    return s
-
-
-
 def preprocess_sentences(sentences_dic, mode = None):
     '''
+    preprocesses the input sentences such that each returned sentences is a sequence of
+    tokens that are part of the lexicon (???) seperated by whitespaces.
+    using a hueristic approach for spell checking.
 
-    :param sentences_dic: a dict[str, str] mapping from sentence identifier to to sentence 
-    :return: 
+    :param sentences_dic: a dict[str, str] mapping from sentence identifier to sentence 
+    :return: a dict[str, str] mapping from sentence identifier to sentence
     '''
 
-    sentences = {k : clean_sentence(s) for k,s in sentences_dic.items()}
-    tokenized_sentences = {k : str.split(sentences[k], " ") for k in sentences}
+    tokenized_sentences = {k : str.split(clean_sentence(s)) for k,s in sentences_dic.items()}
     unigrams, bigrams = get_ngrams_counts(tokenized_sentences.values(), 2)
 
     vocab = load_vocabulary(ENG_VOCAB_60K)
@@ -136,13 +117,11 @@ def preprocess_sentences(sentences_dic, mode = None):
     for dig in range(10):
         vocab.add(str(dig))
 
-    corrections_inventory = {}
-
     if mode=='r':
         unigrams_filtered = load_ngrams(TOKEN_COUNTS, 1)
         bigrams_filtered = load_ngrams(BIGRAM_COUNTS, 2)
     else:
-        unigrams_filtered = {kvp[0] : kvp[1] for kvp in unigrams.items() if kvp[0] in vocab}
+        unigrams_filtered = {token : count for token, count in unigrams.items()} # if token in vocab and count>=2}
         bigrams_filtered =  {kvp[0] : kvp[1] for kvp in bigrams.items() if
                              kvp[0][0] in unigrams_filtered and kvp[0][1] in unigrams_filtered}
 
@@ -150,39 +129,34 @@ def preprocess_sentences(sentences_dic, mode = None):
         write_ngrams(TOKEN_COUNTS, unigrams_filtered)
         write_ngrams(BIGRAM_COUNTS, bigrams_filtered)
 
+    # create an inventory of suggested corrections for invalid tokens from the sentences
+    corrections_inventory = {}
 
     for unigram in unigrams:
-        if unigram in unigrams_filtered:
-            continue
-        unigram_variants, bigram_variants = variants(unigram)
-        unigram_corrections = [v for v in unigram_variants if v in unigrams_filtered]
-        bigram_corrections = [bi for bi in bigram_variants if bi in bigrams_filtered]
-        corrections_inventory[unigram] = (unigram_corrections, bigram_corrections[0] if len(bigram_corrections)>0 else None)
+        if unigram not in unigrams_filtered:
+            unigram_variants, bigram_variants = variants(unigram)
+            unigram_corrections = [v for v in unigram_variants if v in unigrams_filtered]
+            bigram_corrections = [bi for bi in bigram_variants if bi in bigrams_filtered]
+            corrections_inventory[unigram] = \
+                (unigram_corrections, bigram_corrections[0] if len(bigram_corrections)>0 else None)
 
-    for k, tok_sent in tokenized_sentences.items():
-        split_points = []
+    for tok_sent in tokenized_sentences.values():
         for i,w in enumerate(tok_sent):
-            sug =  corrections_inventory.get(w, None)
-            if sug is not None: # otherwist it is a valid word
-                if sug[1] is not None: # replace with bigram
-                    tok_sent[i] = sug[1]
-                    split_points.append(i)
-                elif len(sug[0]) == 1:
-                    tok_sent[i] = sug[0][0]
-                elif len(sug[0]) > 1:
-                    prev_token = tok_sent[i-1] if i>0 else "<s>"
+            if w in corrections_inventory: # otherwise it is a valid word
+                unigram_suggestions, bigram_suggestion =  corrections_inventory.get(w, None)
+                if bigram_suggestion is not None: # if a bigram suggestion exists use it
+                    tok_sent[i] = " ".join(bigram_suggestion)
+                elif len(unigram_suggestions) == 1:
+                    tok_sent[i] = unigram_suggestions[0]
+                elif len(unigram_suggestions) > 1: # if several suggestions exits, use the one with the highest ranking
+                    prev_token = (tok_sent[i-1].split(" "))[-1] if i>0 else "<s>"
                     next_token = tok_sent[i+1] if i<len(tok_sent)-1 else "<\s>"
-                    tok_sent[i] = max(sug[0], key = lambda token :
-                    rank_suggestion(token, prev_token, next_token, unigrams_filtered, bigrams_filtered))
+                    tok_sent[i] = max(unigram_suggestions, key = lambda token : \
+                            rank_suggestion(token, prev_token, next_token, unigrams_filtered, bigrams_filtered))
                 else:
                     #print("could no resolve token "+ w)
-                    if unigrams[w]<10: #
+                    if unigrams[w]<10: # only in training
                         tok_sent[i] = "<UNK>"
-        for j, split_point in enumerate(split_points):
-            sp = j+split_point
-            tokenized_sentences[k] = \
-                tokenized_sentences[k][:sp] + list(tokenized_sentences[k][sp]) + tokenized_sentences[k][sp+1:]
-
 
     return {k : " ".join(s) for k,s in tokenized_sentences.items()}
 
