@@ -54,9 +54,23 @@ for sample in samples:
         print(sample.label == eval('exist(filter(lambda x: query_touching_right_wall(x) or query_touching_left_wall(x),filter_color("#0099ff", filter_shape("triangle", sample.structured_rep.get_all_items()))))'))
 
 
+    if "here is one tower with a yellow block above a yellow block" in sample.sentence:#the "above" meaning is not consistent
+        i+=1
+        print('\n' + sample.sentence)
+        show_sample(sample)
+        print('label is: ', sample.label)
+        print(sample.structured_rep.get_all_boxes())
+        print(sample.label == eval('equal_int(1, count(filter(lambda y: exist(filter_color("Yellow", union(relate_sets("above", filter_color("Yellow", y))))),sample.structured_rep.get_all_boxes())))'))
+
+    if "There is a box with seven items and the three black items are the same in shape" in sample.sentence:#the labels are wrong because they treat it like "three items" and not "the three items"
+        i += 1
+        print('\n' + sample.sentence)
+        print(sample.label == eval('exist(filter(lambda y: equal_int(7, count(y)) and (equal_int(3, count(filter_color("Black", y))) and all_same_shape(filter_color("Black", y))), sample.structured_rep.get_all_boxes()))'))
+
+    if "here is exactly one black triangle not touching the edge" in sample.sentence:
+        i += 1
+        print('\n' + sample.sentence)
+        print(sample.label == eval('equal_int(1,count(filter(lambda x: not query_touching_wall(x), filter_color("Black", filter_shape("triangle" , sample.structured_rep.get_all_items())))))'))
+
+
 print("i =",i)
-        #for key in sentences.keys():
-#    print(samples[key].structured_rep.get_all_boxes())
-#    show_sample(samples[key])
-#print(sentences[124])
-#print(sentences[2700])

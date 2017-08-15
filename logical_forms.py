@@ -16,6 +16,10 @@ class Location(Enum):
 class Relation(Enum):
     ABOVE = 'above'
     BELOW = 'below'
+    LEFT = 'left'
+    RIGHT = 'right'
+    BIGGER = 'bigger'
+    SMALLER = 'smaller'
 
 
 def exist(_set):
@@ -245,12 +249,11 @@ def all_same_color(_set):
             return False
     return True
 
-def union(set1, set2):
+def union(sets):
     set3=set()
-    for x in set1:
-        set3.add(x)
-    for y in set2:
-        set3.add(y)
+    for s in sets:
+        for x in s:
+            set3.add(x)
     return list(set3)
 
 def intersect(set1, set2):
@@ -260,3 +263,32 @@ def intersect(set1, set2):
             set3.add(x)
     return list(set3)
 
+def relate(rel:Relation, item:Item):
+    rel=Relation(rel)
+    myset=set()
+    for x in item.box.items:
+        if check_relation(x,item,rel):
+            myset.add(x)
+    return myset
+
+def check_relation(x,item,rel):
+    if rel== Relation.ABOVE:
+        return item.top > x.top
+    if rel== Relation.BELOW:
+        return item.top < x.top
+    if rel== Relation.SMALLER:
+        return item.size > x.size
+    if rel== Relation.BIGGER:
+        return item.size < x.size
+    if rel== Relation.LEFT:
+        return item.left > x.left
+    if rel== Relation.RIGHT:
+        return item.right < x.right
+    return False
+
+def relate_sets(rel,_set):
+    rel=Relation(rel)
+    result=[]
+    for item in _set:
+        result.append(relate(rel,item))
+    return result
