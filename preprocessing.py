@@ -5,6 +5,7 @@ from general_utils import increment_count
 
 
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
+MIN_COUNT = 5
 
 
 
@@ -26,9 +27,10 @@ def load_ngrams(filename, n):
             ngrams[ngram] = counts
     return ngrams
 
+
 def write_ngrams(filename, ngrams):
     with open(filename, 'w') as ngrams_file:
-        for ngram, count in ngrams.items():
+        for ngram, count in sorted(ngrams.items(), key= lambda entry : entry[1], reverse=True):
             ngram = [ngram] if type(ngram)==str else ngram
             count = str(count)
             line = " ".join([t for t in ngram] + [count])
@@ -113,6 +115,8 @@ def preprocess_sentences(sentences_dic, mode = None):
     # delete one-character-words except for 'a'
     for ch in ALPHABET[1:]:
         vocab.discard(ch)
+    for er in ('ad','al','tow','bo','bow','lease','lest', 'thee'):
+        vocab.discard(er) # very bad solution just for now @TODO
     # add digits
     for dig in range(10):
         vocab.add(str(dig))
@@ -121,9 +125,9 @@ def preprocess_sentences(sentences_dic, mode = None):
         unigrams_filtered = load_ngrams(TOKEN_COUNTS, 1)
         bigrams_filtered = load_ngrams(BIGRAM_COUNTS, 2)
     else:
-        unigrams_filtered = {token : count for token, count in unigrams.items()} # if token in vocab and count>=2}
-        bigrams_filtered =  {kvp[0] : kvp[1] for kvp in bigrams.items() if
-                             kvp[0][0] in unigrams_filtered and kvp[0][1] in unigrams_filtered}
+        unigrams_filtered = {token : count for token, count in unigrams.items() if token in vocab}
+        bigrams_filtered =  {bigram : count for bigram, count in bigrams.items() if
+                             bigram[0] in unigrams_filtered and bigram[1] in unigrams_filtered}
 
     if mode == 'w':
         write_ngrams(TOKEN_COUNTS, unigrams_filtered)
@@ -157,8 +161,12 @@ def preprocess_sentences(sentences_dic, mode = None):
                     #print("could no resolve token "+ w)
                     if unigrams[w]<10: # only in training
                         tok_sent[i] = "<UNK>"
-
+                if w in vocab:
+                    print ("{0}({1}): {2}".format(w, i, " ".join(tok_sent)))
     return {k : " ".join(s) for k,s in tokenized_sentences.items()}
+
+    #@todo : handling also rare words (in training set) or unknown tokens (in test/validation)
+
 
 if __name__ == '__main__':
     data, sentences = build_data(read_data(TRAIN_JSON), preprocess=True)
