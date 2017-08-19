@@ -123,9 +123,14 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     :return: a dict[str, str] mapping from sentence identifier to sentence
     '''
     if processing_type is None:
-        return sentences_dic
-    if processing_type =='shallow':
+        return sentences_dic # no processing
+
+    if processing_type not in ("shallow", "spellproof", "lemmatize"):
+        raise ValueError("Invalid processing type: {}".format(processing_type))
+
+    if processing_type =='shallow': # just superficial processing
         return {k : clean_sentence(s) for k,s in sentences_dic.items()}
+
     tokenized_sentences = {k : str.split(clean_sentence(s)) for k,s in sentences_dic.items()}
     unigrams, bigrams = get_ngrams_counts(tokenized_sentences.values(), 2)
     lemmatizer = WordNetLemmatizer()
@@ -187,12 +192,18 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
 
 
     spellproofed_ss = {k : " ".join(s) for k,s in tokenized_sentences.items()}
-    spellproofed_sentences = {k : s.split() for k,s in spellproofed_ss.items()}
-    unigrams_checked, bigrams_checked = get_ngrams_counts(spellproofed_sentences.values(), 2)
+    spellproofed_sentences = {k: s.split() for k, s in spellproofed_ss.items()}
+
 
     if mode == 'w':
+        unigrams_checked, bigrams_checked = get_ngrams_counts(spellproofed_sentences.values(), 2)
         write_ngrams("tokens_spellproofed.txt", unigrams_checked)
         write_ngrams("bigrams_spellproofed.txt", bigrams_checked)
+
+    if processing_type=='spellproof':
+        return spellproofed_ss
+
+
 
     for k, s in spellproofed_sentences.items():
 
@@ -214,151 +225,9 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
         write_ngrams("bigrams_lemmatized.txt", bigrams_lemmatized)
 
 
+    #@todo
+    # handling also rare words (in training set) or unknown tokens (in test/validation)
+    # need to replace them with <UNK>.
     return spellproofed_ss
-
-    #@todo : handling also rare words (in training set) or unknown tokens (in test/validation)
-
-def lemmatize_tokens(callapi=False):
-    NOUN, VERB = 'n', 'v'
-    tokens = load_ngrams(TOKEN_COUNTS, 1)
-    word_lemmatizer = WordNetLemmatizer()
-    d = {}
-    for token, count in tokens.items():
-        lemmas = []
-        for pos in [NOUN, VERB]:
-            lemmas.append((pos, word_lemmatizer.lemmatize(token, pos)))
-        d[token] = (count, lemmas)
-
-    for kvp in sorted(d.items(), key= lambda kvp : kvp[1][0], reverse=True):
-        pass #print(kvp)
-
-    all_word_forms = {}
-
-    d_prime = {}
-    for token,v in d.items():
-        word_forms = set([token, v[1][0][1], v[1][1][1]])
-        for w in word_forms:
-            if w not in d_prime:
-                d_prime[w] = set()
-                d_prime[w].add(token)
-
-
-    if callapi:
-        for token, count in tokens.items():
-            if count<20:
-                word_forms = set([token, d[token][1][0][1], d[token][1][1][1]])
-                for t in word_forms:
-                    if t not in all_word_forms:
-                        res = call_api(t)
-                        if res is not None and "word" in res:
-                            w = res["word"]
-                            synonyms_n, synonyms_v, synonyms_other = [], [], []
-                            for r in res.get("results", []):
-                                if r["partOfSpeech"] == 'noun':
-                                    for category in ("synonyms", "also", "similarTo", "derivative", "hasTypes", "typeOf"):
-                                        synonyms_n.extend(r.get(category, []))
-                                if r["partOfSpeech"] == 'verb':
-                                    for category in ("synonyms", "also", "similarTo", "derivative", "hasTypes", "typeOf"):
-                                        synonyms_v.extend(r.get(category, []))
-                                else:
-                                    for category in ("synonyms", "also", "similarTo", "derivative", "hasTypes", "typeOf"):
-                                        synonyms_other.extend(r.get(category, []))
-
-                            all_word_forms[w] = [synonyms_n, synonyms_v, synonyms_other]
-        for k,v in all_word_forms.items():
-            print(k,v)
-        time.sleep(5)
-    else:
-        all_word_forms = load_synonyms(SYNONYMS)
-
-    bigrams = load_ngrams(BIGRAM_COUNTS, 2)
-    suggestions_synonyms = {}
-    for k,v in all_word_forms.items():
-        if k in integers or k in integer_words:
-            continue
-        suggestions_synonyms[k] = [[], [], []]
-        for i in range(3):
-            for w in v[i]:
-                suggestions_synonyms[k][i].extend(d_prime[w]  if w in d_prime else [])
-                if bigrams.get(tuple(w.split()) , 0) > 3:
-                    suggestions_synonyms[k][i].append(w)
-
-    print("#########################################")
-    #for k,v in suggestions_synonyms.items():
-     #   print(k,v)
-    return suggestions_synonyms
-
-    #
-    # for token, count in tokens.items():
-    #     if count < 20:
-    #         word_forms = set([token, d[token][1][0][1], d[token][1][1][1]])
-    #         for t in word_forms:
-    #             print(t)
-
-def replace_rare_words(tok_sent, unigrams,bigrams, suggestions):
-    tagging = nltk.pos_tag(tok_sent)
-    lemmatizer = WordNetLemmatizer()
-    for i,w in enumerate(tok_sent):
-        if str.isdigit(w):
-            continue
-        if unigrams.get(w,0) <=5:
-            pos = tagging[i][1][0]
-            if pos == 'N':
-                lemma = lemmatizer.lemmatize(w, 'n')
-                idx=0
-            elif pos == 'V':
-                lemma = lemmatizer.lemmatize(w, 'v')
-                idx=1
-            else:
-                lemma = w
-                idx=2
-            options = suggestions[lemma][idx] if lemma in suggestions else []
-            options.extend([lemma, w])
-            if len(options) == 1:
-                res = options[0]
-            elif len(options) > 1:  # if several suggestions exits, use the one with the highest ranking
-                prev_token = (tok_sent[i - 1].split(" "))[-1] if i > 0 else "<s>"
-                next_token = tok_sent[i + 1] if i < len(tok_sent) - 1 else "<\s>"
-                res = max(options, key=lambda token: \
-                    rank_suggestion(token, prev_token, next_token, unigrams, bigrams))
-            if tok_sent[i] != res:
-                print (" ".join(tok_sent))
-                tok_sent[i] = res
-                print(" ".join(tok_sent))
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%")
-
-
-    return
-
-
-
-def formalize_sentence(s):
-    s = [w for w in s.split()]
-
-    forms = [(integers, [], 'n'), (shape_words, [], 's'), (color_words, [], 'c')]
-
-    for i,w in enumerate(s):
-        # remove plural and convert integer words:
-        if w.endswith('s') and w[:-1] in shape_words:
-            s[i] = w[:-1]
-        if w in integer_words:
-            s[i] = integers[integer_words.index(s[i])]
-    return s
-
-def further_process_sentences(sentences):
-    all_word_forms = load_synonyms(SYNONYMS)
-    unigrams = load_ngrams(TOKEN_COUNTS,1 )
-    bigrams = load_ngrams(BIGRAM_COUNTS, 2)
-    for k,s in sentences.items():
-        s = formalize_sentence(s)
-        replace_rare_words(s, unigrams, bigrams, all_word_forms )
-    return
-
-
-if __name__ == '__main__':
-    #lemmatize_tokens(callapi=True)
-    #data, sentences = build_data(read_data(TRAIN_JSON))
-    #preprocess_sentences(sentences, processing_type='thorough')
-    print()
 
 

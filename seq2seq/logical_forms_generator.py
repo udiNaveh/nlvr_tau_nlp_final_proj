@@ -3,17 +3,18 @@ decoder poc
 '''
 
 from collections import namedtuple
-from numpy import random as random
 import numpy as np
 import os
 import re
 
 from preprocessing import get_ngrams_counts
 import definitions
+from logical_forms_new import process_token_sequence
 
+TOKEN_MAPPING = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping')
+PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
 
-TOKEN_MAPPING = os.path.join(definitions.DATA_DIR, 'token mapping')
-PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parses for check as tokens')
+MAX_LENGTH = 35
 
 
 TokenTypes = namedtuple('TokenTypes', ['return_type', 'args_types'])
@@ -31,8 +32,7 @@ def get_probs_from_file(path):
             if not line[0].isdigit():
                 token_seqs.append(line.split())
 
-    return get_ngrams_counts(token_seqs, 3, include_start_and_stop=True )
-
+    return get_ngrams_counts(token_seqs, 3, include_start_and_stop=True)
 
 
 def load_functions(filename):
@@ -57,7 +57,7 @@ def load_functions(filename):
                 # should use Warning instead
                 continue
             token, return_type, args_types = entry[0], entry[-1], entry[2:-1]
-            functions_dict[token] = TokenTypes(return_type= return_type, args_types= args_types)
+            functions_dict[token] = TokenTypes(return_type=return_type, args_types=args_types)
 
         functions_dict.update({str(i): TokenTypes(return_type='int', args_types=[]) for i in range(1, 10)})
 
@@ -71,14 +71,14 @@ def check_types(required, suggested):
     :param required: a str or a list of strings representing types in the logical forms.
     :param suggested: a string representing a type in the logical forms
     :return: True if the provided return type matches the required type that is in the top of the stack. 
-    
+
     '''
-    if '|' in required: # if there are several possible required types (e.g. Item and set<Item>)
+    if '|' in required:  # if there are several possible required types (e.g. Item and set<Item>)
         return any([check_types(x, suggested) for x in required.split('|')])
 
     if required == suggested:
         return True
-    if required == '?' or suggested == '?': # wildcard
+    if required == '?' or suggested == '?':  # wildcard
         return True
     if required.startswith('set') and suggested.startswith('set'):
         return check_types(required[4:-1], suggested[4:-1])
@@ -99,7 +99,7 @@ def disambiguate(typed, nontyped):
     if '|' in typed:
         types = typed.split('|')
         res = [disambiguate(t, nontyped) for t in types if disambiguate(t, nontyped)]
-        if len(res)>0:
+        if len(res) > 0:
             return res[0]
     if nontyped == "?":
         return typed
@@ -109,7 +109,6 @@ def disambiguate(typed, nontyped):
         return typed[8:-2]
     else:
         return None
-
 
 
 class Decoder:
@@ -125,10 +124,8 @@ class Decoder:
         self.vars = [c for c in "xyzwuv"]
         self.stack = ["bool"]
         self.decode = []
-        self.function_dict = {k : v for k,v in functions_dict.items()}
+        self.function_dict = {k: v for k, v in functions_dict.items()}
         self.vars_in_use = {}
-        self.probs = p_dict
-
 
     def get_probs_from_ngram_language_model(self, p_dict, possible_continuations):
         """
@@ -144,13 +141,17 @@ class Decoder:
         bigram_counts = p_dict[1]
         trigram_counts = p_dict[2]
         for token in possible_continuations:
-            probs.append( max(token_counts.get(token, 0) + 10 * bigram_counts.get((prev_token, token), 0) + \
-                       9 * trigram_counts.get((prevprev_token, prev_token, token), 0), 1))
+            probs.append(max(token_counts.get(token, 0) + 10 * bigram_counts.get((prev_token, token), 0) + \
+                             9 * trigram_counts.get((prevprev_token, prev_token, token), 0), 1))
         return np.array(probs) / np.sum(probs)
 
     def choose_next_token(self, probabilities):
-        if len(self.stack)==0:
+        if len(self.stack) == 0:
             return "."  # end of decoding
+
+        if len(self.vars)==0 or len(self.decode)>MAX_LENGTH:
+            raise RuntimeError("decoding passed the allowed length - doesn't seem to go anywhere good")
+
 
         next_type = self.stack.pop()
         # the next token must have a return type that matches next_type or to be itself an instance of next_type
@@ -163,20 +164,19 @@ class Decoder:
                 del self.vars_in_use[var]
                 del self.function_dict[var]
 
-
         if next_type.startswith("bool_func"):
             # in that case there is no choice - the only valid token is 'lambda'
-            var = self.vars.pop(0) # get a new letter to represent the var
-            self.vars_in_use[var] = len(self.stack) # save the current size of stack -
-                                                    # the scope of the var dependes on it.
+            var = self.vars.pop(0)  # get a new letter to represent the var
+            self.vars_in_use[var] = len(self.stack)  # save the current size of stack -
+            # the scope of the var dependes on it.
             next_token = 'lambda_{0}_:'.format(var)
             type_of_var = next_type[10:-1]
-            if type_of_var=='?':
+            if type_of_var == '?':
                 raise TypeError("var in lambda function must be typed")
-            self.function_dict[var] = TokenTypes(return_type= type_of_var, args_types= [])
+            self.function_dict[var] = TokenTypes(return_type=type_of_var, args_types=[])
             self.decode.append(next_token)
             self.stack.append('bool')
-            return
+            return next_token
 
         else:
             # get the probability vector for the possible next tokens, given the current state of the the
@@ -184,40 +184,47 @@ class Decoder:
 
             possible_continuations = [t for t, v in self.function_dict.items()
                                       if check_types(next_type, v.return_type)]
-            probs = self.get_probs_from_ngram_language_model(possible_continuations)
-            next_token = np.random.choice(possible_continuations, p = probs)
+            if len(possible_continuations)==0:
+                raise RuntimeError("decoder for stuck with no possible continuations")
+            probs = self.get_probs_from_ngram_language_model(p_dict, possible_continuations)
+            next_token = np.random.choice(possible_continuations, p=probs)
             t = disambiguate(next_type, self.function_dict[next_token].return_type)
             s = disambiguate(self.function_dict[next_token].return_type, next_type)
             if s is not None:
                 # update jokers in stack:
-                for i in range(len(self.stack)-1,-1,-1):
+                for i in range(len(self.stack) - 1, -1, -1):
                     if '?' in self.stack[i]:
-                        self.stack[i]= self.stack[i].replace('?', s)
+                        self.stack[i] = self.stack[i].replace('?', s)
                     else:
                         break
 
             self.decode.append(next_token)
-            args_to_stack = [arg if t is None else arg.replace('?', t) for arg in self.function_dict[next_token].args_types[::-1]]
+            args_to_stack = [arg if t is None else arg.replace('?', t) for arg in
+                             self.function_dict[next_token].args_types[::-1]]
             self.stack.extend(args_to_stack)
-            return
+            return next_token
 
-
-
-    def get_decoding(self, p_dict):
-        result = []
+    def generate_decoding(self):
         while True:
-            result.append(self.choose_next_token(p_dict))
-            if result[-1]=='.':
+            next_token = self.choose_next_token(p_dict)
+            if next_token == '.':
                 break
-        return result
+        return self.decode
 
+def generate_logical_forms(n):
 
+    for _ in range(n):
+        dec = Decoder(token_mapping)
+        try:
+            s = dec.generate_decoding()
+            print(s) # prints as a token sequence, but you can convert it to normal form using process_token_sequence
+
+        except RuntimeError as err:
+            print (err)
 
 
 if __name__ == "__main__":
     p_dict = get_probs_from_file(PARSED_EXAMPLES_T)
-    d = load_functions(TOKEN_MAPPING)
-    dec = Decoder(d)
-    dec.get_decoding(p_dict)
-    print("")
+    token_mapping = load_functions(TOKEN_MAPPING)
+    generate_logical_forms(10)
 
