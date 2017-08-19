@@ -1,12 +1,12 @@
 import json
 
 from structured_rep_utils import *
-from definitions import *
+import definitions
 from preprocessing import preprocess_sentences
 
 
 
-train = TRAIN_JSON
+train = definitions.TRAIN_JSON
 
 
 def read_data(filename):
@@ -61,6 +61,6 @@ def build_data(data, preprocessing_type = None):
 
 
 if __name__ == '__main__':
-    data = read_data(TRAIN_JSON)
-    samples, sentences = build_data(data, preprocessing_type='thorough')
-    rewrite_data(str.replace(TRAIN_JSON, "train.", "train_preprocessed."), data, sentences)
+    data = read_data(train)
+    samples, sentences = build_data(data, preprocessing_type='lemmatize') # check different processig types
+    print("")

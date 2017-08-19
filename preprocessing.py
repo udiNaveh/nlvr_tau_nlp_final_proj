@@ -224,10 +224,10 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
         write_ngrams("tokens_lemmatized.txt", unigrams_lemmatized)
         write_ngrams("bigrams_lemmatized.txt", bigrams_lemmatized)
 
-
+    return {k: " ".join(s) for k, s in spellproofed_sentences.items()}
     #@todo
     # handling also rare words (in training set) or unknown tokens (in test/validation)
     # need to replace them with <UNK>.
-    return spellproofed_ss
+
 
 
