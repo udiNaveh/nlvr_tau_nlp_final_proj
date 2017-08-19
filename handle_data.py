@@ -17,7 +17,22 @@ def read_data(filename):
     return data
 
 
-def build_data(data, preprocess = False):
+def rewrite_data(filename, data, mapping):
+    with open(filename, 'w') as output_file:
+        for sample in data:
+            s_index = int(str.split(sample["identifier"], "-")[0])
+            sample["sentence"] = mapping[s_index]
+            line = json.dump(sample,output_file)
+            output_file.write('\n')
+
+
+            #output_file.writelines(data)
+
+    return
+
+
+
+def build_data(data, preprocessing_type = None):
     '''
     
     :param data: a deserialized version of a dataset json file: List[List[List[Dict[str: str]]]]
@@ -36,11 +51,16 @@ def build_data(data, preprocess = False):
         if s_index not in sentences:
             sentences[s_index] = line["sentence"]
 
-    if preprocess:
-        sentences = preprocess_sentences(sentences)
+    sentences = preprocess_sentences(sentences, mode=None, processing_type=preprocessing_type)
 
-    #for s in samples: # I deleted this part because it puts the same sentence in all of the samples
-    #    s_index = int(str.split(line["identifier"], "-")[0])
-    #    s.sentence = sentences[s_index]
+    for s in samples:
+       s_index = int(str.split(s.identifier, "-")[0])
+       s.sentence = sentences[s_index]
 
     return samples, sentences
+
+
+if __name__ == '__main__':
+    data = read_data(TRAIN_JSON)
+    samples, sentences = build_data(data, preprocessing_type='thorough')
+    rewrite_data(str.replace(TRAIN_JSON, "train.", "train_preprocessed."), data, sentences)

@@ -84,6 +84,7 @@ number 18
 many 17
 more 17
 second 16
+below 15
 multiple 13
 attached 12
 from 12
@@ -91,7 +92,6 @@ an 12
 single 11
 seven 11
 size 10
-bellow 10
 middle 10
 contain 9
 shape 9
@@ -107,7 +107,6 @@ or 7
 height 7
 medium 6
 but 6
-below 5
 every 5
 both 5
 set 5
