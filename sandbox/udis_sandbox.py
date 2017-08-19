@@ -1,7 +1,6 @@
 import string
 import nltk
-import requests
-from requests.auth import HTTPDigestAuth
+
 
 
 from handle_data import *
@@ -51,10 +50,6 @@ def find_rare_words():
 
 
 
-def call_api(word):
-    url = 'https://wordsapiv1.p.mashape.com/words/' + word
-    myResponse = requests.get(url, auth=HTTPDigestAuth(username = 'udiNaveh' ,password='oxf9089'))
-    print(myResponse)
 
 
 
@@ -101,5 +96,22 @@ def unique_sentences_count(sentences):
         pass #print(s)
     return
 
+
+def select_integers(k, min, max):
+    if k> max-min or k==0:
+        return [set()]
+    return [set([min]).union(s) for s in select_integers(k-1, min+1, max)] + [s for s in select_integers(k, min+1, max) if len(s)>0]
+
+
+def select(_set, k):
+    l = list(_set)
+    return [[l[i] for i in idx] for idx in select_integers(k, 0, len(l))]
+
+
+
+
+
+
 if __name__ == '__main__':
-    build_data(read_data(TRAIN_JSON), preprocess=True)
+    #build_data(read_data(TRAIN_JSON), preprocess=True)
+    call_api('position')

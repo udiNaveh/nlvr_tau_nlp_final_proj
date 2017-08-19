@@ -1,12 +1,17 @@
 import string
+from nltk.stem import WordNetLemmatizer
+import nltk.tag
 
-from handle_data import *
-from general_utils import increment_count
+from definitions import *
+from general_utils import increment_count, call_api
 
 
+color_words = ["blue", "yellow", "black"]
+shape_words = ["circle", "triangle", "square"]
+integers = [str(i) for i in range(1,10)]
+integer_words = "one two three four five six seven".split()
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 MIN_COUNT = 5
-
 
 
 def load_vocabulary(filename):
@@ -14,6 +19,7 @@ def load_vocabulary(filename):
     with open(filename) as vocab_file:
         for line in vocab_file:
             word = line.rstrip()
+
             vocab.add(word)
     return vocab
 
@@ -37,7 +43,16 @@ def write_ngrams(filename, ngrams):
             ngrams_file.write(line + '\n')
     return
 
-
+def load_synonyms(file_name):
+    result = {}
+    with open(file_name) as syns:
+        for line in syns:
+            line = line.rstrip()
+            if len(line)>1:
+                sep = line.find(' ')
+                token = line[:sep]
+                result[token] = eval(line[sep+1 :])
+    return result
 
 
 
@@ -93,12 +108,12 @@ def variants(word, alphabet = ALPHABET):
 
 
 def rank_suggestion(suggested_token, prev_token, next_token, unigram_counts, bigram_counts, p = 0.1):
-       return p * unigram_counts[suggested_token] + \
+       return p * unigram_counts.get(suggested_token, 0) + \
               ((1 - p) / 2) * bigram_counts.get((prev_token, suggested_token),0) + \
               ((1 - p) / 2) * bigram_counts.get((suggested_token, next_token),0)
 
 
-def preprocess_sentences(sentences_dic, mode = None):
+def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     '''
     preprocesses the input sentences such that each returned sentences is a sequence of
     tokens that are part of the lexicon (???) seperated by whitespaces.
@@ -107,15 +122,24 @@ def preprocess_sentences(sentences_dic, mode = None):
     :param sentences_dic: a dict[str, str] mapping from sentence identifier to sentence 
     :return: a dict[str, str] mapping from sentence identifier to sentence
     '''
+    if processing_type is None:
+        return sentences_dic # no processing
+
+    if processing_type not in ("shallow", "spellproof", "lemmatize"):
+        raise ValueError("Invalid processing type: {}".format(processing_type))
+
+    if processing_type =='shallow': # just superficial processing
+        return {k : clean_sentence(s) for k,s in sentences_dic.items()}
 
     tokenized_sentences = {k : str.split(clean_sentence(s)) for k,s in sentences_dic.items()}
     unigrams, bigrams = get_ngrams_counts(tokenized_sentences.values(), 2)
+    lemmatizer = WordNetLemmatizer()
 
     vocab = load_vocabulary(ENG_VOCAB_60K)
     # delete one-character-words except for 'a'
     for ch in ALPHABET[1:]:
         vocab.discard(ch)
-    for er in ('ad','al','tow','bo','bow','lease','lest', 'thee'):
+    for er in ('ad','al','tow','bo','bow','lease','lest', 'thee', 'bellow'):
         vocab.discard(er) # very bad solution just for now @TODO
     # add digits
     for dig in range(10):
@@ -130,8 +154,8 @@ def preprocess_sentences(sentences_dic, mode = None):
                              bigram[0] in unigrams_filtered and bigram[1] in unigrams_filtered}
 
     if mode == 'w':
-        write_ngrams(TOKEN_COUNTS, unigrams_filtered)
-        write_ngrams(BIGRAM_COUNTS, bigrams_filtered)
+        write_ngrams("tokens_counts.txt", unigrams_filtered)
+        write_ngrams("bigrams_counts.txt", bigrams_filtered)
 
     # create an inventory of suggested corrections for invalid tokens from the sentences
     corrections_inventory = {}
@@ -144,7 +168,9 @@ def preprocess_sentences(sentences_dic, mode = None):
             corrections_inventory[unigram] = \
                 (unigram_corrections, bigram_corrections[0] if len(bigram_corrections)>0 else None)
 
-    for tok_sent in tokenized_sentences.values():
+    tagging = {}
+
+    for k, tok_sent in tokenized_sentences.items():
         for i,w in enumerate(tok_sent):
             if w in corrections_inventory: # otherwise it is a valid word
                 unigram_suggestions, bigram_suggestion =  corrections_inventory.get(w, None)
@@ -158,18 +184,50 @@ def preprocess_sentences(sentences_dic, mode = None):
                     tok_sent[i] = max(unigram_suggestions, key = lambda token : \
                             rank_suggestion(token, prev_token, next_token, unigrams_filtered, bigrams_filtered))
                 else:
-                    #print("could no resolve token "+ w)
+                    #print("could not resolve token "+ w)
                     if unigrams[w]<10: # only in training
                         tok_sent[i] = "<UNK>"
                 if w in vocab:
                     print ("{0}({1}): {2}".format(w, i, " ".join(tok_sent)))
-    return {k : " ".join(s) for k,s in tokenized_sentences.items()}
-
-    #@todo : handling also rare words (in training set) or unknown tokens (in test/validation)
 
 
-if __name__ == '__main__':
-    data, sentences = build_data(read_data(TRAIN_JSON), preprocess=True)
-    print()
-    #preprocess_sentences(sentences)
+    spellproofed_ss = {k : " ".join(s) for k,s in tokenized_sentences.items()}
+    spellproofed_sentences = {k: s.split() for k, s in spellproofed_ss.items()}
+
+
+    if mode == 'w':
+        unigrams_checked, bigrams_checked = get_ngrams_counts(spellproofed_sentences.values(), 2)
+        write_ngrams("tokens_spellproofed.txt", unigrams_checked)
+        write_ngrams("bigrams_spellproofed.txt", bigrams_checked)
+
+    if processing_type=='spellproof':
+        return spellproofed_ss
+
+
+
+    for k, s in spellproofed_sentences.items():
+
+        tagging[k] = nltk.pos_tag(s)
+        for i, w in enumerate(s):
+            pos = tagging[k][i][1]
+            if pos.startswith('N'):
+                lemma = lemmatizer.lemmatize(w, 'n')
+            elif pos.startswith('V'):
+                lemma = lemmatizer.lemmatize(w, 'v')
+            else:
+                lemma = w
+            s[i] = lemma if s[i] not in ('is', 'are') else s[i]
+
+    unigrams_lemmatized, bigrams_lemmatized = get_ngrams_counts(spellproofed_sentences.values(), 2)
+
+    if mode == 'w':
+        write_ngrams("tokens_lemmatized.txt", unigrams_lemmatized)
+        write_ngrams("bigrams_lemmatized.txt", bigrams_lemmatized)
+
+    return {k: " ".join(s) for k, s in spellproofed_sentences.items()}
+    #@todo
+    # handling also rare words (in training set) or unknown tokens (in test/validation)
+    # need to replace them with <UNK>.
+
+
 

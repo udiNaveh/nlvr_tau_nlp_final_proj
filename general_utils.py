@@ -1,4 +1,5 @@
-
+import requests
+from requests.auth import HTTPDigestAuth
 
 def increment_count(count_dict, key):
     """
@@ -11,3 +12,13 @@ def increment_count(count_dict, key):
         count_dict[key] += 1
     else:
         count_dict[key] = 1
+
+
+def call_api(word):
+    url = 'https://wordsapiv1.p.mashape.com/words/' + word
+    params = {    "X-Mashape-Key": "Z2LBQaaPOHmshmma0G7uyyxGP0nhp1XEXg2jsnq3bdFVtpXMa5",
+    "Accept": "application/json"}
+    myResponse = requests.get(url, headers = params)
+    if myResponse.status_code != 200:
+        return None
+    return myResponse.json()

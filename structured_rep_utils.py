@@ -26,6 +26,9 @@ class Shape(Enum):
     TRIANGLE = 'triangle'
 
 
+
+
+
 class Item:
     def __init__(self, dic):
         assert isinstance(dic, dict)
@@ -37,7 +40,7 @@ class Item:
         self.box = None # a pointer to the containing box (List of Items). Added when the box constructor is done.
 
     def __repr__(self):
-        return "{0} {1} {2}".format(self.size.name, self.color.name, self.shape.name).lower()
+        return "{0} {1} {2} at x: ({3}-{4}) y: ({5},{6})".format(self.size.name, self.color.name, self.shape.name, self.left, self.right, self.bottom, self.top).lower()
 
     @property
     def right(self):
@@ -95,14 +98,22 @@ class Item:
                other.bottom - self.top)
 
     def is_touching(self, other, use_margin=False):
-        margin = almost_touching_margin if use_margin else 0
-        return self is not other and self.__distance(other) <= margin
+        margin = almost_touching_margin if use_margin else 1
+        return self is not other and self.box is other.box and self.__distance(other) <= margin
 
     def is_top(self):
         return self.top == max(item.top for item in self.box)
 
     def is_bottom(self):
         return self.top == min(item.top for item in self.box)
+
+    def is_second(self):
+        result = self.box.is_tower() and self.bottom==21
+        return result
+
+    def is_third(self):
+        return self.box.is_tower() and self.bottom==42
+
 
 
 class Box:
@@ -129,7 +140,7 @@ class Box:
         return item in self.items
 
     def is_tower(self):
-        return all(s.shape == 'square' for s in self.items) and \
+        return all(s.shape == Shape.SQUARE for s in self.items) and \
                all(s.right == self.items[0].right for s in self.items)
 
 

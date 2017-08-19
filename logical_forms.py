@@ -273,13 +273,14 @@ def relate(rel:Relation, item:Item):
 
 def check_relation(x,item,rel):
     if rel== Relation.ABOVE:
-        return item.top > x.top
+        return item.top < x.top and (touching(item,x) if item.box.is_tower() else True)
+
     if rel== Relation.BELOW:
-        return item.top < x.top
+        return item.top > x.top and (touching(item,x) if item.box.is_tower() else True)
     if rel== Relation.SMALLER:
-        return item.size > x.size
-    if rel== Relation.BIGGER:
         return item.size < x.size
+    if rel== Relation.BIGGER:
+        return item.size > x.size
     if rel== Relation.LEFT:
         return item.left > x.left
     if rel== Relation.RIGHT:
@@ -292,3 +293,28 @@ def relate_sets(rel,_set):
     for item in _set:
         result.append(relate(rel,item))
     return result
+
+### added by udi
+
+def touching(item1 : Item, item2 : Item):
+    return item1.is_touching(item2)
+
+###
+def run_logical_form(expression, image):
+    # create constants
+    BOXES = image.get_all_boxes()
+    ALL_ITEMS = image.get_all_items()
+    try:
+        result = eval(expression)
+    except(SyntaxError, TypeError):
+        raise SyntaxError
+    if type(result) is not bool:
+        raise TypeError("parsing returned a non boolean type")
+    return result
+
+
+def parse(sentence, pre_parsed_dic = {}):
+    if sentence in pre_parsed_dic:
+        return pre_parsed_dic[sentence]
+    else:
+        raise NotImplementedError
