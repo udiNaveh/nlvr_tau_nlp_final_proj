@@ -1,15 +1,16 @@
 import tensorflow as tf
-from utils import *
+from seq2seq.utils import *
 import operator
-from logical_forms_generator import *
-from sandbox\omers_word2vec import *
+from seq2seq.logical_forms_generator import *
+from sandbox.omers_word2vec import *
+from handle_data import *
 
 # hyperparameters
 words_embedding_size = 20
 logical_tokens_embedding_size = 10
 hidden_layer_size = 30
 #vocab_size =
-max_sent_length =
+max_sent_length = 5
 learning_rate = 0.001
 beta = 0.5
 epsilon = 0.05
@@ -20,8 +21,29 @@ batch_size = 8
 STACK = 0
 history_length = 4
 
-# word embeddings
-#TODO
+# build data
+
+#load data
+train = definitions.TRAIN_JSON
+data = read_data(train)
+samples, _ = build_data(data, preprocessing_type='lemmatize')
+#load word embeddings
+embeddings_file = open('word_embeddings','rb')
+embeddings_dict = pickle.load(embeddings_file)
+embeddings_file.close()
+
+embedded_sentences, images, labels, lengths = [], [], [], []
+for sample in samples:
+    sent = []
+    for word in sample.sentence:
+        sent.append(embeddings_dict[word])
+    embedded_sentences.append(sent)
+    images.append(sample.structured_rep)
+    labels.append(sample.label)
+    if len(sent) > max_sent_length:
+        max_sent_length = len(sent)
+    lengths.append(len(sent))
+
 
 # logical forms embeddings
 # TODO
@@ -95,6 +117,8 @@ with tf.Session() as sess:
     while step < num_of_steps:
         x = embedded_sentences[step % len(embedded_sentences)]
         image = images[step % len(embedded_sentences)]
+        label = labels[step % len(embedded_sentences)]
+        length = lengths[step % len(embedded_sentences)]
         #TODO reshape
         #encoder_output = sess.run(h,feed_dict={sentence_placeholder: x})
         beam_steps=0
@@ -106,6 +130,7 @@ with tf.Session() as sess:
             if beam_steps == 0: # first iteration - beam is empty
                 current_history_embedding = get_history_embedding([]) # no history embedding
                 current_probs = sess.run(token_prob_dist, feed_dict={sentence_placeholder: x,
+                                                                     sent_lengths: length,
                                                                      history_embedding: current_history_embedding})
                 for i in range(len(current_probs)):
                     beam.append((current_probs[i],[token_embeddings[i]]))
@@ -128,7 +153,7 @@ with tf.Session() as sess:
         # calculate rewards and gather probabilities for beam
         current_rewards, probabilities = [], []
         for prog in beam:
-            current_rewards.append(execute(prog[1],image,token_mapping))
+            current_rewards.append(bool(execute(prog[1],image,token_mapping)==label))
             probabilities.append(prog[0])
 
         # calculate current gradient
