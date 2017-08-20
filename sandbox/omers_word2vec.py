@@ -4,8 +4,8 @@ from random import shuffle
 import json
 
 
-sents_path = NOPATH
-embed_dim = 8
+sents_path = None
+EMBED_DIM = 8
 lr = 0.1
 ITERNUM = 3
 
@@ -29,9 +29,10 @@ def index_to_one_hot(index, size = (len(words_list))):
 def convert_words_to_indices(sents_path):
     newsents = []
     with open(sents_path) as sents:
+        assert type() == str
         for sent in sents:
             newsent = []
-            for word in sent.split():
+            for word in sent.rstrip().split():
                 newsent.append(words_list.index(word))
             newsents.append(newsent)
     return newsents
@@ -49,7 +50,7 @@ def get_env(k, sent):
         env = [sent[k - 2], sent[k - 1], sent[k + 1], sent[k + 2]]
     return env
 
-def wod2vec(sents_path):
+def wod2vec(sents_path, embed_dim = EMBED_DIM):
 
     words_list = create_dict(sents_path)
 
