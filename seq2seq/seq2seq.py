@@ -9,7 +9,6 @@ from handle_data import *
 words_embedding_size = 20
 logical_tokens_embedding_size = 10
 hidden_layer_size = 30
-#vocab_size =
 max_sent_length = 5
 learning_rate = 0.001
 beta = 0.5
