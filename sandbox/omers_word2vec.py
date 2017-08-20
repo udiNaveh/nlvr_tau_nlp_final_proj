@@ -2,10 +2,13 @@ import numpy as np
 import tensorflow as tf
 from random import shuffle
 import json
+import pickle
+import definitions
+from handle_data import *
 
 
 sents_path = None
-EMBED_DIM = 8
+EMBED_DIM = 20
 lr = 0.1
 ITERNUM = 3
 
@@ -21,20 +24,32 @@ def create_dict(sents_path):
                     words_list.append(word)
     return words_list
 
-def index_to_one_hot(index, size = (len(words_list))):
+def create_dict_from_list(sents_list):
+    words_list = []
+    for sent in sents_list:
+        words = sent.rstrip().split()
+        for word in words:
+            if word in words_list:
+                pass
+            else:
+                words_list.append(word)
+    return words_list
+
+
+def index_to_one_hot(index, size):
     vec = np.zeros(size)
     vec[index] = 1.
     return vec
 
-def convert_words_to_indices(sents_path):
+def convert_words_to_indices(sents_list,words_list):
     newsents = []
-    with open(sents_path) as sents:
-        assert type() == str
-        for sent in sents:
-            newsent = []
-            for word in sent.rstrip().split():
-                newsent.append(words_list.index(word))
-            newsents.append(newsent)
+    #with open(sents_path) as sents:
+    assert type(sents_list) == str
+    for sent in sents_list:
+        newsent = []
+        for word in sent.rstrip().split():
+            newsent.append(words_list.index(word))
+        newsents.append(newsent)
     return newsents
 
 def get_env(k, sent):
@@ -50,9 +65,12 @@ def get_env(k, sent):
         env = [sent[k - 2], sent[k - 1], sent[k + 1], sent[k + 2]]
     return env
 
-def wod2vec(sents_path, embed_dim = EMBED_DIM):
+def word2vec(sents_path, embed_dim = EMBED_DIM, path = False):
 
-    words_list = create_dict(sents_path)
+    if path:
+        words_list = create_dict(sents_path)
+    else:
+        words_list =create_dict_from_list(sents_path)
 
     onehots = tf.placeholder(tf.float32, [None, len(words_list)])
     Win = tf.get_variable("Win", shape=[len(words_list), embed_dim], initializer=tf.random_uniform_initializer(0, 1))
@@ -63,11 +81,11 @@ def wod2vec(sents_path, embed_dim = EMBED_DIM):
     yt = tf.placeholder(tf.float32, [None, 1])
 
     # yaxol lihiyot shehu mecape levector im indexim velo le-one-hot-im
-    loss = tf.nn.sparse_softmax_cross_entropy_with_logits(yt, z)
+    loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels = yt, logits = z)
 
     opt = tf.train.GradientDescentOptimizer(lr).minimize(loss)
 
-    newsents = convert_words_to_indices(sents_path)
+    newsents = convert_words_to_indices(sents_path,words_list)
 
     indices = range(len(newsents))
     with tf.Session() as sess:
@@ -78,7 +96,7 @@ def wod2vec(sents_path, embed_dim = EMBED_DIM):
                 currsent = newsents[indices[j]]
                 for k, word in enumerate(currsent):
                     env = get_env(k, currsent)
-                    envvec = np.sum([index_to_one_hot(l) for l in env])
+                    envvec = np.sum([index_to_one_hot(l, size= (len(words_list))) for l in env])
                     sess.run(opt, feed_dict = {onehots: envvec, yt: word})
         embeds = sess.run(Win)
 
@@ -86,5 +104,16 @@ def wod2vec(sents_path, embed_dim = EMBED_DIM):
     for i, embed in enumerate(embeds):
         embed_dict[words_list[i]] = embed
 
-    wh = open('word_embedings.json', 'w')
-    json.dump(embed_dict, wh)
+    #wh = open('word_embeddings.json', 'w')
+    #json.dump(embed_dict, wh)
+    #return embed_dict
+    file = open('word_embeddings','wb')
+    pickle.dump(embed_dict,file)
+    file.close()
+
+
+train = definitions.TRAIN_JSON
+data = read_data(train)
+samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
+sents_to_parse = sents_dict.values()
+word2vec(sents_to_parse)
