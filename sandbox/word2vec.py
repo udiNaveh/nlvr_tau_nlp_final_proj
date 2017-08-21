@@ -12,17 +12,17 @@ EMBED_DIM = 8
 LR = 0.1
 ITERNUM = 1
 
-def create_dict_from_path(sents_path):
-    words_list = []
-    with open(sents_path) as sents:
-        for sent in sents:
-            words = sent.rstrip().split()
-            for word in words:
-                if word in words_list:
-                    pass
-                else:
-                    words_list.append(word)
-    return words_list
+# def create_dict_from_path(sents_path):
+#     words_list = []
+#     with open(sents_path) as sents:
+#         for sent in sents:
+#             words = sent.rstrip().split()
+#             for word in words:
+#                 if word in words_list:
+#                     pass
+#                 else:
+#                     words_list.append(word)
+#     return words_list
 
 def create_dict(sents):
     words_list = []
@@ -41,15 +41,15 @@ def index_to_one_hot(index, words_list):
     vec[index] = 1.
     return vec
 
-def convert_words_to_indices_from_path(sents_path):
-    newsents = []
-    with open(sents_path) as sents:
-        for sent in sents:
-            newsent = []
-            for word in sent.rstrip().split():
-                newsent.append(words_list.index(word))
-            newsents.append(newsent)
-    return newsents
+# def convert_words_to_indices_from_path(sents_path):
+#     newsents = []
+#     with open(sents_path) as sents:
+#         for sent in sents:
+#             newsent = []
+#             for word in sent.rstrip().split():
+#                 newsent.append(words_list.index(word))
+#             newsents.append(newsent)
+#     return newsents
 
 def convert_words_to_indices(sents, words_list):
     newsents = []
@@ -117,16 +117,12 @@ def wod2vec(sents, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
         embeds = sess.run(Win)
 
     embed_dict = {}
-    embed_dict_json = {}
     for i, embed in enumerate(embeds):
         embed_dict[words_list[i]] = embed
-        embed_dict_json[words_list[i]] = list(embed)
 
     file = open('word_embeddings','wb')
     pickle.dump(embed_dict,file)
     file.close()
-    wh = open('word_embeddings.json', 'w')
-    json.dump(embed_dict_json, wh)
 
     return embed_dict
 
