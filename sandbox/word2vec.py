@@ -10,7 +10,7 @@ from handle_data import *
 # sents_path = None
 EMBED_DIM = 8
 LR = 0.1
-ITERNUM = 1
+ITERNUM = 3
 
 # def create_dict_from_path(sents_path):
 #     words_list = []
@@ -74,7 +74,16 @@ def get_env(k, sent):
         env = [sent[k - 2], sent[k - 1], sent[k + 1], sent[k + 2]]
     return env
 
-def wod2vec(sents, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
+def wod2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
+    # takes a **list of sentences** and hyper-parameters
+    # returns a dictionary of words and their embeddings
+    # and saving that dictionary to a pickle file "word_embeddings"
+    # params:
+    #   sents - the sentences list
+    #   savepath - a path to save the pickle file
+    #   embed_dim - dimension of the embeddings. default: 8
+    #   iternum - number of iterations over the training set. default: 3
+    #   lr - learning rate of the SGD. default: 0.1
 
     words_list = create_dict(sents)
 
@@ -120,20 +129,30 @@ def wod2vec(sents, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
     for i, embed in enumerate(embeds):
         embed_dict[words_list[i]] = embed
 
-    file = open('word_embeddings','wb')
+    file = open(savepath,'wb')
     pickle.dump(embed_dict,file)
     file.close()
 
     return embed_dict
 
-def word2vec_wrapper(trainpath):
+def word2vec_form_path(trainpath, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
+    # takes a **path of train data** (in the form of train.json) and hyper-parameters
+    # returns a dictionary of words and their embeddings
+    # and saving that dictionary to a pickle file "word_embeddings"
+    # params:
+    #   trainpath - the path
+    #   savepath - a path to save the pickle file
+    #   embed_dim - dimension of the embeddings. default: 8
+    #   iternum - number of iterations over the training set. default: 3
+    #   lr - learning rate of the SGD. default: 0.1
+
     data = read_data(trainpath)
     sents = []
     for datum in data:
         if datum['sentence'] not in sents:
             sents.append(datum['sentence'])
-    embed_dict = wod2vec(sents)
+    embed_dict = wod2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR)
     return embed_dict
 
 train = definitions.TRAIN_JSON
-embed_dict = word2vec_wrapper(train)
+embed_dict = word2vec_form_path(train, 'word_embeddings')
