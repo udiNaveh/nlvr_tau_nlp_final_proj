@@ -154,8 +154,9 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
                              bigram[0] in unigrams_filtered and bigram[1] in unigrams_filtered}
 
     if mode == 'w':
-        write_ngrams("tokens_counts.txt", unigrams_filtered)
-        write_ngrams("bigrams_counts.txt", bigrams_filtered)
+        pass
+        #write_ngrams("tokens_counts.txt", unigrams_filtered)
+        #write_ngrams("bigrams_counts.txt", bigrams_filtered)
 
     # create an inventory of suggested corrections for invalid tokens from the sentences
     corrections_inventory = {}
@@ -197,8 +198,8 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
 
     if mode == 'w':
         unigrams_checked, bigrams_checked = get_ngrams_counts(spellproofed_sentences.values(), 2)
-        write_ngrams("tokens_spellproofed.txt", unigrams_checked)
-        write_ngrams("bigrams_spellproofed.txt", bigrams_checked)
+        #write_ngrams("tokens_spellproofed.txt", unigrams_checked)
+        #write_ngrams("bigrams_spellproofed.txt", bigrams_checked)
 
     if processing_type=='spellproof':
         return spellproofed_ss
@@ -218,7 +219,13 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
                 lemma = w
             s[i] = lemma if s[i] not in ('is', 'are') else s[i]
 
+
+            if s[i] in integer_words and s[i]!= 'one':
+                s[i] = integers[integer_words.index(s[i])]
+
     unigrams_lemmatized, bigrams_lemmatized = get_ngrams_counts(spellproofed_sentences.values(), 2)
+
+
 
     if mode == 'w':
         write_ngrams("tokens_lemmatized.txt", unigrams_lemmatized)
