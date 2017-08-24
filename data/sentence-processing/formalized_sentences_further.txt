@@ -1,0 +1,940 @@
+there are T_INT NPitem 139
+there is T_QUANTITY_SINGULAR NPitem T_REL the T_LOC of a box 90
+there is T_QUANTITY_SINGULAR box with T_INT NPitem 79
+there is T_QUANTITY_SINGULAR NPitem T_REL a NPitem 66
+there is T_ONE NPitem 63
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem 61
+there is T_QUANTITY_SINGULAR box with a NPitem at the T_LOC 61
+there is T_QUANTITY_SINGULAR NPitem T_REL the edge 60
+there is T_ONE box with a NPitem at the T_LOC 60
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of a box with T_INT NPitem 53
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem 53
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of a box with T_QUANTITY_PLURAL NPitem 51
+there is T_QUANTITY_SINGULAR NPitem T_REL right edge of a box 50
+there is T_QUANTITY_SINGULAR NPitem T_REL the T_LOC 44
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of a box 40
+there is T_ONE box with T_INT NPitem 39
+T_ONE of the box contain T_QUANTITY_PLURAL NPitem 32
+there is T_QUANTITY_SINGULAR box with a NPitem and a NPitem 32
+there is T_ONE box with T_QUANTITY_PLURAL NPitem 31
+there are T_INT box with a NPitem at the T_LOC 30
+there are T_QUANTITY_PLURAL NPitem T_REL the edge 30
+there is T_QUANTITY_SINGULAR NPitem not T_REL a edge 27
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL a NPitem 26
+there are T_QUANTITY_PLURAL NPitem not T_REL a edge 24
+there is T_QUANTITY_SINGULAR box with only T_COLOR and NPitem 24
+there is T_QUANTITY_SINGULAR box with only T_INT NPitem 23
+there is no NPitem T_REL the T_LOC of a box 22
+there is T_QUANTITY_SINGULAR box with a NPitem and T_QUANTITY_SINGULAR NPitem 21
+there is T_QUANTITY_SINGULAR box with a NPitem and T_INT NPitem 20
+there is T_QUANTITY_SINGULAR NPitem T_REL a corner 19
+there is T_ONE box with T_QUANTITY_SINGULAR NPitem 19
+T_ONE of the box have T_QUANTITY_PLURAL NPitem 19
+there is T_QUANTITY_SINGULAR T_COLOR box 18
+there are T_QUANTITY_PLURAL box with a NPitem at the T_LOC 18
+there are T_INT NPitem as the T_LOC of a box 18
+there are T_INT box with T_QUANTITY_SINGULAR NPitem 17
+there is T_ONE box with T_INT NPitem stack together 17
+there is T_QUANTITY_SINGULAR NPitem T_REL the corner 16
+the box with T_INT NPitem have a NPitem at the T_LOC 16
+there is T_ONE box with T_ONE NPitem at the T_LOC 16
+there are T_QUANTITY_PLURAL NPitem not T_REL the edge 15
+there is T_QUANTITY_SINGULAR NPitem not T_REL the edge 15
+there are T_QUANTITY_PLURAL NPitem 15
+there is no NPitem T_REL right edge of a box 14
+there is T_ONE box with only T_COLOR and NPitem 13
+there is T_QUANTITY_SINGULAR box that have T_INT NPitem 13
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem 12
+there is T_QUANTITY_SINGULAR box with only NPitem 12
+there is T_QUANTITY_SINGULAR NPitem in each box 12
+there is T_QUANTITY_SINGULAR NPitem T_REL a corner of a box 11
+there is T_ONE box with a NPitem T_REL a NPitem 11
+there is T_QUANTITY_SINGULAR box which have T_INT NPitem 11
+there is T_QUANTITY_SINGULAR NPitem T_REL the side 11
+there is T_QUANTITY_SINGULAR box with a NPitem a NPitem and a NPitem 10
+there are T_INT NPitem T_REL the T_LOC of a box 10
+there are T_INT NPitem T_REL the edge 10
+there is T_QUANTITY_SINGULAR NPitem T_COLOR a NPitem 10
+there are T_QUANTITY_PLURAL NPitem T_REL a edge 9
+there is T_ONE NPitem T_REL a corner 9
+there are T_INT box with T_INT NPitem 9
+there is T_ONE box with many NPitem 9
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of T_INT different color 9
+there is T_QUANTITY_SINGULAR T_COLOR box with only T_ONE NPitem 8
+there is no NPitem as the T_LOC of a box 8
+there is T_QUANTITY_SINGULAR NPitem T_REL a edge 8
+there are T_QUANTITY_PLURAL NPitem as the T_LOC of a box 8
+each box have T_QUANTITY_SINGULAR NPitem 8
+none of the NPitem are T_REL a edge 8
+there is T_QUANTITY_SINGULAR box with a NPitem at T_LOC 7
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem which is of T_COLOR color 7
+there is T_QUANTITY_SINGULAR box with a NPitem a NPitem and T_QUANTITY_SINGULAR NPitem 7
+there is T_ONE box with only T_ONE NPitem 7
+there is no NPitem T_REL a NPitem 7
+there is T_QUANTITY_SINGULAR box with a NPitem and T_QUANTITY_PLURAL NPitem 7
+none of the NPitem are T_REL the edge 7
+there is no T_SHAPE T_REL the T_LOC of a box 7
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_INT are T_COLOR 7
+there is T_ONE box with only NPitem 6
+there is T_QUANTITY_SINGULAR NPitem T_REL the T_LOC bottom 6
+there are T_INT box with NPitem 6
+there is T_ONE NPitem T_REL the T_LOC 6
+there is T_ONE box with T_QUANTITY_SINGULAR NPitem and T_ONE NPitem 6
+there is no box with T_INT NPitem 6
+there is only T_ONE box with T_QUANTITY_SINGULAR NPitem 6
+there are T_INT NPitem T_REL right edge of a box 5
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of T_QUANTITY_SINGULAR box 5
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of only T_COLOR and T_COLOR color 5
+there is T_ONE box with T_QUANTITY_PLURAL NPitem stack together 5
+T_ONE of the box contain T_QUANTITY_SINGULAR NPitem 5
+there is T_QUANTITY_SINGULAR box with T_INT NPitem have a NPitem at the T_LOC 5
+there are T_QUANTITY_PLURAL NPitem T_REL the T_LOC 5
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and T_QUANTITY_SINGULAR NPitem 5
+there are T_INT box with T_ONE NPitem 5
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem and T_QUANTITY_PLURAL NPitem 5
+there are T_INT NPitem T_REL the side 5
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem 5
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge 5
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and a NPitem T_REL T_LOC 5
+there is T_ONE box with T_ONE NPitem and T_ONE NPitem 5
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of T_COLOR and T_COLOR color 5
+there is T_QUANTITY_SINGULAR box with NPitem of only T_COLOR and T_COLOR color 5
+the NPitem is T_REL the edge 5
+there is T_QUANTITY_SINGULAR box which have a NPitem T_REL a NPitem 5
+there is only T_ONE NPitem as the T_LOC of a box 5
+there are T_QUANTITY_PLURAL NPitem T_REL the T_LOC of a box 5
+there are T_INT box with NPitem at the T_LOC 4
+there is T_QUANTITY_SINGULAR box with a NPitem a NPitem and T_QUANTITY_PLURAL NPitem 4
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem and T_ONE NPitem 4
+there is only T_ONE box with a NPitem at the T_LOC 4
+the T_LOC NPitem from the T_LOC of a box is T_COLOR 4
+there is T_QUANTITY_SINGULAR box with a NPitem a NPitem and T_INT NPitem 4
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem have a NPitem at the T_LOC 4
+there is T_QUANTITY_SINGULAR box with T_ONE T_COLOR and T_ONE NPitem 4
+NPitem is T_REL the edge 4
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and a NPitem T_REL it 4
+there are T_QUANTITY_PLURAL box with T_QUANTITY_PLURAL NPitem 4
+T_QUANTITY_SINGULAR box have a NPitem at its T_LOC 4
+the box with T_INT NPitem have a NPitem T_REL a NPitem 4
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and a NPitem 4
+there are T_INT box that have T_QUANTITY_SINGULAR NPitem 4
+the T_LOC of a T_INT NPitem box is T_COLOR 4
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_ONE is T_COLOR 4
+NPitem is not T_REL a edge 4
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_INT are T_COLOR 4
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL T_LOC 4
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of T_QUANTITY_PLURAL box 4
+there is no NPitem T_REL a corner of a box 4
+the NPitem is not T_REL the edge 4
+there is no T_SHAPE T_REL right edge of a box 4
+there are T_INT box with many NPitem 4
+there is T_QUANTITY_SINGULAR NPitem T_REL the T_LOC wall of a box 4
+the box with T_QUANTITY_PLURAL NPitem have a NPitem at the T_LOC 4
+there is T_QUANTITY_SINGULAR NPitem 4
+there is T_QUANTITY_SINGULAR box with T_INT T_COLOR and T_ONE NPitem 4
+T_ONE of the box have T_QUANTITY_PLURAL NPitem T_ONE of which is a NPitem 4
+there are T_INT box with T_QUANTITY_PLURAL NPitem 4
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of all T_INT different color 4
+there is T_ONE NPitem T_REL the edge 4
+there is T_QUANTITY_SINGULAR box which have only T_ONE NPitem 4
+there is T_QUANTITY_SINGULAR NPitem T_REL a edge of a box 4
+there is T_ONE box with T_QUANTITY_SINGULAR NPitem in it 4
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem with a NPitem at the T_LOC 3
+there are T_INT NPitem not T_REL a edge 3
+there is T_QUANTITY_SINGULAR box with T_INT T_COLOR T_INT T_COLOR and T_ONE NPitem 3
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem at the T_LOC 3
+T_ONE of the box have only T_ONE NPitem 3
+there is T_QUANTITY_SINGULAR box which contain T_QUANTITY_PLURAL NPitem 3
+there is T_ONE box with only T_ONE NPitem in it 3
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and T_QUANTITY_PLURAL NPitem 3
+there are T_INT box with only T_ONE NPitem 3
+there is T_ONE box with T_ONE NPitem 3
+there is T_ONE box with a NPitem in the middle 3
+there are T_INT NPitem and T_ONE NPitem 3
+T_ONE of the box have T_INT NPitem 3
+T_QUANTITY_SINGULAR box have T_QUANTITY_PLURAL NPitem 3
+there is T_ONE box that have T_QUANTITY_SINGULAR NPitem 3
+there are T_INT NPitem T_REL the T_LOC 3
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and a NPitem T_REL T_LOC 3
+there are T_INT box that contain T_QUANTITY_SINGULAR NPitem 3
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem and T_QUANTITY_SINGULAR NPitem 3
+there is T_ONE NPitem T_REL a edge 3
+T_QUANTITY_SINGULAR box contain T_QUANTITY_PLURAL NPitem 3
+there are T_INT NPitem as the T_LOC of a box with T_QUANTITY_PLURAL NPitem 3
+there is only T_ONE NPitem T_REL the edge 3
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of a box with only T_INT NPitem 3
+there is T_QUANTITY_SINGULAR box with only T_INT T_COLOR and NPitem 3
+there are T_INT NPitem not T_REL the edge 3
+there is T_QUANTITY_SINGULAR NPitem T_REL the NPitem 3
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and T_QUANTITY_PLURAL NPitem 3
+NPitem is not T_REL the edge 3
+there are T_INT NPitem T_REL each other 3
+T_INT of the T_INT box have a T_COLOR T_LOC 3
+there is T_QUANTITY_SINGULAR box with T_INT NPitem have a NPitem T_REL a NPitem 3
+there are T_INT box that have T_INT NPitem each 3
+there is no NPitem as the T_LOC of a box with T_QUANTITY_PLURAL NPitem 3
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem include NPitem 3
+there is no box with only T_ONE NPitem 3
+there is T_QUANTITY_SINGULAR NPitem T_REL the edge of the T_SHAPE 2
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem that is T_COLOR 2
+there is T_QUANTITY_SINGULAR box which have a NPitem at the T_LOC 2
+there is T_ONE box with T_QUANTITY_SINGULAR NPitem which is T_COLOR in color 2
+there is T_QUANTITY_SINGULAR box with only T_ONE T_SIZE NPitem 2
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and T_QUANTITY_SINGULAR NPitem 2
+there is T_QUANTITY_SINGULAR box which have a NPitem and a NPitem 2
+there is T_QUANTITY_SINGULAR box with NPitem and NPitem 2
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem that is not T_COLOR 2
+T_ONE of the box contain T_QUANTITY_SINGULAR NPitem which is a NPitem 2
+T_ONE of the T_INT box is T_COLOR 2
+there is T_QUANTITY_SINGULAR NPitem T_REL a box corner 2
+the T_LOC of the T_INT NPitem box is T_COLOR 2
+there are T_INT box with the same T_LOC color that is not T_COLOR 2
+all NPitem are T_REL the edge 2
+there is T_ONE box with only T_INT NPitem 2
+there is T_QUANTITY_SINGULAR box which have T_QUANTITY_PLURAL NPitem 2
+there is T_QUANTITY_SINGULAR box with many NPitem and the T_INT NPitem are T_COLOR 2
+there are T_INT box that have the same number of NPitem 2
+there is T_ONE box with T_INT NPitem of the same color 2
+there is T_ONE box with T_QUANTITY_PLURAL NPitem of the same color 2
+there is only T_ONE box with NPitem 2
+there is T_QUANTITY_SINGULAR box with a NPitem at the T_LOC and a NPitem at the T_LOC 2
+there is T_QUANTITY_SINGULAR box with T_INT NPitem not have a NPitem at T_LOC 2
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem which is T_COLOR 2
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL T_LOC and a NPitem right T_REL it 2
+there is T_QUANTITY_SINGULAR T_INT NPitem box that the T_LOC is T_COLOR 2
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and a T_COLOR T_ONE is T_REL the edge 2
+there is T_ONE NPitem and T_ONE NPitem 2
+T_ONE of the box have a NPitem T_REL a NPitem 2
+there are T_INT NPitem T_REL T_LOC 2
+there is T_ONE box with T_QUANTITY_PLURAL NPitem in it 2
+the box with T_INT NPitem have a NPitem T_REL the NPitem 2
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem which is of T_COLOR color 2
+there is T_QUANTITY_SINGULAR box with the exacts set of NPitem 2
+there is T_QUANTITY_SINGULAR box with many NPitem and the T_INT are T_COLOR 2
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the NPitem 2
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem of T_COLOR and T_COLOR color 2
+there is only T_ONE box with T_INT NPitem 2
+there is T_QUANTITY_SINGULAR box that have only T_ONE NPitem 2
+there is T_ONE NPitem T_REL the T_LOC bottom 2
+there are T_INT NPitem in T_ONE box 2
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem and the color is T_COLOR 2
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and other NPitem 2
+there is T_ONE box which have a NPitem T_REL a NPitem 2
+there is T_QUANTITY_SINGULAR box with a T_COLOR T_LOC 2
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and T_INT NPitem 2
+there is no NPitem T_REL a edge of a box 2
+there is T_ONE box which have a NPitem at the T_LOC 2
+there is T_QUANTITY_SINGULAR box which have only T_COLOR color NPitem 2
+there is T_QUANTITY_SINGULAR T_SIZE NPitem T_REL the edge 2
+T_ONE of the box have T_QUANTITY_SINGULAR NPitem 2
+T_QUANTITY_SINGULAR of the box contain T_QUANTITY_SINGULAR NPitem 2
+there are T_QUANTITY_PLURAL box with NPitem at the T_LOC 2
+there are T_INT box with a NPitem T_REL a NPitem 2
+there is T_QUANTITY_SINGULAR box that the T_LOC NPitem from the T_LOC is T_COLOR 2
+there are T_INT box with a NPitem 2
+there is only T_ONE NPitem T_REL the T_LOC of a box 2
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and a T_COLOR T_ONE T_REL T_LOC 2
+T_ONE box have T_INT NPitem 2
+there is T_QUANTITY_SINGULAR box which have only T_ONE color 2
+there are T_QUANTITY_PLURAL box with NPitem 2
+there is T_QUANTITY_SINGULAR box with T_INT T_COLOR and T_INT NPitem 2
+there is T_QUANTITY_SINGULAR box with many NPitem 2
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and a T_COLOR T_ONE T_REL T_LOC 2
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and T_ONE NPitem 2
+there is T_QUANTITY_SINGULAR T_COLOR box with T_QUANTITY_PLURAL NPitem 2
+there is T_ONE box with NPitem of all T_INT color 2
+all box have T_QUANTITY_PLURAL NPitem 2
+only T_ONE NPitem is T_REL the edge 2
+there is T_ONE box with a NPitem T_REL the NPitem 2
+there is T_QUANTITY_SINGULAR box with a NPitem and many NPitem 2
+T_ONE of the box have T_QUANTITY_PLURAL NPitem which are T_COLOR 2
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of T_INT box 2
+there is T_ONE box with NPitem only 2
+T_ONE box have T_ONE NPitem 2
+there are T_INT box which have only T_INT NPitem 2
+there is T_ONE box with T_QUANTITY_PLURAL NPitem of same color 2
+there is T_QUANTITY_SINGULAR box with a NPitem at the T_LOC and NPitem at the T_LOC 2
+there is T_QUANTITY_SINGULAR box where a T_COLOR and NPitem are T_REL each other 2
+there are T_INT NPitem shape 2
+T_ONE of the box contain T_INT NPitem 2
+T_ONE box have T_INT NPitem of the same color 2
+there is as NPitem T_REL a NPitem 2
+there are T_INT box with a T_COLOR T_LOC 2
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_REL each other 2
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem which is T_COLOR 2
+all the box have a NPitem 2
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_COMPARE same set of NPitem 2
+the box with T_INT NPitem have a NPitem as a middle NPitem 2
+there are T_QUANTITY_PLURAL box with T_QUANTITY_SINGULAR NPitem 2
+there is no box with only NPitem 2
+there is T_QUANTITY_SINGULAR box with T_INT NPitem have NPitem at the T_LOC 2
+there is T_QUANTITY_SINGULAR NPitem between a NPitem 2
+there are T_QUANTITY_PLURAL NPitem T_REL a NPitem 2
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and T_ONE is T_REL the side 2
+T_QUANTITY_PLURAL NPitem are T_REL the edge 1
+there is T_QUANTITY_SINGULAR NPitem is T_REL a edge 1
+T_INT box have the same T_LOC and different T_REL T_LOC 1
+there is T_ONE box with only T_ONE NPitem and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box that have a T_COLOR and NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of all T_INT different color and a T_COLOR T_REL T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem which is at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem stack together 1
+the middle NPitem of the box is T_COLOR 1
+there are T_INT box with many NPitem and each have T_INT NPitem 1
+there is T_ONE box with T_QUANTITY_PLURAL NPitem have the same color NPitem T_REL each other 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and a T_COLOR T_ONE T_REL it 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem have NPitem of all T_INT color 1
+there is T_QUANTITY_SINGULAR box that T_INT NPitem are T_REL a edge 1
+there is T_ONE box with T_INT NPitem have a NPitem in between T_INT NPitem of same color 1
+there are T_INT NPitem with T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with many NPitem and there is T_ONE NPitem and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_ONE is a NPitem and T_INT are NPitem 1
+box with T_INT NPitem have a NPitem 1
+there are T_INT box with a least T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem that is not a NPitem or a NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and not all T_INT different color 1
+there is T_QUANTITY_SINGULAR box with a NPitem between T_INT NPitem of the same color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of T_INT different color of which there are T_INT T_COLOR T_ONE T_QUANTITY_COMPARE 1
+there are T_INT box with NPitem of all T_INT color 1
+there is T_ONE box with T_QUANTITY_SINGULAR NPitem NPitem 1
+there is T_QUANTITY_SINGULAR box which have T_ONE T_COLOR and T_ONE T_COLOR 1
+there is T_QUANTITY_SINGULAR box with a NPitem and another NPitem 1
+there is T_QUANTITY_SINGULAR box which have T_INT NPitem and the T_INT are T_COLOR the other T_ONE is T_COLOR 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the corner and the shape is not T_SHAPE 1
+T_INT box have a NPitem 1
+there are T_INT box with T_ONE NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE of only T_ONE color 1
+all the box have T_ONE NPitem each 1
+there is T_QUANTITY_SINGULAR box with only T_INT NPitem of T_COLOR and T_COLOR color 1
+T_QUANTITY_SINGULAR NPitem is T_REL the T_LOC bottom 1
+the T_LOC and T_LOC of a T_INT NPitem box are the the same in color 1
+there are T_INT NPitem and they are the same shape of NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem have a NPitem at T_LOC 1
+the box with T_INT NPitem have a NPitem 1
+the is no T_SHAPE T_REL T_LOC right corner of a box 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem and T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with T_ONE T_COLOR and only T_INT NPitem 1
+there is T_QUANTITY_SINGULAR NPitem that is T_REL the corner 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_QUANTITY_SINGULAR NPitem and T_QUANTITY_SINGULAR NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem of all T_INT different color 1
+T_ONE of the box have T_QUANTITY_SINGULAR NPitem which is T_COLOR 1
+T_ONE of the box contain T_INT T_COLOR T_ONE T_COLOR and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with only T_INT NPitem and T_QUANTITY_SINGULAR NPitem 1
+there <UNK> T_ONE box with T_QUANTITY_PLURAL NPitem in it 1
+there is T_ONE NPitem T_REL the T_LOC right corner 1
+there is T_ONE box with NPitem of T_COLOR and T_COLOR color 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and a NPitem T_REL T_LOC 1
+there is T_QUANTITY_SINGULAR box with a NPitem and only NPitem T_REL it 1
+there is T_ONE box with a NPitem and T_SHAPE in it 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem have T_QUANTITY_PLURAL NPitem of T_COLOR color 1
+there is T_ONE box with T_INT NPitem in it 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_REL T_LOC 1
+there is T_QUANTITY_SINGULAR box with NPitem of all T_INT different color and T_QUANTITY_PLURAL NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_QUANTITY_PLURAL are NPitem T_REL each other 1
+there is T_QUANTITY_SINGULAR NPitem and a NPitem 1
+there is T_QUANTITY_SINGULAR box with many NPitem which have only T_ONE NPitem that is T_SHAPE 1
+all the box have the same T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem T_QUANTITY_SINGULAR NPitem and a T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box which have only T_INT NPitem and they are both T_SHAPE 1
+box with T_INT NPitem have NPitem of all the T_INT color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and T_ONE of the NPitem is T_SHAPE 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of the same size not T_REL the edge 1
+T_ONE box have only T_COLOR and NPitem 1
+there is T_QUANTITY_SINGULAR box that have T_INT NPitem and the T_INT NPitem are T_INT NPitem and T_ONE NPitem 1
+there is T_ONE box with T_INT NPitem T_REL a different colored NPitem 1
+T_ONE of the box have T_INT NPitem T_REL the edge 1
+there are T_INT box that are not the same in height 1
+there is T_QUANTITY_SINGULAR box with a T_COLOR T_LOC and T_COLOR T_LOC 1
+all the T_INT box have different T_LOC color 1
+T_ONE of the box contain only T_COLOR color NPitem 1
+there are T_INT NPitem T_REL the corner 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem have a NPitem T_REL a NPitem 1
+there are only T_INT box with T_QUANTITY_SINGULAR NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and a NPitem T_REL the NPitem T_REL T_LOC 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box and the T_ONE NPitem is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and only T_ONE NPitem of different shape 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE of all T_INT different color 1
+the box with T_INT NPitem have same color NPitem T_REL each other 1
+there is T_QUANTITY_SINGULAR box with NPitem of all T_INT different color 1
+there is T_ONE box with T_INT NPitem where T_QUANTITY_SINGULAR NPitem is T_COLOR 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box that the T_LOC and T_LOC is T_COLOR 1
+there is T_ONE NPitem box and the color is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem that is T_COLOR 1
+there is T_QUANTITY_SINGULAR NPitem in the corner of the box 1
+there is only T_ONE box which have T_LOC NPitem 1
+T_ONE of the T_INT box have a T_COLOR T_LOC 1
+T_INT out of the T_INT box have the same T_LOC 1
+there is T_QUANTITY_SINGULAR box with NPitem and only T_ONE other color 1
+there is T_ONE box with only T_ONE NPitem and it is a NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem include T_COLOR T_ONE 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL T_LOC and T_INT NPitem T_REL it 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem with only T_COLOR and T_COLOR color 1
+T_ONE of the box have only T_SHAPE 1
+there are T_QUANTITY_PLURAL box with T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of the same color 1
+there is T_QUANTITY_SINGULAR box with T_COLOR and NPitem and a NPitem 1
+there are T_INT NPitem and T_INT NPitem 1
+T_INT box have the same number of NPitem 1
+the T_LOC of the T_INT box are all the same 1
+T_ONE of the box contain T_QUANTITY_PLURAL NPitem of which T_INT are T_COLOR and T_ONE is of T_COLOR color 1
+there is T_QUANTITY_SINGULAR box with NPitem of all T_INT different color and a NPitem 1
+T_QUANTITY_PLURAL NPitem are not T_REL the edge 1
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem and T_QUANTITY_PLURAL NPitem 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box that have T_QUANTITY_PLURAL NPitem T_REL 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and there NPitem is T_REL the side 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE of which a NPitem is T_REL the corner of the box 1
+there are only T_INT box that have the same T_LOC color 1
+there is T_QUANTITY_SINGULAR box that have T_ONE T_COLOR and NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT T_COLOR T_INT T_COLOR and T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_INT NPitem and T_INT NPitem 1
+there is only T_ONE NPitem as the T_LOC of a box with T_INT NPitem 1
+there is T_ONE box with a NPitem and a NPitem 1
+T_INT of the T_INT box have the same T_LOC color that is not T_COLOR 1
+T_ONE of the box have NPitem of only T_ONE color 1
+all the T_INT box either contain NPitem in even or odd number 1
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem which is T_COLOR 1
+the T_LOC of the T_INT box are T_COLOR 1
+there is T_ONE box with T_ONE NPitem and T_ONE NPitem and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with all T_INT different color and a NPitem T_REL the edge with its T_LOC 1
+there is only T_ONE box with T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box which have only T_ONE NPitem that is T_COLOR 1
+there are T_INT box with only NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem have a NPitem at the T_LOC and a different color NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box which have a NPitem in between T_INT NPitem 1
+there is the box with the same set of NPitem 1
+there is T_QUANTITY_SINGULAR different number of NPitem in the box 1
+there is T_QUANTITY_SINGULAR box and the T_LOC is T_COLOR 1
+there is T_ONE box that is make of only T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR NPitem of T_SIZE size T_REL the edge 1
+T_ONE of the box with NPitem block have a NPitem T_REL the T_LOC NPitem 1
+there are T_QUANTITY_PLURAL NPitem T_REL the T_LOC bottom 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the right corner 1
+there is T_QUANTITY_SINGULAR box that have only T_ONE shape 1
+there are T_QUANTITY_PLURAL NPitem in a box of which T_ONE is a NPitem 1
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of box with T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and a T_COLOR T_ONE right T_REL it 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of different color 1
+there is T_QUANTITY_SINGULAR box where a NPitem is T_REL the edge with another NPitem T_REL it 1
+the T_LOC NPitem of a box from the T_LOC is T_COLOR 1
+there is not T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem 1
+all the T_LOC of the box are T_COLOR 1
+there is box with T_INT NPitem and a NPitem T_REL the edge 1
+all the T_LOC of the box have the same color 1
+there is T_QUANTITY_SINGULAR box with many NPitem and T_INT are T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem have a NPitem as a middle NPitem 1
+T_ONE of the box have T_QUANTITY_PLURAL NPitem where T_ONE of the NPitem is T_COLOR 1
+the NPitem is T_REL the edge with its side 1
+T_ONE of the box contain only T_ONE NPitem and this NPitem is not T_REL the edge 1
+there is T_QUANTITY_SINGULAR NPitem T_REL T_INT NPitem 1
+none of the NPitem not T_REL a edge 1
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of a box with only T_COLOR and NPitem 1
+there is T_QUANTITY_SINGULAR box which have only T_INT NPitem and the color are the same 1
+there is T_QUANTITY_SINGULAR NPitem not T_REL the T_LOC or edge 1
+there is T_QUANTITY_SINGULAR box with only T_COLOR and NPitem of which there are only NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem which are of T_COLOR color 1
+there is as box with only T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box 1
+there is T_ONE box with have NPitem of T_COLOR color only 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_QUANTITY_SINGULAR is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and T_INT other NPitem 1
+each box contain even number of NPitem 1
+T_INT T_SIZE NPitem are T_REL the edge 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem T_QUANTITY_PLURAL NPitem and only T_ONE NPitem 1
+there is T_ONE box with only T_COLOR and NPitem in it 1
+there is T_QUANTITY_SINGULAR box with NPitem directly T_REL the NPitem T_REL the edge 1
+the box with T_INT NPitem have NPitem of T_COLOR and T_COLOR color 1
+there is T_QUANTITY_SINGULAR box with many NPitem and only T_ONE NPitem have a different color 1
+there is T_QUANTITY_SINGULAR box with T_COLOR and NPitem 1
+there is T_QUANTITY_SINGULAR box with only NPitem and a NPitem T_REL the edge 1
+T_ONE of the box with T_INT NPitem have a NPitem T_REL the T_LOC 1
+there is no box with a NPitem and T_INT NPitem 1
+there is T_ONE box with only T_INT NPitem of the same color 1
+NPitem are not T_REL a edge 1
+there is T_QUANTITY_SINGULAR box with only T_INT NPitem of which T_ONE is T_COLOR 1
+there is T_QUANTITY_SINGULAR NPitem that is between the T_INT NPitem that is not T_COLOR 1
+there are T_QUANTITY_PLURAL box that are not the same in height 1
+there is T_QUANTITY_SINGULAR box with a least T_INT NPitem of all T_INT different color 1
+there is T_ONE NPitem T_REL the left corner 1
+there is T_ONE box have a NPitem T_REL a NPitem 1
+there is T_QUANTITY_SINGULAR box with NPitem of T_COLOR and T_COLOR color only 1
+there are T_INT box which have T_INT NPitem each 1
+there is T_QUANTITY_SINGULAR box that have T_INT NPitem T_REL each other 1
+there is only T_ONE box which have no NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE of which there are T_QUANTITY_SINGULAR T_COLOR and T_ONE NPitem 1
+there is T_ONE box than contain T_QUANTITY_SINGULAR NPitem 1
+there is T_QUANTITY_SINGULAR box box with T_QUANTITY_SINGULAR NPitem and T_QUANTITY_SINGULAR NPitem 1
+there is T_ONE box with T_INT NPitem and T_INT NPitem and T_ONE NPitem 1
+the NPitem is T_REL T_LOC 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the edge with its side 1
+there are NPitem T_REL the T_LOC of a box 1
+there is only T_ONE box with T_QUANTITY_SINGULAR NPitem in it 1
+there is T_QUANTITY_SINGULAR box and the color of the T_LOC and T_LOC NPitem is T_COLOR 1
+T_INT box have a NPitem T_REL a NPitem 1
+there is T_QUANTITY_SINGULAR box with a T_COLOR T_COLOR at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of the same shape 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem T_REL the edge 1
+there is T_QUANTITY_SINGULAR NPitem and T_QUANTITY_SINGULAR NPitem 1
+there is T_ONE box with only T_COLOR color NPitem 1
+T_ONE box have T_QUANTITY_SINGULAR NPitem and T_ONE NPitem 1
+there is only T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box which have a T_COLOR and NPitem 1
+T_INT box have the same T_INT NPitem each 1
+there are T_INT box with NPitem T_REL the T_LOC 1
+the middle of a T_INT NPitem box is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of same color T_REL each other 1
+there is box NPitem T_REL a NPitem 1
+there are T_QUANTITY_PLURAL box with T_INT NPitem stack together 1
+T_ONE of the box with T_INT NPitem have a NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box that have T_INT NPitem with T_INT color 1
+the box with T_INT NPitem have T_INT NPitem 1
+there is T_ONE box with T_COLOR and NPitem 1
+there is T_QUANTITY_SINGULAR NPitem that is T_REL a NPitem 1
+there is T_QUANTITY_SINGULAR box with only T_COLOR and NPitem of which T_ONE is a NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem stack together 1
+there is T_QUANTITY_SINGULAR box which have only T_ONE NPitem which is T_SHAPE 1
+there is only T_ONE NPitem in a box 1
+there is T_QUANTITY_SINGULAR box which have only T_INT NPitem and the color is T_COLOR 1
+there is T_QUANTITY_SINGULAR box which is the T_LOC NPitem from the T_LOC is T_COLOR 1
+T_INT box have the same T_LOC 1
+T_ONE of the box contain T_QUANTITY_SINGULAR NPitem which is T_COLOR 1
+the color of the T_INT NPitem of a box after the T_LOC are all the same 1
+there is only T_ONE box with T_ONE NPitem at the T_LOC 1
+there are T_INT NPitem T_REL a NPitem 1
+there is T_ONE box with a NPitem in between T_INT NPitem 1
+there are T_INT box which have NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box that have only T_ONE NPitem which is not T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and each have a NPitem T_REL a NPitem 1
+none of the T_SHAPE are T_REL a edge 1
+there is T_QUANTITY_SINGULAR box with only T_COLOR and T_COLOR color and a T_SIZE T_SHAPE 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and a NPitem 1
+T_ONE box with T_INT NPitem stack together 1
+T_ONE of the box have T_QUANTITY_PLURAL NPitem of T_QUANTITY_PLURAL different color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_QUANTITY_PLURAL are T_COLOR and T_COLOR 1
+there is T_QUANTITY_SINGULAR box with NPitem of T_INT different color of which only T_ONE is T_COLOR 1
+there are T_QUANTITY_PLURAL box that have only T_INT NPitem 1
+there is T_INT NPitem box and the color is T_COLOR and T_COLOR 1
+T_ONE of the box have T_QUANTITY_SINGULAR NPitem and T_ONE NPitem T_REL the edge 1
+the T_LOC T_INT color of a box from the T_LOC are T_COLOR yellow and T_COLOR 1
+there are T_INT box that have different T_LOC color and the same color in the T_LOC NPitem 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box that have T_ONE color 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_QUANTITY_SINGULAR NPitem and NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_INT are T_SHAPE and T_ONE is a NPitem 1
+there is T_QUANTITY_SINGULAR box contain T_QUANTITY_PLURAL NPitem 1
+there is NPitem T_REL the edge with a NPitem T_REL T_LOC 1
+there are T_INT NPitem in a box 1
+there are T_QUANTITY_PLURAL box with the same color 1
+there is T_QUANTITY_SINGULAR T_COLOR box that have T_QUANTITY_PLURAL NPitem 1
+there is T_QUANTITY_SINGULAR NPitem that is T_REL the side 1
+there are T_INT NPitem T_REL the edge of the box 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and T_COLOR and NPitem T_REL it 1
+there is T_ONE box with T_ONE NPitem which is of T_COLOR color 1
+there is T_ONE box where a NPitem is T_REL a NPitem 1
+there is NPitem T_REL the side of the box 1
+there is box with T_INT NPitem T_REL the T_LOC 1
+there is T_QUANTITY_SINGULAR box with NPitem of T_INT different color and only T_ONE NPitem of T_SIZE size 1
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem of T_SIZE size not T_REL the edge 1
+there are T_INT box which have the same number of NPitem and T_INT shape of color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem include T_SHAPE 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box which the T_LOC and T_LOC are not the same in color 1
+there is T_ONE NPitem that is a NPitem 1
+there is T_QUANTITY_SINGULAR box with T_COLOR and NPitem and the T_COLOR T_ONE T_REL T_LOC 1
+T_ONE of the box with the T_INT NPitem have a NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with a T_COLOR and NPitem T_REL each other 1
+there is T_ONE box with T_QUANTITY_PLURAL NPitem of a T_COLOR a a T_COLOR color each 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL a T_LOC NPitem 1
+T_ONE of the box contain NPitem where T_QUANTITY_PLURAL of the NPitem are T_COLOR 1
+there are T_SHAPE T_REL right edge of a box 1
+there is T_ONE box where the only NPitem is a NPitem 1
+there are T_INT box with a NPitem at T_LOC 1
+there is box with T_COLOR T_LOC NPitem 1
+the T_LOC and T_LOC NPitem of the box are T_COLOR 1
+of the T_INT box T_ONE have only T_COLOR T_LOC 1
+the T_LOC of the T_INT box is T_COLOR 1
+there is T_ONE box that have T_INT NPitem that are not T_REL each other 1
+there is T_QUANTITY_SINGULAR NPitem T_REL a NPitem as the T_LOC of a box with T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box that have only T_ONE NPitem that is not T_COLOR 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and another T_ONE T_REL it all 1
+there is T_QUANTITY_SINGULAR box with all T_INT color and a T_COLOR T_ONE T_REL T_LOC 1
+there is T_QUANTITY_SINGULAR box that the color T_REL the T_LOC is T_COLOR only 1
+T_ONE of the box have T_QUANTITY_PLURAL NPitem T_ONE of which is NPitem 1
+there are T_INT box with T_INT NPitem of different color 1
+there are T_INT NPitem in the same box 1
+T_INT box have T_COLOR T_LOC 1
+there is T_QUANTITY_SINGULAR box with only T_COLOR and NPitem alternately position 1
+NPitem of all T_INT different color are T_REL the edge 1
+all there box contain T_QUANTITY_SINGULAR NPitem 1
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem that is NPitem 1
+there is T_QUANTITY_SINGULAR NPitem and NPitem in a box 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE and a NPitem T_REL the edge 1
+T_ONE of the box have T_QUANTITY_SINGULAR NPitem of which T_ONE NPitem is T_REL the edge 1
+there are T_INT box with T_INT NPitem and each have T_QUANTITY_PLURAL NPitem 1
+there are T_INT the same color NPitem T_REL the different corner of a NPitem 1
+there is T_ONE box where the T_LOC and the T_LOC NPitem are the same color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_ONE is a NPitem 1
+there is T_QUANTITY_SINGULAR box with a NPitem and a other T_SHAPE 1
+there is T_QUANTITY_SINGULAR box which have T_INT NPitem and T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem of which T_INT are T_COLOR 1
+there are T_QUANTITY_PLURAL NPitem not T_REL the a edge 1
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of a box with NPitem 1
+there is T_ONE box with T_ONE NPitem and T_QUANTITY_SINGULAR NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and the T_LOC NPitem is T_COLOR 1
+there is T_QUANTITY_SINGULAR box where only T_INT NPitem are the same color 1
+the box with least number of NPitem contain T_QUANTITY_SINGULAR NPitem 1
+there is T_QUANTITY_SINGULAR box have a NPitem T_REL a NPitem 1
+the number of NPitem in the box is different 1
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem and it is T_REL the edge 1
+there is T_QUANTITY_SINGULAR box which have T_QUANTITY_PLURAL NPitem and only have T_INT NPitem 1
+there are T_INT box with T_QUANTITY_PLURAL NPitem each 1
+there is T_QUANTITY_SINGULAR box with NPitem T_REL a NPitem 1
+there are T_INT box with the same height that are smaller than the T_LOC box 1
+there is T_QUANTITY_SINGULAR box which have only T_INT NPitem and they are T_COLOR 1
+there is T_QUANTITY_SINGULAR box with NPitem of T_INT different color of which the T_COLOR T_ONE is both T_REL T_LOC and T_REL the T_LOC 1
+there is T_ONE box with T_QUANTITY_PLURAL NPitem which have NPitem at the T_LOC 1
+there are only T_INT box that have NPitem 1
+there is T_QUANTITY_SINGULAR box with T_COLOR and NPitem of which T_ONE is a NPitem and another is a NPitem 1
+there are T_INT box that contain NPitem 1
+there is T_QUANTITY_SINGULAR NPitem T_REL a NPitem in a box with T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem that is not a NPitem 1
+there are T_QUANTITY_PLURAL NPitem T_REL the right side edge 1
+there are T_INT box with NPitem of same color at T_LOC 1
+T_QUANTITY_SINGULAR of the box contain T_INT NPitem NPitem 1
+T_ONE box contain T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with many NPitem and the T_INT have the same shape and color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE of which T_ONE is a NPitem 1
+the T_INT box have T_ONE T_INT and T_INT NPitem each 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_REL the T_LOC of a box 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box and only T_ONE color 1
+there is T_QUANTITY_SINGULAR box with no a NPitem with T_INT T_COLOR and T_QUANTITY_SINGULAR NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem with a NPitem at the T_LOC 1
+the box have T_QUANTITY_SINGULAR NPitem have a NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_LOC and T_LOC are T_COLOR 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and another NPitem T_REL it 1
+there is T_QUANTITY_COMPARE T_REL NPitem not T_REL a edge 1
+there is box with have a NPitem T_REL a NPitem 1
+there are T_INT NPitem that are not the color T_COLOR 1
+T_ONE of the T_INT box have T_INT color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_INT NPitem are the same in shape 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE of which T_INT are T_COLOR 1
+there is T_QUANTITY_SINGULAR NPitem near a NPitem 1
+there is T_QUANTITY_SINGULAR T_INT box NPitem that the T_LOC NPitem from the T_LOC is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_ONE or more NPitem of T_COLOR color only 1
+the box with T_INT NPitem have NPitem at the T_LOC 1
+there are T_QUANTITY_PLURAL NPitem as the T_LOC of a box with T_QUANTITY_PLURAL NPitem 1
+there is T_QUANTITY_SINGULAR NPitem that do have a NPitem T_REL it 1
+there is T_QUANTITY_SINGULAR box that have only NPitem 1
+there are T_INT box with T_ONE NPitem each 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_ONE is a NPitem 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL a NPitem and a NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE of which T_ONE is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_COLOR T_ONE is T_REL T_LOC 1
+there is T_QUANTITY_SINGULAR box with NPitem of only T_INT different color and a NPitem T_REL the edge 1
+T_INT box are the same in height 1
+there is T_QUANTITY_SINGULAR box with a NPitem not T_REL the edge 1
+there is T_QUANTITY_SINGULAR box which have T_INT NPitem and the T_LOC is T_COLOR 1
+all box have T_QUANTITY_SINGULAR NPitem in it 1
+there are only T_INT box with NPitem T_LOC 1
+there are T_INT box of T_INT NPitem each 1
+there is T_QUANTITY_SINGULAR box that have T_QUANTITY_PLURAL NPitem T_REL each other 1
+there are T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL NPitem 1
+there is T_QUANTITY_SINGULAR box with only NPitem with T_QUANTITY_PLURAL NPitem 1
+there is T_QUANTITY_SINGULAR box with T_COLOR and NPitem and only T_ONE is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem have a NPitem at the T_LOC and T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem where the NPitem are T_COLOR and T_COLOR in color 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box which have T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL T_LOC NPitem 1
+there is as box with only T_ONE NPitem and it is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_INT T_SIZE T_SHAPE of which T_ONE is T_REL the edge 1
+there is T_QUANTITY_SINGULAR NPitem T_REL of a NPitem 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box where the T_LOC and T_LOC NPitem are the same in color 1
+there are T_INT box that have T_INT different shape NPitem 1
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem and T_ONE NPitem of the same size 1
+there is T_QUANTITY_SINGULAR box with many NPitem and there is T_QUANTITY_SINGULAR NPitem and T_SHAPE 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the T_LOC edge 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the right corner of the box 1
+there is T_ONE box with T_QUANTITY_SINGULAR T_COLOR and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with only T_COLOR and NPitem and a NPitem 1
+least T_ONE of the T_SHAPE box contain odd number of NPitem 1
+there is T_QUANTITY_SINGULAR box which have only T_ONE NPitem T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and a T_COLOR T_ONE T_REL the edge 1
+there are T_INT NPitem in a box and many of the NPitem are T_COLOR 1
+T_QUANTITY_SINGULAR of the box contain T_QUANTITY_SINGULAR NPitem which is a NPitem 1
+there are T_INT box contain T_QUANTITY_PLURAL NPitem 1
+there is T_ONE box with T_ONE NPitem in it 1
+there is T_QUANTITY_SINGULAR box that have T_INT NPitem which are T_SHAPE and T_SHAPE 1
+there are T_INT box with not T_QUANTITY_PLURAL NPitem that are the same in height 1
+NPitem are T_REL the T_LOC 1
+there are only T_INT box with NPitem and T_QUANTITY_SINGULAR of them have NPitem as the T_LOC of a box 1
+there is T_QUANTITY_SINGULAR T_COLOR box that the NPitem are not T_QUANTITY_PLURAL 1
+there is T_ONE box that contain T_QUANTITY_PLURAL NPitem 1
+there is T_QUANTITY_SINGULAR NPitem that is T_REL the side of the box 1
+there is T_QUANTITY_SINGULAR box where none of the NPitem are T_REL the edge 1
+all of the box have many NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_LOC is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem and the T_LOC is T_COLOR 1
+there is no box with T_QUANTITY_SINGULAR NPitem and T_QUANTITY_PLURAL NPitem 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box which the T_LOC and T_LOC is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which NPitem are both T_REL T_LOC and T_REL T_LOC 1
+there is T_QUANTITY_SINGULAR box with a NPitem and T_INT NPitem T_REL each other 1
+the box with least number of NPitem contain only T_ONE NPitem 1
+each box have many NPitem 1
+there is only T_ONE NPitem T_REL a edge 1
+T_ONE of the T_INT box T_LOC is T_COLOR 1
+there is no NPitem as the T_LOC of a box with T_INT NPitem 1
+there is only T_ONE box with NPitem in it 1
+there is no NPitem of T_SIZE size T_REL the edge 1
+there is only T_ONE box with T_COLOR and NPitem 1
+there is T_ONE box where T_INT of the same color NPitem are at the T_LOC 1
+there is T_ONE box with T_QUANTITY_SINGULAR NPitem which is T_COLOR 1
+the same color is T_REL T_LOC in all T_INT box 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem where both NPitem are of same color 1
+there is T_QUANTITY_SINGULAR box with NPitem of T_INT different color and T_INT NPitem with T_QUANTITY_SINGULAR be a NPitem 1
+there is T_QUANTITY_SINGULAR box with many NPitem and the T_INT T_COLOR are T_SHAPE 1
+there are T_SHAPE T_REL the T_LOC of a box 1
+T_ONE of the box have T_QUANTITY_PLURAL NPitem T_REL the T_LOC which are not T_COLOR 1
+there are T_INT box with only T_ONE NPitem and other NPitem 1
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem and T_QUANTITY_SINGULAR NPitem 1
+there is T_QUANTITY_SINGULAR box that have only T_INT NPitem 1
+there are T_QUANTITY_PLURAL box contain T_QUANTITY_PLURAL NPitem 1
+the NPitem of all T_INT color are T_REL the edge 1
+there are T_INT NPitem of different size in T_INT different box 1
+T_ONE of the box have T_INT NPitem T_REL the T_LOC 1
+all the T_INT box have the same color NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR NPitem that is not a NPitem T_REL the corner 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_INT NPitem have different color 1
+there is T_QUANTITY_SINGULAR box that have T_INT NPitem are T_REL the side 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE and no other color 1
+there is T_QUANTITY_SINGULAR box with NPitem of T_INT different color and T_QUANTITY_PLURAL NPitem 1
+there is T_ONE box with only T_ONE NPitem and only T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_ONE is a NPitem not T_REL the edge 1
+there is as NPitem T_REL the NPitem 1
+there is T_QUANTITY_SINGULAR box which have T_QUANTITY_SINGULAR NPitem 1
+there is T_ONE box with T_INT NPitem stack together of the same color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_INT are T_SHAPE 1
+there is T_QUANTITY_SINGULAR NPitem T_REL another NPitem T_REL the edge 1
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of box 1
+there is T_ONE box with a NPitem and NPitem in it 1
+there is T_QUANTITY_SINGULAR box with T_COLOR and NPitem and the T_COLOR are T_SHAPE 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_INT are NPitem 1
+there is T_QUANTITY_SINGULAR NPitem with a NPitem T_REL it 1
+all the T_INT box have a NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of all T_INT different color and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR T_COLOR or NPitem T_REL the T_LOC of a box 1
+there are T_INT box that have T_INT the same color NPitem T_REL each other 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of all T_INT different color of which T_INT NPitem are T_COLOR 1
+there is T_QUANTITY_SINGULAR box that have only T_INT NPitem and they are all T_COLOR 1
+there is box with a NPitem of T_SIZE size and a NPitem 1
+the T_LOC of a box is T_COLOR which is T_REL a NPitem 1
+there is T_QUANTITY_SINGULAR box with T_COLOR and NPitem of which there are T_INT NPitem of different size 1
+T_ONE of the box contain T_INT NPitem among other NPitem 1
+there is T_ONE box with T_ONE NPitem in the middle of it 1
+there is T_ONE box with a NPitem at the T_LOC and NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with a NPitem and other T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box which have only T_ONE NPitem and it is not T_COLOR 1
+each box have a NPitem of the same color 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL a T_COLOR T_COLOR 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box and the T_LOC NPitem is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem and it is T_COLOR 1
+there are T_INT box with the same number of NPitem 1
+none of the T_COLOR color NPitem are T_REL the edge 1
+there are T_QUANTITY_PLURAL box with T_ONE NPitem 1
+there is as box that have no color T_COLOR 1
+T_ONE of the box contain only T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem and T_QUANTITY_PLURAL NPitem 1
+there are T_INT box with NPitem of T_INT different color 1
+the total NPitem of the T_INT box is T_INT 1
+there is T_QUANTITY_SINGULAR box that have T_ONE NPitem and T_ONE NPitem that are T_COLOR 1
+there is T_ONE box with only T_INT NPitem and T_ONE NPitem 1
+T_ONE of the box contain T_QUANTITY_PLURAL NPitem where T_ONE of the NPitem is a NPitem 1
+there are box with either T_COLOR and T_COLOR or T_COLOR and NPitem 1
+the box contain least number of NPitem are T_COLOR 1
+there is T_QUANTITY_SINGULAR box that have T_ONE of the NPitem is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with no a NPitem 1
+there is T_QUANTITY_SINGULAR box with a NPitem at the T_LOC and at the T_LOC 1
+there is only T_ONE NPitem T_REL a NPitem 1
+there is T_QUANTITY_SINGULAR box which have NPitem of all T_INT color 1
+T_ONE of the box have T_QUANTITY_SINGULAR NPitem NPitem only 1
+the middle NPitem of a T_INT box NPitem is T_COLOR 1
+there is T_ONE box with T_QUANTITY_PLURAL NPitem and they are the same color 1
+there is T_ONE box with NPitem block only 1
+T_ONE of the box have a different colored NPitem T_REL a NPitem 1
+there is T_QUANTITY_SINGULAR box with a NPitem and a NPitem T_REL the edge 1
+there are NPitem in each box and the position are the same 1
+the box with the least number of NPitem have a NPitem 1
+there are T_INT box with T_INT NPitem of T_INT different color 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box and the T_LOC NPitem from the T_LOC is T_COLOR 1
+there are T_INT box with T_ONE NPitem T_REL the T_LOC bottom 1
+there is T_ONE box that have T_QUANTITY_PLURAL NPitem 1
+there is T_QUANTITY_SINGULAR box which have only T_ONE NPitem and it is T_SHAPE 1
+there is T_ONE box with a NPitem at T_LOC 1
+there are T_INT the same color T_SHAPE that are T_REL the corner 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_INT NPitem are T_COLOR in color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and a T_COLOR T_REL T_LOC 1
+there are T_INT NPitem T_REL a edge 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem with a NPitem T_REL T_LOC NPitem of different color 1
+there is T_QUANTITY_SINGULAR box which only have T_SHAPE and T_SHAPE 1
+there is T_ONE NPitem T_REL a box corner 1
+there are T_INT box with T_INT NPitem T_REL each other 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem have all NPitem of the same color 1
+there is only T_ONE box with T_COLOR at the T_LOC 1
+T_QUANTITY_SINGULAR of the box with T_INT NPitem have T_QUANTITY_COMPARE same color NPitem at the T_LOC and T_LOC 1
+T_ONE box with a NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and T_INT NPitem T_QUANTITY_COMPARE T_REL it 1
+T_ONE of the box contain only T_ONE NPitem which is a NPitem 1
+there is only T_ONE color T_REL the T_LOC in all T_INT box 1
+there is T_ONE box with T_INT NPitem of the same shape 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the side of the box 1
+there is T_QUANTITY_SINGULAR box with a NPitem in <UNK> 1
+there a T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_ONE NPitem is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with NPitem of only T_INT different color 1
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem and T_INT NPitem 1
+the T_LOC of the T_INT box are T_INT T_COLOR and T_ONE T_COLOR 1
+T_ONE box have a NPitem at its T_LOC 1
+there is T_ONE box with have T_QUANTITY_SINGULAR NPitem T_REL the edge 1
+there is box with NPitem of different color and T_INT NPitem T_QUANTITY_COMPARE 1
+there are T_INT NPitem with a NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box that have T_INT T_COLOR and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR NPitem not T_REL the T_LOC 1
+there is T_QUANTITY_SINGULAR box with only T_INT NPitem of different color 1
+the T_LOC T_INT NPitem from the T_LOC of a box are T_COLOR 1
+T_ONE of the box contain NPitem of which only T_ONE NPitem is T_COLOR 1
+there is NPitem which have a T_QUANTITY_SINGULAR NPitem which is of T_COLOR color 1
+there is T_QUANTITY_SINGULAR box with only T_ONE NPitem and T_QUANTITY_PLURAL NPitem of another color 1
+T_INT box have the same height and the same T_LOC color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_INT are the same 1
+there is T_QUANTITY_SINGULAR box with a NPitem and T_QUANTITY_PLURAL NPitem include T_SHAPE 1
+there is T_QUANTITY_SINGULAR NPitem as the T_LOC of only T_INT box 1
+there is T_QUANTITY_SINGULAR box which have T_INT NPitem and the T_INT are the same in shape 1
+there are T_INT box with T_COLOR T_LOC 1
+there is T_ONE box with have T_ONE NPitem of T_COLOR color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem not T_REL each other 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the edge which is not a NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL T_COLOR and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem have NPitem at the T_LOC and NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge with its T_LOC 1
+the T_LOC of a box is T_COLOR and the T_LOC is T_COLOR 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem with a NPitem at the T_LOC and a NPitem T_REL the T_LOC NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem all of which are of T_COLOR color 1
+there is T_QUANTITY_SINGULAR box with only NPitem of which T_QUANTITY_SINGULAR is a NPitem 1
+there is T_QUANTITY_SINGULAR box which contain only T_SHAPE NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem T_QUANTITY_SINGULAR NPitem and a NPitem 1
+there is T_QUANTITY_SINGULAR NPitem T_REL T_LOC right corner of a box 1
+T_ONE of the box with T_QUANTITY_PLURAL NPitem have T_COLOR and T_COLOR color NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE of T_INT different color T_QUANTITY_COMPARE 1
+all the box have T_QUANTITY_SINGULAR NPitem that is the same in color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the it have T_INT color 1
+T_ONE NPitem is T_REL the T_LOC 1
+there is T_QUANTITY_SINGULAR box with NPitem of all T_INT different color and only T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the edge with T_QUANTITY_PLURAL NPitem T_REL it 1
+there is as box which have only T_INT NPitem and the T_INT NPitem are T_COLOR 1
+in T_REL of the box there is T_QUANTITY_SINGULAR NPitem T_REL a NPitem with a NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem of the same color 1
+T_QUANTITY_SINGULAR box with T_INT NPitem have a NPitem at the T_LOC 1
+there is T_ONE NPitem in each box 1
+there is no T_COLOR box with only T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL T_COLOR T_ONE T_COLOR and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with NPitem of all T_INT different color and a NPitem T_REL the edge 1
+there are NPitem in each box that have the same position 1
+the is T_ONE box with a NPitem at the T_LOC 1
+all the box have T_QUANTITY_SINGULAR NPitem 1
+there are T_QUANTITY_PLURAL box with NPitem and T_QUANTITY_PLURAL box with NPitem 1
+there is box with T_INT NPitem which are T_INT T_COLOR and T_ONE T_COLOR 1
+there is T_QUANTITY_SINGULAR NPitem that is between T_INT NPitem 1
+all T_INT box contain NPitem 1
+there is T_QUANTITY_SINGULAR box that have only T_INT NPitem that are not the same 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_QUANTITY_PLURAL are T_COLOR 1
+there is T_QUANTITY_SINGULAR T_INT NPitem box and the T_LOC is T_COLOR 1
+the T_LOC T_INT NPitem of the box is T_COLOR and T_COLOR 1
+there is T_QUANTITY_SINGULAR NPitem that is T_REL the T_LOC corner 1
+there are T_INT box which have T_QUANTITY_SINGULAR NPitem as the T_LOC most NPitem 1
+T_INT NPitem are T_REL the edge 1
+there is T_QUANTITY_SINGULAR box with T_ONE NPitem and T_INT NPitem of T_ONE another color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem have a NPitem T_REL a NPitem with a NPitem at the T_LOC of the box 1
+T_ONE of the box have T_QUANTITY_SINGULAR NPitem which are all of same shape 1
+T_ONE of the box have a NPitem T_REL the edge 1
+there are T_INT box with NPitem as the T_LOC level 1
+the T_LOC and the T_LOC of a T_INT NPitem box are the same in color 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem T_QUANTITY_COMPARE of which T_INT are NPitem 1
+there is T_QUANTITY_SINGULAR box with NPitem and T_QUANTITY_PLURAL NPitem 1
+the box with T_QUANTITY_PLURAL NPitem have a NPitem at the T_LOC and T_LOC 1
+there are T_QUANTITY_PLURAL NPitem T_REL the NPitem T_REL the edge 1
+all of the box have a NPitem T_REL the edge of the box 1
+there is T_QUANTITY_SINGULAR box with NPitem of T_INT different color and a T_COLOR T_ONE T_REL the edge 1
+there is T_QUANTITY_SINGULAR box that have only T_INT NPitem and color of the NPitem is T_COLOR and T_COLOR 1
+there are T_INT box with the same height and their T_LOC is not the same in color 1
+T_QUANTITY_PLURAL box have the same number of NPitem each and the same number of NPitem T_REL the side 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_INT are NPitem 1
+T_ONE box have T_INT NPitem and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box of T_INT NPitem which have NPitem of either T_COLOR or T_COLOR color only 1
+the T_LOC of the box with T_INT NPitem is T_COLOR 1
+there is T_QUANTITY_SINGULAR NPitem between T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box have only T_COLOR color NPitem where T_QUANTITY_SINGULAR NPitem is not T_REL a edge 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem where NPitem is T_REL the edge 1
+there is no box with T_QUANTITY_PLURAL NPitem 1
+there is T_QUANTITY_SINGULAR NPitem and a NPitem T_REL a corner 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem of which T_INT have the same shape 1
+there is T_ONE box with T_QUANTITY_SINGULAR NPitem which is not T_COLOR 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the right side 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem and a NPitem 1
+there are T_INT box that have a NPitem T_REL a NPitem 1
+T_ONE of the box with T_INT NPitem have a NPitem T_REL a NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem have a NPitem at T_LOC and a NPitem at T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem with a NPitem T_REL the T_LOC NPitem 1
+NPitem of T_SIZE size is T_REL the edge 1
+there is T_QUANTITY_SINGULAR box which have T_COLOR and NPitem only 1
+there are T_INT box with NPitem of only T_INT different color 1
+each box have T_QUANTITY_SINGULAR NPitem in it 1
+there is T_QUANTITY_SINGULAR box that have T_ONE NPitem and T_ONE NPitem 1
+the box with T_INT NPitem have NPitem of T_INT different color 1
+there is T_QUANTITY_SINGULAR NPitem T_REL the T_LOC NPitem 1
+there is T_QUANTITY_SINGULAR box which have only T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the T_INT NPitem are the same 1
+the box with least number of NPitem have T_QUANTITY_PLURAL NPitem 1
+the color of a T_INT NPitem box is T_COLOR and T_COLOR 1
+there is T_QUANTITY_SINGULAR box which contain NPitem of T_COLOR and T_COLOR color only 1
+there is T_QUANTITY_SINGULAR box with a NPitem a NPitem a NPitem and T_QUANTITY_SINGULAR NPitem 1
+there is T_QUANTITY_SINGULAR box which have a NPitem a NPitem and T_INT NPitem 1
+the box with least number of NPitem contain T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with many NPitem and the only T_COLOR is a NPitem 1
+there is T_QUANTITY_SINGULAR box with many NPitem and only T_ONE is T_REL the edge 1
+there is T_QUANTITY_SINGULAR NPitem that is T_REL T_COLOR and NPitem 1
+all T_INT box contain T_ONE NPitem 1
+there is box with a T_COLOR T_LOC 1
+T_ONE box have a NPitem T_REL the T_LOC 1
+there is box with a NPitem and it is not T_REL the edge 1
+there is T_QUANTITY_SINGULAR box that a T_COLOR and NPitem are T_REL side of the box 1
+T_ONE box with T_INT NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem where a NPitem is at T_LOC of the box 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and the NPitem is T_REL the edge 1
+the T_LOC of the T_INT box are T_INT T_COLOR and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem where the T_LOC is T_COLOR and the T_LOC is T_COLOR 1
+T_ONE of the box contain T_QUANTITY_SINGULAR NPitem T_REL the T_LOC bottom 1
+there is T_QUANTITY_SINGULAR box with NPitem of the same color and a T_SIZE T_SHAPE 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and T_INT NPitem T_REL it 1
+there is T_QUANTITY_SINGULAR box with NPitem of T_INT different color 1
+all the box do not have the same number of NPitem 1
+all the box have a NPitem at the T_LOC 1
+T_QUANTITY_SINGULAR of the box contain NPitem of T_INT color 1
+there is T_QUANTITY_SINGULAR box that the T_LOC and T_LOC NPitem are the same in color 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_QUANTITY_SINGULAR NPitem and T_QUANTITY_PLURAL NPitem 1
+only T_COLOR and NPitem are T_REL the edge 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_PLURAL NPitem of which T_QUANTITY_SINGULAR NPitem is T_REL the edge 1
+there are T_QUANTITY_PLURAL NPitem in T_ONE box 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem with the NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with a NPitem T_REL the edge and T_QUANTITY_PLURAL T_COLOR T_REL it 1
+there are T_INT box where the T_LOC and T_LOC NPitem are both T_COLOR 1
+none of the NPitem are T_REL the T_LOC 1
+there is T_QUANTITY_SINGULAR NPitem and T_ONE NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem which is a NPitem 1
+there is T_QUANTITY_SINGULAR box with T_QUANTITY_SINGULAR NPitem in it 1
+there is T_QUANTITY_SINGULAR box with only T_COLOR and NPitem in it 1
+the T_LOC of the box are T_COLOR and T_COLOR only 1
+there is T_ONE NPitem not T_REL the edge 1
+there are only T_INT NPitem T_REL the edge 1
+there is T_QUANTITY_SINGULAR box with T_COLOR and NPitem and the number of the NPitem of each color are the same 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem and with a NPitem at the T_LOC 1
+there is T_QUANTITY_SINGULAR box with T_INT NPitem include T_INT T_COLOR T_ONE 1
+there is T_QUANTITY_SINGULAR box with T_COLOR T_LOC 1
+there is T_QUANTITY_SINGULAR back NPitem of T_QUANTITY_SINGULAR box 1
