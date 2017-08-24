@@ -22,30 +22,6 @@ TOKEN_REP_PATH = r'C:\Users\ASUS\Dropbox\אודי\לימודים\שנה ג סמ�
 MORE_REP_PATH = r'C:\Users\ASUS\Dropbox\אודי\לימודים\שנה ג סמסטר ב\NLP\project\CNLVR\more_replacements'
 
 
-def read_dict_from_txt(path):
-    """
-    loads a dictionary from a text file in which every line is in the format
-    key : value
-    assumes that keys are unique
-    :return: a dictionary mapping string to strings
-    """
-
-    reps = {}
-    with open(path) as f:
-        for line in f:
-            line = line.strip()
-            if len(line)==0 or line.startswith('#'):
-                continue
-            kvp = line.split(':')
-            if len(kvp)!=2:
-               continue
-            key = line[0].strip()
-            value = line[1].strip()
-            reps[key] = value
-    return reps
-
-
-more_rep_dict = get_more_rep_dict()
 
 def load_token_replacement(path):
     count_dic = {}
@@ -101,16 +77,10 @@ def get_sentences_with_replacements():
             sentences[k] = (sentences[k] + ' ').replace(' {} '.format(t), ' {} '.format(rep_dict[t]))
     return sentences
 
-def get_sentences_with_unks():
-    sentences = get_sentences_with_replacements()
-    sentences_tokenized = {k: s.split() for k, s in sentences.items()}
-    unigrams = get_ngrams_counts(sentences_tokenized.values(), 1)[0]
-    for k, s in sentences_tokenized.items():
-        sentences_tokenized[k] = " ".join([w  if unigrams.get(w,0)>=5 else '<UNK>' for w in s])
-    return sentences_tokenized
 
-def get_sentences_formalized():
-    sentences = get_sentences_with_unks()
+
+def get_sentences_formalized(sentences):
+
     formalized_sentences = {k : formalize_sentence(s) for k,s in sentences.items()}
     count_dict = {}
     for s in formalized_sentences.values():
@@ -145,51 +115,6 @@ def get_sentences_formalized():
 #     return s
 
 
-def formalize_sentence(s):
-    if isinstance(s, str):
-        s = [w for w in s.split()]
-
-    forms = [(integers, [], 'n'), (shape_words, [], 's'), (color_words, [], 'c')]
-
-    for i,w in enumerate(s):
-        if w in integers or w in integer_words:
-            s[i] = 'T_INT'
-        if w in color_words:
-            s[i] = 'T_COLOR'
-        if w in shape_words:
-            s[i] = 'T_SHAPE'
-        if w in size_words:
-            s[i] = 'T_SIZE'
-        if w in location_words:
-            s[i] = 'T_LOC'
-
-    s = " ".join(s)
-    for q in quantity_words:
-        if q in s:
-            s= s.replace(q, 'T_quantity')
-    s = " " + s + " "
-    for pair in more_rep_dict:
-        s = s.replace(' ' +pair[0] + ' ', ' '+pair[1] + ' ')
-
-    return s[1:-1]
-
-# def find_rare_words():
-#     data, sentences = build_data(read_data(TRAIN_JSON), preprocess= True)
-#     token_counts = load_ngrams(TOKEN_COUNTS, 1)
-#     for kvp in sorted(token_counts.items(), key= lambda kvp : kvp[1]):
-#         print(kvp)
-#     sentence_with_rare_words = {}
-#     for k, s in sentences.items():
-#         tokens = s.split()
-#         rare_tokens = [(t, token_counts.get(t, 0)) for t in tokens if token_counts.get(t, 0) <=5]
-#         if len(rare_tokens) > 0:
-#             sentence_with_rare_words[k] = rare_tokens
-#
-#     for k, v in sentence_with_rare_words.items():
-#         print (sentences[k], v)
-
-
-
 
 
 
@@ -198,12 +123,6 @@ def unique_sentences_count(sentences):
     tokenized_clean_sentences = preprocess_sentences(sentences)
     formalized_sentences = {k : formalize_sentence(s) for k,s in tokenized_clean_sentences.items()}
 
-    # for k, s in sentences.items():
-    #     # includes illegal word
-    #     if len([w for w in s.split(" ") if w.lower() not in vocab and not str.isdigit(w)]) > 0:
-    #         print("original    = {}".format(s))
-    #         print("corredrcted = {}".format(" ".join(tokenized_clean_sentences[k])))
-    #         print("formalized  = {}".format(" ".join(formalized_sentences[k])))
 
 
 
@@ -237,23 +156,8 @@ def unique_sentences_count(sentences):
     return
 
 
-def select_integers(k, min, max):
-    if k> max-min or k==0:
-        return [set()]
-    return [set([min]).union(s) for s in select_integers(k-1, min+1, max)] + [s for s in select_integers(k, min+1, max) if len(s)>0]
 
 
-def select(_set, k):
-    l = list(_set)
-    return [[l[i] for i in idx] for idx in select_integers(k, 0, len(l))]
-
-
-def gen_all_NPitem():
-    res = []
-    pattren = ['T_SIZE', 'T_COLOR', 'T_SHAPE']
-    with open('translations') as f:
-        for line in f:
-            line.split()
 
 
 

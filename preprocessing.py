@@ -132,6 +132,18 @@ def rank_suggestion(suggested_token, prev_token, next_token, unigram_counts, big
               ((1 - p) / 2) * bigram_counts.get((prev_token, suggested_token),0) + \
               ((1 - p) / 2) * bigram_counts.get((suggested_token, next_token),0)
 
+def replace_words_by_dictionary(sentences, dic):
+    manualy_chosen_replacements = sorted(dic.items(), key = lambda kvp : len(kvp[0].split()), reverse=True)
+    manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
+    sentences_with_replacements = {}
+    for k, s in sentences.items():
+        s = " {} ".format(s) # pad with whitespaces
+        for exp, replacement in manualy_chosen_replacements:
+            s = s.replace(exp, replacement)
+        sentences_with_replacements[k] = s.strip() # remove whitespaces
+
+    return sentences_with_replacements
+
 
 def replace_rare_words_with_unk(sentences):
     sentences = {k: s.split() for k, s in sentences.items()} # tokenize
@@ -265,18 +277,12 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
 
 
     # sort by key length in decreasing order, to prevent override of previous changes
-    manualy_chosen_replacements = sorted(load_dict_from_txt(SYNONYMS).items(), key = lambda kvp : len(kvp[0].split()), reverse=True)
-    manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
-    lemmatized_sentences_with_replacements = {}
-    for k, s in lemmatized_sentences.items():
-        s = " {} ".format(s) # pad with whitespaces
-        for exp, replacement in manualy_chosen_replacements:
-            s = s.replace(exp, replacement)
-        lemmatized_sentences_with_replacements[k] = s.strip() # remove whitespaces
 
 
-    return lemmatized_sentences_with_replacements
+    replacements_dic = load_dict_from_txt(SYNONYMS)
+    lemmatized_sentences_with_replacements = replace_words_by_dictionary(lemmatized_sentences, replacements_dic)
 
+    return  lemmatized_sentences_with_replacements
     # notice: to replace rare words with <unk> token, run the 'replace_rare_words_with_unk' methodsh
     # on the output if this method
 
