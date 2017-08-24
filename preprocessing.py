@@ -54,7 +54,27 @@ def load_synonyms(file_name):
                 result[token] = eval(line[sep+1 :])
     return result
 
+def load_dict_from_txt(path):
+    """
+    loads a dictionary from a text file in which every line is in the format
+    key : value
+    assumes that keys are unique
+    :return: a dictionary mapping string to strings
+    """
 
+    reps = {}
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if len(line)==0 or line.startswith('#'):
+                continue
+            kvp = line.split(':')
+            if len(kvp)!=2:
+               continue
+            key = kvp[0].strip()
+            value = kvp[1].strip()
+            reps[key] = value
+    return reps
 
 def get_ngrams_counts(dataset, max_ngram, include_start_and_stop = False):
     """
@@ -112,6 +132,26 @@ def rank_suggestion(suggested_token, prev_token, next_token, unigram_counts, big
               ((1 - p) / 2) * bigram_counts.get((prev_token, suggested_token),0) + \
               ((1 - p) / 2) * bigram_counts.get((suggested_token, next_token),0)
 
+def replace_words_by_dictionary(sentences, dic):
+    manualy_chosen_replacements = sorted(dic.items(), key = lambda kvp : len(kvp[0].split()), reverse=True)
+    manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
+    sentences_with_replacements = {}
+    for k, s in sentences.items():
+        s = " {} ".format(s) # pad with whitespaces
+        for exp, replacement in manualy_chosen_replacements:
+            s = s.replace(exp, replacement)
+        sentences_with_replacements[k] = s.strip() # remove whitespaces
+
+    return sentences_with_replacements
+
+
+def replace_rare_words_with_unk(sentences):
+    sentences = {k: s.split() for k, s in sentences.items()} # tokenize
+    unigrams = get_ngrams_counts(sentences.values(), 1)[0]
+    for k, s in sentences.items():
+        sentences[k] = " ".join([w  if unigrams.get(w,0)>=MIN_COUNT else '<UNK>' for w in s])
+    return sentences
+
 
 def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     '''
@@ -125,7 +165,7 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     if processing_type is None:
         return sentences_dic # no processing
 
-    if processing_type not in ("shallow", "spellproof", "lemmatize"):
+    if processing_type not in ("shallow", "spellproof", "lemmatize", "deep"):
         raise ValueError("Invalid processing type: {}".format(processing_type))
 
     if processing_type =='shallow': # just superficial processing
@@ -154,8 +194,9 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
                              bigram[0] in unigrams_filtered and bigram[1] in unigrams_filtered}
 
     if mode == 'w':
-        write_ngrams("tokens_counts.txt", unigrams_filtered)
-        write_ngrams("bigrams_counts.txt", bigrams_filtered)
+        pass
+        #write_ngrams("tokens_counts.txt", unigrams_filtered)
+        #write_ngrams("bigrams_counts.txt", bigrams_filtered)
 
     # create an inventory of suggested corrections for invalid tokens from the sentences
     corrections_inventory = {}
@@ -188,7 +229,7 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
                     if unigrams[w]<10: # only in training
                         tok_sent[i] = "<UNK>"
                 if w in vocab:
-                    print ("{0}({1}): {2}".format(w, i, " ".join(tok_sent)))
+                    pass#print ("{0}({1}): {2}".format(w, i, " ".join(tok_sent)))
 
 
     spellproofed_ss = {k : " ".join(s) for k,s in tokenized_sentences.items()}
@@ -197,8 +238,8 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
 
     if mode == 'w':
         unigrams_checked, bigrams_checked = get_ngrams_counts(spellproofed_sentences.values(), 2)
-        write_ngrams("tokens_spellproofed.txt", unigrams_checked)
-        write_ngrams("bigrams_spellproofed.txt", bigrams_checked)
+        #write_ngrams("tokens_spellproofed.txt", unigrams_checked)
+        #write_ngrams("bigrams_spellproofed.txt", bigrams_checked)
 
     if processing_type=='spellproof':
         return spellproofed_ss
@@ -218,16 +259,32 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
                 lemma = w
             s[i] = lemma if s[i] not in ('is', 'are') else s[i]
 
+
+            if s[i] in integer_words and s[i]!= 'one':
+                s[i] = integers[integer_words.index(s[i])]
+
     unigrams_lemmatized, bigrams_lemmatized = get_ngrams_counts(spellproofed_sentences.values(), 2)
 
     if mode == 'w':
         write_ngrams("tokens_lemmatized.txt", unigrams_lemmatized)
         write_ngrams("bigrams_lemmatized.txt", bigrams_lemmatized)
 
-    return {k: " ".join(s) for k, s in spellproofed_sentences.items()}
-    #@todo
-    # handling also rare words (in training set) or unknown tokens (in test/validation)
-    # need to replace them with <UNK>.
+    lemmatized_sentences =  {k: " ".join(s) for k, s in spellproofed_sentences.items()}
+    if processing_type == 'lemmatize':
+        return lemmatized_sentences
+
+    # move on to replacing words/phrases with others with similar meaning, in order to reduce vocabulary size
+
+
+    # sort by key length in decreasing order, to prevent override of previous changes
+
+
+    replacements_dic = load_dict_from_txt(SYNONYMS)
+    lemmatized_sentences_with_replacements = replace_words_by_dictionary(lemmatized_sentences, replacements_dic)
+
+    return  lemmatized_sentences_with_replacements
+    # notice: to replace rare words with <unk> token, run the 'replace_rare_words_with_unk' methodsh
+    # on the output if this method
 
 
 

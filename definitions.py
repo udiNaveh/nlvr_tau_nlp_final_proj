@@ -16,4 +16,4 @@ ENG_VOCAB_60K =  os.path.join(DATA_DIR, 'sentence-processing', 'en-vocabulary-60
 TOKEN_COUNTS =  os.path.join(DATA_DIR, 'sentence-processing', 'tokens.txt')
 BIGRAM_COUNTS =  os.path.join(DATA_DIR, 'sentence-processing', 'bigrams.txt')
 
-SYNONYMS =  os.path.join(DATA_DIR, 'sentence-processing', 'synonyms_broad')
+SYNONYMS =  os.path.join(DATA_DIR, 'sentence-processing', 'manual_replacements.txt')

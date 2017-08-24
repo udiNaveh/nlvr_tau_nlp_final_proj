@@ -1,0 +1,37 @@
+just : only
+nearly : closely
+attach to : touch
+a lot of : many
+line : edge
+but : and
+under : below
+an : a
+contains : contain
+first : bottom
+kind : shape
+beneath : below
+rectangle : square
+on top of : on
+count : number
+some : many
+underneath : below
+object : item
+multiple : many
+almost : closely
+without : with no
+over : on
+roof : top wall
+type : shape
+any : a
+block : item
+wall : edge
+attach with : touch
+base: bottom
+above : on
+single : 1
+a single : 1
+grey square : box
+attach : touch
+every : each
+lower : bottom
+grey box : box
