@@ -2,7 +2,7 @@ import json
 
 from structured_rep_utils import *
 import definitions
-from preprocessing import preprocess_sentences
+from preprocessing import preprocess_sentences, replace_rare_words_with_unk
 
 
 
@@ -32,7 +32,7 @@ def rewrite_data(filename, data, mapping):
 
 
 
-def build_data(data, preprocessing_type = None):
+def build_data(data, preprocessing_type = None, use_unk = True):
     '''
     
     :param data: a deserialized version of a dataset json file: List[List[List[Dict[str: str]]]]
@@ -52,6 +52,8 @@ def build_data(data, preprocessing_type = None):
             sentences[s_index] = line["sentence"]
 
     sentences = preprocess_sentences(sentences, mode=None, processing_type=preprocessing_type)
+    if use_unk:
+        sentences = replace_rare_words_with_unk(sentences)
 
     for s in samples:
        s_index = int(str.split(s.identifier, "-")[0])
@@ -62,5 +64,5 @@ def build_data(data, preprocessing_type = None):
 
 if __name__ == '__main__':
     data = read_data(train)
-    samples, sentences = build_data(data, preprocessing_type='lemmatize') # check different processig types
+    samples, sentences = build_data(data, preprocessing_type='deep') # check different processig types
     print("")

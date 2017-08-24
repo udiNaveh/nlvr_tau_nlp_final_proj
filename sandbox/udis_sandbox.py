@@ -1,6 +1,6 @@
 import string
 import nltk
-
+import tensorflow as tf
 from handle_data import build_data
 
 from handle_data import *
@@ -21,15 +21,29 @@ size_words = ["medium", "small", "big"]
 TOKEN_REP_PATH = r'C:\Users\ASUS\Dropbox\אודי\לימודים\שנה ג סמסטר ב\NLP\project\CNLVR\tokens important'
 MORE_REP_PATH = r'C:\Users\ASUS\Dropbox\אודי\לימודים\שנה ג סמסטר ב\NLP\project\CNLVR\more_replacements'
 
-def get_more_rep_dict():
-    reps = []
-    with open(MORE_REP_PATH) as f:
+
+def read_dict_from_txt(path):
+    """
+    loads a dictionary from a text file in which every line is in the format
+    key : value
+    assumes that keys are unique
+    :return: a dictionary mapping string to strings
+    """
+
+    reps = {}
+    with open(path) as f:
         for line in f:
-            line = line.split(':')
-            line[0] = line[0].strip()
-            line[1] = line[1].strip()
-            reps.append(tuple(line))
+            line = line.strip()
+            if len(line)==0 or line.startswith('#'):
+                continue
+            kvp = line.split(':')
+            if len(kvp)!=2:
+               continue
+            key = line[0].strip()
+            value = line[1].strip()
+            reps[key] = value
     return reps
+
 
 more_rep_dict = get_more_rep_dict()
 
@@ -80,6 +94,8 @@ def get_sentences_with_replacements():
 
     sentences = preprocess_sentences(sentences, processing_type='lemmatize')
     rep_dict = get_replacement_dict(TOKEN_REP_PATH)
+    for k,v in rep_dict.items():
+        print ("{0} : {1}".format(k,v))
     for k in sentences.keys():
         for t in rep_dict.keys():
             sentences[k] = (sentences[k] + ' ').replace(' {} '.format(t), ' {} '.format(rep_dict[t]))
@@ -242,11 +258,5 @@ def gen_all_NPitem():
 
 
 if __name__ == '__main__':
-    #build_data(read_data(TRAIN_JSON), preprocess=True)
-    ordered = get_sentences_formalized()
-    for s, count in ordered:
-        print(s, count)
-
-
-
+    get_sentences_with_replacements()
     print("")

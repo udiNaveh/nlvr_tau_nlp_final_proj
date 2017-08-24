@@ -1,7 +1,9 @@
 import tensorflow as tf
-from utils import epsilon_greedy_sample, execute
+#from tensorflow.nn.rnn_cell import BasicLSTMCell
+from tensorflow.contrib.rnn import BasicLSTMCell
+from seq2seqModel.utils import epsilon_greedy_sample, execute
 import operator
-from logical_forms_generator import *
+from seq2seqModel.logical_forms_generator import *
 #from word2vec import *
 from handle_data import *
 import pickle
@@ -10,7 +12,9 @@ import numpy as np
 # hyperparameters
 words_embedding_size = 8
 logical_tokens_embedding_size = 10
+d1 = 50
 hidden_layer_size = 30
+sent_embedding_size = 2 * hidden_layer_size
 max_sent_length = 5
 learning_rate = 0.001
 beta = 0.5
@@ -21,13 +25,20 @@ beam_size = 50
 batch_size = 8
 STACK = 0
 history_length = 4
+history_embedding_size = history_length * logical_tokens_embedding_size
+
 
 # build data
 
 # load data
 train = definitions.TRAIN_JSON
+TOKEN_MAPPING = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping')
 data = read_data(train)
 samples, _ = build_data(data, preprocessing_type='lemmatize')
+token_mapping = load_functions(TOKEN_MAPPING)
+n_logical_tokens = len(token_mapping)
+
+
 
 # load word embeddings
 embeddings_file = open('word_embeddings','rb')
@@ -40,7 +51,7 @@ for sample in samples:
     sent = []
     for word in sample.sentence.split():
         if word not in embeddings_dict:
-            print(sample.sentence, word)
+            #print(sample.sentence, word) # this shouldn't happen if we do preprocessing
             sent.append(embeddings_dict['<UNK>'])
         else:
             sent.append(embeddings_dict[word])
@@ -57,22 +68,31 @@ for sample in samples:
 # TODO
 token_mapping = load_functions(TOKEN_MAPPING)
 num_of_tokens = len(token_mapping)
-#token_embeddings =
+
 
 # Encoder
 # placeholders for sentence and it's length
 sentence_placeholder = tf.placeholder(shape = [None, None,words_embedding_size],dtype = tf.float32,name = "sentence_placeholder")
 sent_lengths = tf.placeholder(dtype = tf.int32,name = "sent_length_placeholder")
+
 # Forward cell
-lstm_fw_cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_layer_size, forget_bias=1.0)
+#lstm_fw_cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_layer_size, forget_bias=1.0)
+lstm_fw_cell = BasicLSTMCell (hidden_layer_size, forget_bias=1.0)
 # Backward cell
-lstm_bw_cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_layer_size, forget_bias=1.0)
+lstm_bw_cell = BasicLSTMCell(hidden_layer_size, forget_bias=1.0)
 # stack cells together in RNN
 outputs, _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell, lstm_bw_cell, sentence_placeholder,sent_lengths,dtype=tf.float32)
+#    outputs: A tuple (output_fw, output_bw) containing the forward and
+#   the backward rnn output `Tensor`.
+#    output_fw will be a `Tensor` shaped:
+#    `[batch_size, max_time, cell_fw.output_size]`
+
+
 # outputs is a (output_forward,output_backwards) tuple. concat them together to receive h vector
-h = tf.concat(outputs,2)
+h = tf.concat(outputs,2)    # shape: [batch_size, max_time, 2 * hidden_layer_size ]
 # the final utterance is the last output
-e_m = h[0][-1]
+
+e_m = h[0,-1,:] # len: 2*hidden_layer_size todo check if this is really what we need
 
 # History embedding
 def get_history_embedding(history, STACK=0):
@@ -97,14 +117,17 @@ def get_history_embedding(history, STACK=0):
         return result
 
 # Decoder
-history_embedding = tf.placeholder(shape=[logical_tokens_embedding_size*4],dtype = tf.float32,name = "history_embedding")
-W_q = tf.get_variable("W_q",shape=[hidden_layer_size*2,hidden_layer_size*2 + logical_tokens_embedding_size*4],initializer=tf.contrib.layers.xavier_initializer()) # (60,100)
-q_t = tf.nn.relu(tf.matmul(W_q,tf.reshape(tf.concat([e_m,history_embedding],0),[hidden_layer_size*2 + logical_tokens_embedding_size*4,1]))) # dim [60,1]
-W_a = tf.get_variable("W_a",shape=[hidden_layer_size*2,hidden_layer_size*2],initializer=tf.contrib.layers.xavier_initializer()) # dim [60*60]
+history_embedding = tf.placeholder(shape=[history_embedding_size], dtype = tf.float32, name ="history_embedding")
+decoder_input = tf.reshape(tf.concat([e_m,history_embedding],0),[sent_embedding_size + history_embedding_size,1])
+W_q = tf.get_variable("W_q", shape=[d1, sent_embedding_size + history_embedding_size], initializer=tf.contrib.layers.xavier_initializer())# (d1,100)
+q_t = tf.nn.relu(tf.matmul(W_q, decoder_input)) # dim [d1,1]
+W_a = tf.get_variable("W_a",shape=[d1, sent_embedding_size],initializer=tf.contrib.layers.xavier_initializer()) # dim [d1*60]
 alpha = tf.nn.softmax(tf.matmul(tf.matmul(tf.transpose(q_t),W_a),tf.transpose(h[0]))) #dim [1,25]
-c_t = tf.matmul(alpha,h[0]) # attention vector, dim [1,60]
-W_s = tf.get_variable("W_s",shape=[hidden_layer_size*2,logical_tokens_embedding_size],initializer=tf.contrib.layers.xavier_initializer())
-token_prob_dist = tf.nn.softmax(tf.matmul(tf.transpose(token_embeddings),W_s)*tf.concat([q_t,tf.transpose(c_t)],0))
+c_t = tf.matmul(alpha,h[0,:,:]) # attention vector, dim [1,60]
+token_embeddings =  tf.get_variable("token_embeddings", shape=[n_logical_tokens, logical_tokens_embedding_size], initializer=tf.contrib.layers.xavier_initializer())
+W_s = tf.get_variable("W_s",shape=[logical_tokens_embedding_size, d1 + sent_embedding_size],initializer=tf.contrib.layers.xavier_initializer())
+
+token_prob_dist = tf.nn.softmax(tf.matmul(token_embeddings, tf.matmul(W_s, tf.concat([q_t,tf.transpose(c_t)],0))))
 
 theta = tf.trainable_variables()
 program_probs = tf.placeholder(tf.float32,name="program_probs") # the probability (scalar) of every program in beam
