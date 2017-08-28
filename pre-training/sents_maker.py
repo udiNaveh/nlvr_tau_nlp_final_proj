@@ -1,4 +1,5 @@
 from copy import deepcopy
+import pickle
 
 # def dim_caller(words):
 #     shape = []
@@ -96,3 +97,7 @@ while oldsents != sents:
     print('so far ', len(sents), 'sentences')
 
 print('done! ', len(sents), 'sentences')
+
+file = open('sents_for_pretain', 'wb')
+pickle.dump(sents, file)
+file.close()
