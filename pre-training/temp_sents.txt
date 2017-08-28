@@ -1,0 +1,27 @@
+@ there are T_INT T_COLOR item
+~ equal_int T_INT count filter ALL_ITEMS lambda_x_: is_T_COLOR x
+
+@ there is 1 tower with a T_COLOR item at the T_LOC
+~ exist filter ALL_BOXES lambda_x_: exist filter x lambda_y_: and is_T_LOC y is_T_COLOR y
+~ exist filter ALL_BOXES lambda_x_: exist filter filter x lambda_y_: is_T_LOC y lambda_z_: is_T_COLOR z
+
+@ there is T_QUANTITY_COMPARE 1 tower with a T_COLOR item at the T_LOC
+~ T_QUANTITY_COMPARE 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: and is_T_LOC y is_T_COLOR y
+~ T_QUANTITY_COMPARE 1 count filter ALL_BOXES lambda_x_: exist filter filter x lambda_y_: is_T_LOC y lambda_z_: is_T_COLOR z
+
+@ there is 1 T_COLOR T_SHAPE
+~ exist filter ALL_ITEMS lambda_x_: and is_T_COLOR x is_T_SHAPE x
+~ exist filter filter ALL_ITEMS lambda_x_: is_T_COLOR x lambda_y_: is_T_SHAPE y
+
+@ there is a T_COLOR item as the T_LOC of a tower with T_INT item
+~ exist filter ALL_BOXES lambda_x_: and equal_int T_INT count x exist filter x lambda_y_: and is_T_LOC y is_T_COLOR y
+~ exist filter ALL_BOXES lambda_x_: and equal_int T_INT count x exist filter filter x lambda_y_: is_T_LOC y lambda_z_: is_T_COLOR z
+
+@ there is a T_COLOR1 item on a T_COLOR2 item
+~ exist filter get_above filter ALL_ITEMS lambda_y_: is_T_COLOR2 lambda_x_: is_T_COLOR1
+
+@ there is a T_COLOR item as the T_LOC of a tower with T_QUANTITY_COMPARE T_INT item
+~ exist filter ALL_BOXES lambda_x_: and T_QUANTITY_COMPARE T_INT count x exist filter x lambda_y_: and is_T_LOC y is_T_COLOR y
+~ exist filter ALL_BOXES lambda_x_: and T_QUANTITY_COMPARE T_INT count x exist filter filter x lambda_y_: is_T_LOC y lambda_z_: is_T_COLOR z
+~ exist filter filter ALL_BOXES lambda_x_: T_QUANTITY_COMPARE T_INT count x lambda_y_: exist filter y lambda_z_: and is_T_LOC z is_T_COLOR z
+~ exist filter filter ALL_BOXES lambda_x_: T_QUANTITY_COMPARE T_INT count x lambda_y_: exist filter filter y lambda_z_: is_T_LOC z lambda_w_: is_T_COLOR w
