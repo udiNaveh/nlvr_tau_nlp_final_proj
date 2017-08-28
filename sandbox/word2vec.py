@@ -5,7 +5,7 @@ import json
 import pickle
 import definitions
 from handle_data import *
-
+from sklearn.neighbors import KNeighborsClassifier
 
 # sents_path = None
 EMBED_DIM = 8
@@ -94,8 +94,8 @@ def wod2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
     z = tf.matmul(h, Wout)
     # yt = tf.placeholder(tf.float32, [None, len(words_list)])
     yt = tf.placeholder(tf.int32, [1,])
-    print(yt)
-    print(z)
+    # print(yt)
+    # print(z)
 
     # yaxol lihiyot shehu mecape levector im indexim velo le-one-hot-im
     loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=yt, logits=z)
@@ -133,7 +133,7 @@ def wod2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
     pickle.dump(embed_dict,file)
     file.close()
 
-    return embed_dict
+    return embed_dict, embeds
 
 def word2vec_form_path(trainpath, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
     # takes a **path of train data** (in the form of train.json) and hyper-parameters
@@ -151,8 +151,28 @@ def word2vec_form_path(trainpath, savepath, embed_dim = EMBED_DIM, iternum = ITE
     for datum in data:
         if datum['sentence'] not in sents:
             sents.append(datum['sentence'])
-    embed_dict = wod2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR)
-    return embed_dict
+    embed_dict, embeds = wod2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR)
+    return embed_dict, embeds
 
 train = definitions.TRAIN_JSON
-embed_dict = word2vec_form_path(train, 'word_embeddings')
+embed_dict, embeds = word2vec_form_path(train, 'word_embeddings')
+
+key_words = ['of', 'is', 'a', 'yellow', 'circle', 'box']
+
+KN = KNeighborsClassifier(n_neighbors=3)
+
+print('fitting pseudo-KNN...')
+KN.fit(embeds, [1]*len(embeds))
+inds = KN.kneighbors(embeds, return_distance=False)
+# print(inds)
+
+embeds_list = embeds.tolist()
+for word in key_words:
+    req_words = []
+    ind = embeds_list.index(embed_dict[word].tolist())
+    req_inds = inds[ind]
+    for idx in req_inds:
+        for w in embed_dict:
+            if (embed_dict[w] == embeds[idx]).all()==True:
+                req_words.append(w)
+    print('for:', word, ', the 3nn are:', req_words)
