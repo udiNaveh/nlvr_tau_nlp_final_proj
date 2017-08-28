@@ -365,21 +365,25 @@ def process_token_sequence(token_seq, tokens_mapping):
     '''
     stack = []
 
+    token_seq = token_seq.copy()
+
     for idx, token in enumerate(token_seq):
+        n_args = len(tokens_mapping[token].args_types) if token in tokens_mapping else 0
+
         next_ch = ''
         added_chars = ""
         if token.startswith('lambda'):
             token = token.replace('_', ' ')
 
 
-        elif tokens_mapping.get(token, 0) == 0:
+        elif n_args == 0:
             while next_ch != ', ' and len(stack)>0:
                 next_ch = stack.pop()
                 added_chars += next_ch
-        elif tokens_mapping[token] == 1:
+        elif n_args == 1:
             added_chars += '('
             stack.append(')')
-        elif tokens_mapping[token] == 2:
+        elif n_args == 2:
             added_chars += '('
             stack.extend([')',', '])
         token += added_chars
@@ -397,10 +401,14 @@ def run_logical_form(expression, image):
     :return: the result of executing the logical form on the structured representation
     '''
     # create constants
-    ALL_BOXES = image.get_all_boxes()
-    ALL_ITEMS = image.get_all_items()
+    all_boxes = image.get_all_boxes()
+    all_items = image.get_all_items()
 
-    result = eval(expression) # no error handling here for now...
+
+    f = eval("lambda ALL_BOXES, ALL_ITEMS : " + expression)
+    result = f(all_boxes, all_items) # no error handling here for now...
+
+
     if type(result) is not bool:
         raise TypeError("parsing returned a non boolean type")
     return result

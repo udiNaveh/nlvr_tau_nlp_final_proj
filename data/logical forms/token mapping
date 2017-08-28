@@ -15,7 +15,7 @@
 
 exist	1	set<?>	bool
 
-unique	1	set<Item>	Item
+#unique	1	set<Item>	Item
 
 count	1	set<?>	int
 

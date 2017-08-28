@@ -125,6 +125,7 @@
 	#exist(filter(ALL_BOXES, lambda x : AND(equal(3,count(color(x))), exist(filter(x, lambda y :(AND(black(y), AND(triangle(y), touching_top_wall(y)))))))))
 	
 	#exist(filter(lambda(y, AND(equal_set(query_color_set(y), AllColors) ,exist(filter(lambda(x, query_touching_top_wall(x)), filter_color(black,filter_shape(triangle, y)))))),all_ALL_BOXES))
+	#exist(filter(lambda(y, AND(equal_set(query_color_set(y), AllColors) ,exist(filter(lambda(x, query_touching_top_wall(x)), filter_color(black,filter_shape(triangle, y)))))),all_ALL_BOXES))
 
 	
 17. There is a box with multiple items and only one item has a different color
