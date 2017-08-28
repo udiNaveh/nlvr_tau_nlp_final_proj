@@ -1,5 +1,6 @@
 import typing
 from enum import Enum
+from copy import copy
 
 almost_touching_margin = 5
 
@@ -41,6 +42,13 @@ class Item:
 
     def __repr__(self):
         return "{0} {1} {2} at x: ({3}-{4}) y: ({5},{6})".format(self.size.name, self.color.name, self.shape.name, self.left, self.right, self.bottom, self.top).lower()
+
+    def __copy__(self):
+        return Item({'y_loc': self.__y_loc,
+                     'x_loc': self.__x_loc,
+                     'color':self.color.name,
+                     'size':self.size.name ,
+                     'type':self.shape.name })
 
     @property
     def right(self):
@@ -139,6 +147,9 @@ class Box:
     def __contains__(self, item):
         return item in self.items
 
+    def __copy__(self):
+        return Box([item.__copy__() for item in self.items])
+
     def is_tower(self):
         return all(s.shape == Shape.SQUARE for s in self.items) and \
                all(s.right == self.items[0].right for s in self.items)
@@ -158,6 +169,9 @@ class Image:
     def __iter__(self):
         for s in self.boxes:
             yield s
+
+    def __copy__(self):
+        return [box.__copy__() for box in self.boxes ]
 
     def get_all_boxes(self):
         return self.boxes

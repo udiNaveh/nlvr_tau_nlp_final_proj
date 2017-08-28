@@ -7,7 +7,7 @@ algorithm in-sha-la.
 """
 
 import unittest
-
+import os
 import definitions
 import display_images
 from handle_data import *
@@ -161,7 +161,7 @@ def test_parsing_on_samples(sentence, samples, only_tokens = TOKENS_ONLY, show_m
 
 def test_parsed_forms():
     total_logical_forms, total_errors, total_mistakes = 0,0,0
-    data, sentences = build_data(read_data(TRAIN_JSON), preprocessing_type='shallow')
+    data, sentences = build_data(read_data(definitions.TRAIN_JSON), preprocessing_type='shallow')
     has_parsing = [k for k,s in sentences.items() if s in parsed_samples]
 
     for k in has_parsing:
