@@ -28,10 +28,10 @@ sent_embedding_size = 2 * lstm_hidden_layer_size
 history_length = 4
 history_embedding_size = history_length * logical_tokens_embedding_size
 
-
+#other hyper parameters
 learning_rate = 0.001
 beta = 0.5
-epsilon = 0.1
+epsilon = 0.2
 num_of_steps = 10000
 max_decoding_length = 15
 beam_size = 30
@@ -46,41 +46,20 @@ embeddings_dict = pickle.load(embeddings_file)
 embeddings_file.close()
 assert words_embedding_size == np.size(embeddings_dict['blue'])
 
-#load logical tokens embeddings
-logical_tokens_embeddings_file = open(LOGICAL_TOKENS_EMBEDDINGS_PATH,'rb')
-logical_tokens_embeddings_dict = pickle.load(logical_tokens_embeddings_file)
-logical_tokens_embeddings_file.close()
+
 
 #load logical tokens inventory
 logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
-
-#load data
-train_path = definitions.TRAIN_JSON
-# data = read_data(train_path)
-# samples, sentences = build_data(data, preprocessing_type='shallow')
-n_logical_tokens = len(logical_tokens_mapping)
-assert len(logical_tokens_embeddings_dict) == n_logical_tokens
-
-
+logical_tokens = [token for token in logical_tokens_mapping.keys()]
 for var in "xyzwuv":
-    logical_tokens_embeddings_dict[var] = np.random.rand(logical_tokens_embedding_size)
-n_logical_tokens+=6
-logical_tokens, logical_tokens_embs = zip(*sorted(logical_tokens_embeddings_dict.items()))
-assert all([token in logical_tokens for token in logical_tokens_mapping.keys()])
+    logical_tokens.extend([var, 'lambda_{}_:'.format(var) ])
+logical_tokens.extend(['<s>', '<EOS>'])
 logical_tokens_ids = {lt: i for i, lt in enumerate(logical_tokens)}
-logical_tokens_embeddings_dict['<s>'] = np.random.rand(logical_tokens_embedding_size)
-logical_tokens_embeddings_dict['<EOS>'] = np.random.rand(logical_tokens_embedding_size)
-for var in "xyzwuv":
-    logical_tokens_embeddings_dict['lambda_{}_:'.format(var)] = np.random.rand(logical_tokens_embedding_size)
+n_logical_tokens = len(logical_tokens_ids)
+
+
 
 ngram_p_dict = get_probs_from_file(PARSED_EXAMPLES_T)
-
-
-
-
-W_lt =  tf.constant(value= np.array(logical_tokens_embs), dtype= tf.float32,
-                    shape=[n_logical_tokens, logical_tokens_embedding_size],
-                    name="logical_tokens_emb", verify_shape=True)
 
 
 def build_sentence_encoder():
@@ -105,8 +84,6 @@ def build_sentence_encoder():
     final_fw = outputs[0][:,-1,:]
     final_bw = outputs[1][:,0,:]
 
-    e_m = tf.concat((outputs[0][:,-1,:], outputs[1][:,0,:]), axis=1)
-
     return sentence_placeholder, sent_lengths, lstm_outputs, tf.concat((final_fw, final_bw), axis=1)
 
 
@@ -124,9 +101,12 @@ def build_decoder(lstm_outputs, final_utterance_embedding):
     c_t = tf.matmul(alpha, lstm_outputs)  # attention vector, dim [1,60]
     W_s = tf.get_variable("W_s", shape=[logical_tokens_embedding_size, decoder_hidden_layer_size + sent_embedding_size],
                           initializer=tf.contrib.layers.xavier_initializer())
+    W_logical_tokens = tf.get_variable("W_logical_tokens", dtype= tf.float32,
+                    shape=[n_logical_tokens, logical_tokens_embedding_size],
+                          initializer=tf.contrib.layers.xavier_initializer())
+    token_unnormalized_dist = tf.matmul(W_logical_tokens, tf.matmul(W_s, tf.concat([q_t, tf.transpose(c_t)], 0)))
 
-    token_prob_dist = tf.nn.softmax(tf.matmul(W_lt, tf.matmul(W_s, tf.concat([q_t, tf.transpose(c_t)], 0))), dim=0)
-    return history_embedding, token_prob_dist
+    return history_embedding, token_unnormalized_dist, W_logical_tokens
 
 
 def build_batchGrad():
@@ -137,27 +117,21 @@ def build_batchGrad():
     wq_grad = tf.placeholder(tf.float32, name="wq_grad")
     wa_grad = tf.placeholder(tf.float32, name="wa_grad")
     ws_grad = tf.placeholder(tf.float32, name="ws_grad")
+    logical_tokens_grad = tf.placeholder(tf.float32, name="logical_tokens_grad")
     batchGrad = [lstm_fw_weights_grad, lstm_fw_bias_grad, lstm_bw_weights_grad, lstm_bw_bias_grad,
-                 wq_grad, wa_grad, ws_grad]
+                 wq_grad, wa_grad, ws_grad, logical_tokens_grad]
     return batchGrad
-
-
-
-
 
 # PartialProgram
 
 
-def beam_search(sentence_embedding, lstm_output_tensors, history_embedding_tensor):
+def beam_search(lstm_output_tensors, history_embedding_tensor, encoder_feed_dict, token_prob_dist, logical_tokens_embeddings_dict):
 
     h, e_m = lstm_output_tensors
-    length = [len(sentence_embedding)]
     # encoder_output = sess.run(h,feed_dict={sentence_placeholder: x})
     beam = [PartialProgram()]
 
-    sentence_h, sentence_e_m = sess.run(lstm_output_tensors, feed_dict={sentence_placeholder: sentence_embedding,
-                                                                        sent_lengths_placeholder: length,
-                                                                        })
+    sentence_h, sentence_e_m = sess.run(lstm_output_tensors, feed_dict= encoder_feed_dict)
     # create a beam of possible programs for sentence, the iteration continues while there are unfinished programs in beam and t < max_beam_steps
 
     for t in range(max_decoding_length):
@@ -181,14 +155,15 @@ def beam_search(sentence_embedding, lstm_output_tensors, history_embedding_tenso
 
             probs_given_valid = [1.0] if len(valid_next_tokens) == 1 else\
                 [current_probs[logical_tokens_ids[next_tok]] for next_tok in valid_next_tokens]
+            #TODO document
             logprob_given_valid = np.log(probs_given_valid/np.sum(probs_given_valid))
 
-            ngram_probs = get_ngram_probs(history_tokens, ngram_p_dict, valid_next_tokens)
+            #ngram_probs = get_ngram_probs(history_tokens, ngram_p_dict, valid_next_tokens)
 
             for i, next_tok in enumerate(valid_next_tokens):
                 pp = PartialProgram(partial_program)
                 # logprob_given_valid[i]
-                pp.add_token(next_tok, + np.log(ngram_probs[i]) , logical_tokens_mapping)
+                pp.add_token(next_tok, + logprob_given_valid[i] , logical_tokens_mapping)
                 continuations.append(pp)
 
         # choose the #beam_size programs and place them in the beam
@@ -211,7 +186,8 @@ def sentences_to_embeddings(sentences, enbedding_dict):
     return np.array([[embeddings_dict.get(w, embeddings_dict['<UNK>']) for w in sentence] for sentence in sentences])
 
 
-if __name__ == '__main__':
+
+def run_unsupervised_training(sess):
 
     # build the computaional graph:
     # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
@@ -219,8 +195,8 @@ if __name__ == '__main__':
     sentence_placeholder, sent_lengths_placeholder, h, e_m = build_sentence_encoder()
     # ff decoder - given the outputs of the encoder, and an embedding of the decoding history,
     # computes a probability distribution over the tokens.
-    history_embedding, token_prob_dist = build_decoder(h, e_m)
-
+    history_embedding, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
+    token_prob_dist = tf.nn.softmax(token_unnormalized_dist,dim=0)
     chosen_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
                                    name="chosen_action_token")  # a one-hot vector represents the action taken at each step
 
@@ -232,97 +208,91 @@ if __name__ == '__main__':
     batch_grad = build_batchGrad()
     update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
 
-
-    #load data
-
-    train = CNLVRDataSet(train_path)
-
-
-
-
-    # training
-
-    # create sentences, images and label vectors
-
-
-
-
     init = tf.global_variables_initializer()
+
+    sess.run(init)
+    step=1
+    gradList = sess.run(theta) # just to get dimensions
+    gradBuffer = {}
+
+    # load data
+    train = CNLVRDataSet(definitions.TRAIN_JSON)
+
+    #initialize gradients
+    for var, grad in enumerate(gradList):
+        gradBuffer[var] = grad*0
+    while train.epochs_completed < 5:
+        print("train.epochs_completed= {}".format(train.epochs_completed))
+
+        sentences, samples = zip(*train.next_batch(batch_size))
+
+        embedded_sentences = sentences_to_embeddings(sentences, embeddings_dict)
+        current_logical_tokens_embeddings = sess.run(W_logical_tokens)
+        logical_tokens_embeddings_dict = \
+            {token : current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens}
+        for step in range (batch_size):
+            s = sentences[step]
+            x = embedded_sentences[step]
+            related_samples = samples[step]
+            sentence_embedding = np.reshape(x, [1, len(x), words_embedding_size])
+            length = [len(s.split())]
+            encoder_feed_dict = {sentence_placeholder: sentence_embedding, sent_lengths_placeholder: length}
+
+            beam = beam_search((h, e_m), history_embedding, encoder_feed_dict, token_prob_dist,
+                               logical_tokens_embeddings_dict)
+
+            # calculate rewards and gather probabilities for beam
+            rewarded_programs = []
+            beam = [prog for prog in beam if prog.token_seq[-1] == '<EOS>'] #otherwise won't compile and therefore no reward
+
+            compiled = 0
+            correct = 0
+            for prog in beam:
+                prog.token_seq.pop(-1) # take out the '<EOS>' token
+                # execute program and get reward is result is same as the label
+                execution_results = np.array([execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
+                                     for sample in related_samples])
+                actual_labels = np.array([sample.label for sample in related_samples])
+                compiled+= sum(res is not None for res in execution_results)
+                reward = 1 if all(execution_results==actual_labels) else 0
+                correct+=reward
+                if reward>0:
+                    rewarded_programs.append(prog)
+
+            #print("beam size = {0}, {1} programs compiled, {2} correct".format(len(beam), compiled, correct))
+
+            print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
+
+            if not rewarded_programs:
+                continue
+
+            programs_gradient_weights = get_gradient_weights_for_beam(rewarded_programs)
+
+            for idx, program in enumerate(rewarded_programs):
+                padded_token_sequence = ['<s>' for _ in range(history_length)] + [token for token in program]
+                padded_token_sequence_embedded = np.concatenate([logical_tokens_embeddings_dict[tok] for tok in padded_token_sequence])
+                token_sequence_ids = [logical_tokens_ids.get(token, -1) for token in program]
+                token_sequence_one_hot = np.stack([one_hot(n_logical_tokens, tok_id) if tok_id >= 0 else np.zeros(n_logical_tokens)
+                                                   for tok_id in token_sequence_ids], axis = 0)
+                histories = [padded_token_sequence_embedded[logical_tokens_embedding_size * i :
+                logical_tokens_embedding_size * i + history_embedding_size] for i in range(len(program))]
+                histories = np.reshape(histories, [len(program), history_embedding_size])
+
+
+                program_grad = sess.run(compute_program_grads, feed_dict={sentence_placeholder: sentence_embedding,
+                                                                          sent_lengths_placeholder: length,
+                                                                          history_embedding : histories,
+                                                                          chosen_logical_tokens : token_sequence_one_hot
+                                                                          })
+                for var,grad in enumerate(program_grad):
+                   gradBuffer[var] -=  programs_gradient_weights[idx] * grad[0]
+
+
+        sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
+        for var, grad in enumerate(gradBuffer):
+            gradBuffer[var] = gradBuffer[var]*0
+
+
+if __name__ == '__main__':
     with tf.Session() as sess:
-        sess.run(init)
-        step=1
-        batch_counter = 0
-        gradList = sess.run(theta) # just to get dimensions
-        gradBuffer = {}
-
-        #initialize gradients
-        for var, grad in enumerate(gradList):
-            gradBuffer[var] = grad*0
-        while train.epochs_completed < 5:
-            print("train.epochs_completed= {}".format(train.epochs_completed))
-
-            sentences, samples = zip(*train.next_batch(batch_size))
-            embedded_sentences = sentences_to_embeddings(sentences, embeddings_dict)
-            for step in range (batch_size):
-                s = sentences[step]
-                x = embedded_sentences[step]
-                related_samples = samples[step]
-                sentence_embedding = np.reshape(x, [1, len(x), words_embedding_size])
-                length = [len(s.split())]
-
-                beam = beam_search(sentence_embedding, (h, e_m), history_embedding)
-
-                # calculate rewards and gather probabilities for beam
-                rewarded_programs = []
-                beam = [prog for prog in beam if prog.token_seq[-1] == '<EOS>'] #otherwise won't compile and therefore no reward
-
-                compiled = 0
-                correct = 0
-                for prog in beam:
-                    prog.token_seq.pop(-1) # take out the '<EOS>' token
-                    # execute program and get reward is result is same as the label
-                    execution_results = np.array([execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
-                                         for sample in related_samples])
-                    actual_labels = np.array([sample.label for sample in related_samples])
-                    compiled+= sum(res is not None for res in execution_results)
-                    reward = 1 if all(execution_results==actual_labels) else 0
-                    correct+=reward
-                    if reward>0:
-                        rewarded_programs.append(prog)
-
-                #print("beam size = {0}, {1} programs compiled, {2} correct".format(len(beam), compiled, correct))
-
-
-
-                print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
-
-                if not rewarded_programs:
-                    continue
-
-                programs_gradient_weights = get_gradient_weights_for_beam(rewarded_programs)
-
-                for idx, program in enumerate(rewarded_programs):
-                    padded_token_sequence = ['<s>' for _ in range(history_length)] + [token for token in program]
-                    padded_token_sequence_embedded = np.concatenate([logical_tokens_embeddings_dict[tok] for tok in padded_token_sequence])
-                    token_sequence_ids = [logical_tokens_ids.get(token, -1) for token in program]
-                    token_sequence_one_hot = np.stack([one_hot(n_logical_tokens, tok_id) if tok_id >= 0 else np.zeros(n_logical_tokens)
-                                                       for tok_id in token_sequence_ids], axis = 0)
-                    histories = [padded_token_sequence_embedded[logical_tokens_embedding_size * i :
-                    logical_tokens_embedding_size * i + history_embedding_size] for i in range(len(program))]
-                    histories = np.reshape(histories, [len(program), history_embedding_size])
-
-
-                    program_grad = sess.run(compute_program_grads, feed_dict={sentence_placeholder: sentence_embedding,
-                                                                              sent_lengths_placeholder: length,
-                                                                              history_embedding : histories,
-                                                                              chosen_logical_tokens : token_sequence_one_hot
-                                                                              })
-                    for var,grad in enumerate(program_grad):
-                       gradBuffer[var] -=  programs_gradient_weights[idx] * grad[0]
-
-
-            sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
-            for var, grad in enumerate(gradBuffer):
-                gradBuffer[var] = gradBuffer[var]*0
-
-                #print("step: %d, loss: %2.f" % (step, loss))
+        run_unsupervised_training(sess)
