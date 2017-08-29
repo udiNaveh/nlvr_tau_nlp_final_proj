@@ -303,8 +303,7 @@ def run_supervised_training(sess):
     # computes a probability distribution over the tokens.
     history_embedding, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
     # a one-hot vector represents the action taken at each step
-    chosen_logical_tokens = tf.placeholder(tf.float32, [1, n_logical_tokens],
-                                   name="chosen_action_token")
+    chosen_logical_tokens = tf.placeholder(tf.float32, [1, n_logical_tokens], name="chosen_action_token")
 
     #chosen_logical_tokens_reshaped = np.reshape(chosen_logical_tokens,[n_logical_tokens,1])
     token_unnormalized_dist = tf.transpose(token_unnormalized_dist)
@@ -385,8 +384,8 @@ def run_supervised_training(sess):
 
                 # calculate gradient
                 token_grad = sess.run(compute_program_grads, feed_dict={sentence_placeholder: sentence_embedding,
-                                                                          sent_lengths_placeholder: length,
-                                                                          history_embedding : history_embs,
+                                                                        sent_lengths_placeholder: length,
+                                                                        history_embedding: history_embs,
                                                                         chosen_logical_tokens: one_hot_reshaped})
 
                 for var,grad in enumerate(token_grad):
