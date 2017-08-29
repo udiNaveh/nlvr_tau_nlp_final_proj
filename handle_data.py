@@ -4,6 +4,7 @@ from structured_rep_utils import *
 import definitions
 import numpy as np
 from preprocessing import preprocess_sentences, replace_rare_words_with_unk, get_ngrams_counts, write_ngrams
+import pickle
 
 
 
@@ -152,10 +153,38 @@ def generate_new_samples(dataset, sentence_id):
         per_s = [p[color_words.index(w)] if w in color_words else w for w in tokenized]
 
 
+class SupervisedParsing:
+
+    def __init__(self, path):
+        self.__ids = []
+        self.examples = []
+        self._index_in_epoch = 0
+        self.epochs_completed = 0
+        self.__num_examples = 0
+        self.get_supervised_data(path)
+
+    def get_supervised_data(self, path):
+        sents = pickle.load(open(path,'rb'))
+        self.__num_examples = len(sents)
+        self.__ids = [x for x in range(len(sents))]
+        self.examples = sents
+
+    def next_batch(self,batch_size):
+        start = self._index_in_epoch
+        if start == 0:
+            np.random.shuffle(self.__ids)  # shuffle index
+
+        # go to the next batch
+        elif start + batch_size > self.__num_examples:
+            self.epochs_completed += 1
+            self._index_in_epoch=0
+            return  self.next_batch(batch_size)
 
 
-
-
+        self._index_in_epoch += batch_size
+        end = self._index_in_epoch
+        indices = self.__ids[start : end]
+        return [(self.examples[k][0], self.examples[k][1]) for k in indices]
 
 
 
