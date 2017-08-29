@@ -1,16 +1,110 @@
 from copy import deepcopy
 import pickle
+from logical_forms_new import *
+import  random
+import os
+import definitions
+from seq2seqModel.logical_forms_generator import load_functions
+from seq2seqModel.utils import execute
+from handle_data import *
 
-def sents_maker(path = r'temp_sents.txt')
+
+
+LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
+PARSED_FORMS_PATH = 'temp_sents.txt'
+
+colors = ['yellow', 'blue', 'black']
+locs = [('top', 'top'), ('bottom', 'bottom'), ('base', 'bottom')]
+ints = ['2', '3', '4', '5', '6', '7']
+shapes = ['triangle', 'circle', 'square', ]
+quants = [('exactly', 'equal_int'), ('at least', 'ge'), ('at most', 'le')]
+ones = ['1']
+
+replacements_dic = {'T_SHAPE' : [('square', ['square']),('triangle', ['triangle']),('circle', ['circle'])],
+             'T_COLOR' : [('yellow', ['yellow']),('blue', ['blue']),('black', ['black'])],
+             'T_LOC' :  [('top', ['top']),('bottom', ['bottom'])],
+             'T_ONE' : [('1', ['1', 'one', 'a'])],
+             'T_INT' : [(str(i), [str(i)]) for i in range (2,8)],
+             'T_QUANTITY_COMPARE' : [('equal_int', ['exactly']),('le', ['at least']),('ge', ['at most']),
+                                     ('lt', ['more than']),('gt', ['less than'])]
+             }
+
+logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
+
+def load_forms(path):
+    result = {}
+    with open(path) as forms_file:
+        for line in forms_file:
+            if line.startswith('@'):
+                engsent = line[2:].rstrip()
+                engsent , form_count = engsent.split('$')
+                engsent = engsent.strip()
+                form_count = int(form_count.strip())
+                result[engsent] = (form_count, [])
+            elif line.startswith('~'):
+                logsent = line[2:].strip()
+                result[engsent][1].append(logsent)
+            else:
+                continue
+    return result
+
+def generate_eng_log_pairs(engsent, logsent, n_pairs):
+    eng_words = engsent.split()
+    forms = set([w for w in eng_words if w == w.upper() and not w.isdigit()])
+    result = []
+    for _ in range(n_pairs):
+        eng_words = engsent.split()
+        log_tokens = logsent.split()
+        current_replacements = {}
+        for f in forms:
+            f_ = f[:-2] if f[-1].isdigit() else f
+            current_replacements[f] = random.choice(replacements_dic[f_])
+        for i, word in enumerate(eng_words):
+            if word in current_replacements:
+                logtoken, real_words = current_replacements[word]
+                eng_words[i] = random.choice(real_words)
+
+        for form, (logtoken, _) in current_replacements.items():
+            for i, tok in enumerate(log_tokens):
+                if form in tok:
+                    newtok = str.upper(logtoken) if '.' in tok else logtoken
+                    log_tokens[i] = tok.replace(form, newtok)
+
+        result.append((" ".join(eng_words), " ".join(log_tokens)))
+    return result
+
+
+def check_generated_forms(forms_doctionary, samples):
+
+    for engsent, (form_count, logsents) in sorted(forms_doctionary.items(), key = lambda k : - k[1][0]):
+        for logsent in logsents:
+            curr_samples = random.sample(samples, 5)
+            generated_forms = generate_eng_log_pairs(engsent, logsent, 5)
+            for gen_sent, gen_log in generated_forms:
+
+                for sample in curr_samples:
+                    r = execute(gen_log.split(), sample.structured_rep, logical_tokens_mapping)
+                    if r is None:
+                        print("not compiled:")
+                        print(gen_log)
+                        print("original=" + logsent)
+                        print()
+
+
+
+
+
+
+
+
+
+
+
+def sents_maker(path = r'temp_sents.txt'):
 
     fsents = open(path)
 
-    colors = ['yellow', 'blue', 'black']
-    locs = [('top', 'top'), ('bottom', 'bottom'), ('base', 'bottom')]
-    ints = ['2', '3', '4', '5', '6', '7']
-    shapes = ['triangle', 'circle', 'square',]
-    quants = [('exactly', 'equal_int'), ('at least', 'ge'), ('at most', 'le')]
-    ones = ['1']
+
 
     sents = []
     for line in fsents:
@@ -81,11 +175,21 @@ def sents_maker(path = r'temp_sents.txt')
                     break
 
         print('so far ', len(sents), 'sentences')
-
     print('done! ', len(sents), 'sentences')
     return sents
 
-sents = sents_maker()
-file = open('sents_for_pretain', 'wb')
-pickle.dump(sents, file)
-file.close()
+
+
+
+
+
+if __name__ == '__main__':
+    parsed_forms = load_forms(PARSED_FORMS_PATH)
+    samples, sentences = build_data(read_data(definitions.TRAIN_JSON))
+    check_generated_forms(parsed_forms, samples)
+
+
+    # sents = sents_maker()
+    # file = open('sents_for_pretain', 'wb')
+    # pickle.dump(sents, file)
+    # file.close()
