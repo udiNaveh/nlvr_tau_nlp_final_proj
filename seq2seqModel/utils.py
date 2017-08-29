@@ -52,6 +52,9 @@ def execute(program_tokens,image,token_mapping):
                 RuntimeError, RecursionError, Exception, NotImplementedError) as err:
         result = None
 
+    # if result is None:
+    #     if input("go inside? ") =='y':
+    #         result = run_logical_form(logical_form, image)
     return result
 
 
