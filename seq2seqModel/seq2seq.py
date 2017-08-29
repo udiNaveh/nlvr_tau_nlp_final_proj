@@ -343,15 +343,20 @@ def run_supervised_training(sess):
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
         logical_tokens_embeddings_dict = \
             {token : current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens}
-        for step in range (batch_size):
+        for step in range(batch_size):
             s = sentences[step]
             x = embedded_sentences[step]
+            #print(s)
+            #print(labels[step])
 
             sentence_embedding = np.reshape(x, [1, len(x), words_embedding_size])
             length = [len(s.split())]
             encoder_feed_dict = {sentence_placeholder: sentence_embedding, sent_lengths_placeholder: length}
             sentence_h, sentence_e_m = sess.run((h,e_m), feed_dict=encoder_feed_dict)
             golden_parsing = labels[step].split()
+            #print(golden_parsing)
+            golden_parsing.append('<EOS>')
+
             output = []
 
             for i in range(len(golden_parsing)):
@@ -373,24 +378,21 @@ def run_supervised_training(sess):
                 if golden_parsing[i] == 'and':
                     golden_parsing[i] = 'AND'
                 one_hot_vec[logical_tokens_ids[golden_parsing[i]]] = 1
-                #one_hot_reshaped = np.reshape(one_hot_vec, [1, len(one_hot_vec)])
-                #probs_reshaped = np.reshape(current_probs, [1, len(current_probs)])
                 one_hot_reshaped = np.reshape(one_hot_vec,[1,n_logical_tokens])
-                #probs_reshaped = np.stack(current_probs).reshape([n_logical_tokens,1])
-                #print(one_hot_reshaped.shape,probs_reshaped.shape)
-                if train.epochs_completed == 4:
-                    output.append(logical_tokens[np.argmax(current_probs)])
+
+                #if train.epochs_completed == 4:
+                output.append(logical_tokens[np.argmax(current_probs)])
 
                 # calculate gradient
                 token_grad = sess.run(compute_program_grads, feed_dict={sentence_placeholder: sentence_embedding,
                                                                           sent_lengths_placeholder: length,
                                                                           history_embedding : history_embs,
-                                                                        chosen_logical_tokens: one_hot_reshaped})#token_unnormalized_dist: probs_reshaped,
+                                                                        chosen_logical_tokens: one_hot_reshaped})
 
                 for var,grad in enumerate(token_grad):
                    gradBuffer[var] -= grad[0]
-            if train.epochs_completed == 4:
-                print("outputted: %s" % " ".join(output))
+            #if train.epochs_completed == 4:
+            print("outputted: %s" % " ".join(output))
 
         sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
 
