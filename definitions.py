@@ -17,3 +17,4 @@ TOKEN_COUNTS =  os.path.join(DATA_DIR, 'sentence-processing', 'tokens.txt')
 BIGRAM_COUNTS =  os.path.join(DATA_DIR, 'sentence-processing', 'bigrams.txt')
 
 SYNONYMS =  os.path.join(DATA_DIR, 'sentence-processing', 'manual_replacements.txt')
+SUPERVISED_TRAIN_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'sents_for_pretain')
