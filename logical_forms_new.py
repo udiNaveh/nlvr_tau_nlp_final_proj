@@ -190,7 +190,7 @@ def equal(a,b):
         return a == b
     a = a if isinstance(a, list) else [a]
     b = b if isinstance(b, list) else [b]
-    types = [type[x] for x in a] + [type[x] for x in b]
+    types = [type(x) for x in a] + [type(x) for x in b]
     if count(types) > 1:
         raise TypeError("cannot equate types: {0} and {1}".format(types[0], types[1]))
     return equal_set(a, b)
