@@ -1,0 +1,1258 @@
+
+@ there are T_INT T_COLOR item 101
+~ equal_int T_INT count filter ALL_ITEMS lambda_x_: is_T_COLOR x
+! equal_int T_INT count filter_color ALL_ITEMS color.T_COLOR
+
+@ there is T_ONE tower with a T_COLOR item at the T_LOC 60
+~ exist filter ALL_BOXES lambda_x_: exist filter x lambda_y_: and is_T_LOC y is_T_COLOR y
+~ exist filter ALL_BOXES lambda_x_: exist filter filter x lambda_y_: is_T_LOC y lambda_z_: is_T_COLOR z
+! exist filter ALL_BOXES lambda_x_: exist intersection filter_color x color.T_COLOR filter x lambda_y_: is_T_LOC y
+
+@ there is T_QUANTITY_COMPARE T_ONE tower with a T_COLOR item at the T_LOC 53
+~ T_QUANTITY_COMPARE 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: and is_T_LOC y is_T_COLOR y
+~ T_QUANTITY_COMPARE 1 count filter ALL_BOXES lambda_x_: exist filter filter x lambda_y_: is_T_LOC y lambda_z_: is_T_COLOR z
+! T_QUANTITY_COMPARE 1 count filter ALL_BOXES lambda_x_: exist intersection filter_color x color.T_COLOR filter x lambda_y_: is_T_LOC y
+
+@ there is T_ONE T_COLOR T_SHAPE 52
+~ exist filter ALL_ITEMS lambda_x_: and is_T_COLOR x is_T_SHAPE x
+~ exist filter filter ALL_ITEMS lambda_x_: is_T_COLOR x lambda_y_: is_T_SHAPE y
+! exist intersection filter ALL_ITEMS lambda_x_: is_T_COLOR x filter ALL_ITEMS lambda_y_: is_T_SHAPE y
+
+@ there is a T_COLOR item as the T_LOC of a tower with T_INT item 51
+~ exist filter ALL_BOXES lambda_x_: and equal_int T_INT count x exist filter x lambda_y_: and is_T_LOC y is_T_COLOR y
+~ exist filter ALL_BOXES lambda_x_: and equal_int T_INT count x exist filter filter x lambda_y_: is_T_LOC y lambda_z_: is_T_COLOR z
+
+@ there is a T_COLOR_1 item on a T_COLOR_2 item 47
+~ exist filter get_above filter ALL_ITEMS lambda_y_: is_T_COLOR2 lambda_x_: is_T_COLOR1
+
+@ there is a T_COLOR item as the T_LOC of a tower with T_QUANTITY_COMPARE T_INT item 44
+~ exist filter ALL_BOXES lambda_x_: and T_QUANTITY_COMPARE T_INT count x exist filter x lambda_y_: and is_T_LOC y is_T_COLOR y
+~ exist filter ALL_BOXES lambda_x_: and T_QUANTITY_COMPARE T_INT count x exist filter filter x lambda_y_: is_T_LOC y lambda_z_: is_T_COLOR z
+~ exist filter filter ALL_BOXES lambda_x_: T_QUANTITY_COMPARE T_INT count x lambda_y_: exist filter y lambda_z_: and is_T_LOC z is_T_COLOR z
+~ exist filter filter ALL_BOXES lambda_x_: T_QUANTITY_COMPARE T_INT count x lambda_y_: exist filter filter y lambda_z_: is_T_LOC z lambda_w_: is_T_COLOR w
+
+there is a T_COLOR T_SHAPE closely touch the T_LOC of a box 41
+there are T_INT T_COLOR T_SHAPE 36
+T_ONE of the box contain T_QUANTITY_COMPARE T_INT item 31
+there are T_INT tower with a T_COLOR item at the T_LOC 30
+there is a box with a T_COLOR T_SHAPE and a T_COLOR T_SHAPE 27
+there is a T_COLOR T_SHAPE touch the T_LOC 25
+there is a T_COLOR T_SHAPE closely touch right edge of a box 24
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE touch the edge 23
+there is a box with T_INT item 22
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item as the T_LOC of a tower 21
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE not touch a edge 20
+there is a box with only T_COLOR and T_COLOR item 20
+there is a box with only T_ONE item 20
+there is a T_COLOR item as the T_LOC of a tower 19
+T_ONE of the box have T_QUANTITY_COMPARE T_INT item 19
+there is a tower with a T_COLOR item on a T_COLOR item 19
+there is a T_COLOR tower 18
+there is a box with T_QUANTITY_COMPARE T_INT item 18
+there are T_QUANTITY_COMPARE T_INT tower with a T_COLOR item at the T_LOC 18
+there is a box with T_INT T_COLOR item 18
+there are T_INT T_COLOR item as the T_LOC of a tower 18
+there is T_ONE tower with T_INT T_COLOR item stack together 17
+the tower with T_INT item have a T_COLOR item at the T_LOC 16
+there is a T_COLOR T_SHAPE touch the edge 16
+there is T_ONE tower with T_INT T_COLOR item 16
+there is T_ONE tower with T_ONE T_COLOR item at the T_LOC 16
+there are T_QUANTITY_COMPARE T_INT T_COLOR item touch the edge 15
+there is a T_COLOR item closely touch the T_LOC of a box 14
+there is T_ONE box with T_INT T_COLOR item 14
+there is a box with a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 14
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item on a T_COLOR item 13
+there is a tower with T_QUANTITY_COMPARE T_INT item 13
+there is no T_COLOR T_SHAPE closely touch the T_LOC of a box 12
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item touch the edge 12
+there is a T_SHAPE closely touch right edge of a box 11
+there is a T_SHAPE closely touch the T_LOC of a box 11
+there is T_ONE tower with a T_COLOR item on a T_COLOR item 11
+there is T_ONE box with only T_COLOR and T_COLOR item 11
+there is a box with only T_INT item 11
+there is T_ONE tower with T_QUANTITY_COMPARE T_INT T_COLOR item 11
+there is a T_COLOR item T_COLOR a T_COLOR item 10
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_INT item 10
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item closely touch the T_LOC of a box 10
+there is no T_COLOR T_SHAPE closely touch right edge of a box 10
+there is T_ONE T_COLOR item 10
+there is a T_COLOR T_SHAPE touch the side 9
+there is T_ONE box with many item 9
+there are T_QUANTITY_COMPARE T_INT T_SHAPE not touch a edge 9
+there is a T_COLOR T_SHAPE touch the corner 9
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE touch the T_LOC 9
+there is a box with T_QUANTITY_COMPARE T_INT T_COLOR item 9
+there is no T_COLOR item closely touch the T_LOC of a box 9
+there is a tower with T_INT item 9
+there are T_QUANTITY_COMPARE T_INT T_SHAPE touch the edge 9
+there is a box with T_INT item of T_INT different color 8
+there is a box with a T_COLOR T_SHAPE and T_INT T_COLOR T_SHAPE 8
+there are T_QUANTITY_COMPARE T_INT T_COLOR item as the T_LOC of a tower 8
+each box have T_QUANTITY_COMPARE T_ONE T_COLOR item 8
+there is a T_SHAPE closely touch a corner 8
+there are T_QUANTITY_COMPARE T_INT T_COLOR item 8
+there is a tower with only T_ONE T_COLOR item 8
+there are T_QUANTITY_COMPARE T_INT T_COLOR item not touch a edge 8
+there is no T_COLOR item as the T_LOC of a tower 8
+there is T_ONE tower with T_QUANTITY_COMPARE T_INT item 8
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE closely touch the T_LOC of a box 8
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT item 8
+there are T_QUANTITY_COMPARE T_INT T_COLOR item not touch the edge 8
+there is a tower with a T_COLOR item at the T_LOC 8
+there is T_ONE box with T_QUANTITY_COMPARE T_INT item 7
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE not touch the edge 7
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item as the T_LOC of a tower with T_QUANTITY_COMPARE T_INT item 7
+there are T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE 7
+there is no T_SHAPE closely touch the T_LOC of a box 7
+there are T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE not touch a edge 7
+there is a box with T_ONE item 7
+there is a box with only T_ONE T_COLOR item 7
+there is no T_COLOR item on a T_COLOR item 7
+there are T_INT box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 7
+there is a T_COLOR tower with only T_ONE item 7
+there is a box which have T_INT item 7
+there is a box with a T_COLOR T_SHAPE a T_COLOR T_SHAPE and a T_COLOR T_SHAPE 7
+there is a box with T_INT item of which T_INT are T_COLOR 7
+there is T_ONE box with T_QUANTITY_COMPARE T_ONE T_COLOR item 6
+there are T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE not touch the edge 6
+there is a T_SHAPE closely touch a corner of a box 6
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE closely touch right edge of a box 6
+there is a tower with only T_ONE item 6
+there is T_QUANTITY_COMPARE T_ONE tower with a T_COLOR item on a T_COLOR item 6
+there is a box with a T_COLOR T_SHAPE and T_INT T_SHAPE 6
+none of the T_COLOR T_SHAPE are touch the edge 6
+there is a box with only T_COLOR item 6
+there is T_QUANTITY_COMPARE T_ONE tower with a T_COLOR item at T_LOC 6
+there are T_INT T_COLOR item touch the edge 6
+there is a box with T_INT T_COLOR T_SHAPE 5
+there is a box with T_INT item of T_COLOR and T_COLOR color 5
+there is T_ONE box with T_INT T_COLOR T_SHAPE 5
+there is a box with T_INT item of only T_COLOR and T_COLOR color 5
+there is only T_ONE T_COLOR item as the T_LOC of a tower 5
+there is a box with item of only T_COLOR and T_COLOR color 5
+there is T_ONE tower with T_QUANTITY_COMPARE T_INT T_COLOR item stack together 5
+there is T_ONE T_COLOR T_SHAPE touch the T_LOC 5
+there is a box with a T_COLOR T_SHAPE and T_INT T_COLOR item 5
+there is T_ONE T_COLOR item closely touch a corner 5
+there is a box with only T_ONE T_COLOR T_SHAPE 5
+there is a box that have T_INT item 5
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item in each box 5
+there is T_ONE box with T_QUANTITY_COMPARE T_ONE item 5
+there is a T_COLOR T_SHAPE not touch a edge 5
+there is a T_COLOR item as the T_LOC of T_QUANTITY_COMPARE T_ONE tower 5
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item touch the T_LOC 5
+there is T_QUANTITY_COMPARE T_ONE T_SHAPE closely touch the T_LOC of a box 5
+there is a T_COLOR T_SHAPE not touch the edge 5
+there are T_INT tower with T_QUANTITY_COMPARE T_ONE T_COLOR item 5
+there is a box with a T_COLOR T_SHAPE a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 4
+there is a tower with T_QUANTITY_COMPARE T_INT T_COLOR item 4
+T_COLOR T_SHAPE is not touch a edge 4
+there is a T_COLOR T_SHAPE closely touch a corner 4
+there is no tower with T_INT item 4
+there is a tower with T_INT T_COLOR item 4
+there is no T_COLOR item closely touch right edge of a box 4
+there is a tower with T_QUANTITY_COMPARE T_ONE item which is of T_COLOR color 4
+none of the T_COLOR item are touch a edge 4
+there is T_ONE box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 4
+there is T_ONE box with T_QUANTITY_COMPARE T_INT T_COLOR item 4
+there are T_INT tower with T_COLOR item at the T_LOC 4
+the T_LOC item from the T_LOC of a tower is T_COLOR 4
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT T_COLOR item 4
+there are T_INT T_COLOR item closely touch right edge of a box 4
+the tower with T_INT item have a T_COLOR item on a T_COLOR item 4
+there is a box with T_INT item of which T_ONE is T_COLOR 4
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item closely touch right edge of a box 4
+there is T_QUANTITY_COMPARE T_ONE box with T_INT T_COLOR item 4
+there is a T_COLOR item below a T_COLOR item 4
+there is T_ONE T_COLOR T_SHAPE touch the edge 4
+there is a T_SIZE T_COLOR T_SHAPE touch the edge 4
+there is a box with a T_COLOR item touch the edge and a T_COLOR item on T_LOC 4
+there is a box with a T_COLOR item on T_LOC 4
+none of the T_COLOR T_SHAPE are touch a edge 4
+there is T_ONE tower with only T_COLOR item 4
+T_ONE of the box contain T_QUANTITY_COMPARE T_ONE item 4
+there are T_INT box with many item 4
+there are T_QUANTITY_COMPARE T_INT T_COLOR item touch a edge 4
+the T_LOC of a T_INT item tower is T_COLOR 4
+there is a box with T_INT T_COLOR and T_ONE T_COLOR item 4
+T_COLOR T_SHAPE is touch the edge 4
+there is T_QUANTITY_COMPARE T_ONE tower which have a T_COLOR item on a T_COLOR item 4
+there is a tower with only T_COLOR item 4
+there is only T_ONE tower with T_QUANTITY_COMPARE T_ONE T_COLOR item 4
+there is a tower with T_INT item have a T_COLOR item at the T_LOC 4
+there are T_INT box with T_QUANTITY_COMPARE T_ONE T_COLOR item 4
+there are T_QUANTITY_COMPARE T_INT tower with T_QUANTITY_COMPARE T_INT item 4
+there are T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE touch the edge 4
+T_QUANTITY_COMPARE T_ONE tower have a T_COLOR item at its T_LOC 4
+there is a box with T_ONE T_COLOR and T_ONE T_COLOR item 4
+there is T_ONE tower with T_QUANTITY_COMPARE T_ONE T_COLOR item 4
+there is only T_ONE tower with a T_COLOR item at the T_LOC 4
+there is a tower which have only T_ONE item 4
+there is a T_COLOR item closely touch a corner 4
+the tower with T_QUANTITY_COMPARE T_INT item have a T_COLOR item at the T_LOC 4
+there is a box with a T_COLOR item touch the edge and a T_COLOR item on it 4
+there is no T_SHAPE closely touch right edge of a box 4
+there is a T_COLOR item as the T_LOC of T_QUANTITY_COMPARE T_INT tower 4
+there are T_INT box with only T_ONE T_COLOR item 3
+the T_COLOR item is touch the edge 3
+there is T_QUANTITY_COMPARE T_ONE box with T_QUANTITY_COMPARE T_INT item 3
+T_QUANTITY_COMPARE T_ONE box contain T_QUANTITY_COMPARE T_INT item 3
+there are T_QUANTITY_COMPARE T_INT item closely touch the T_LOC of a box 3
+there are T_QUANTITY_COMPARE T_INT T_SHAPE touch a edge 3
+there is a tower with only T_COLOR and T_COLOR item 3
+there is a T_COLOR item as the T_LOC of a tower with only T_INT item 3
+there is T_QUANTITY_COMPARE T_ONE tower with T_ONE T_COLOR item at the T_LOC 3
+there is T_ONE box with T_INT item 3
+there is a box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_INT T_SHAPE 3
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE touch a edge 3
+there are T_INT item closely touch the T_LOC of a box 3
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE touch the T_LOC bottom 3
+there is a box with a T_COLOR T_SHAPE a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_INT T_COLOR item 3
+there is a box with a T_COLOR T_SHAPE touch the edge 3
+there is a tower with only T_INT T_COLOR item 3
+there are T_INT T_SHAPE closely touch the T_LOC of a box 3
+there are T_INT T_COLOR T_SHAPE not touch the edge 3
+there are T_INT tower with T_COLOR item 3
+there are T_INT box with T_INT T_COLOR item 3
+T_QUANTITY_COMPARE T_ONE box have T_QUANTITY_COMPARE T_INT item 3
+there are T_INT T_COLOR item closely touch the T_LOC of a box 3
+there is a box with T_INT item and the T_INT are T_COLOR 3
+there is T_QUANTITY_COMPARE T_ONE box which contain T_QUANTITY_COMPARE T_INT item 3
+there is T_ONE tower with a T_COLOR item in the middle 3
+there is T_ONE box with only T_ONE T_COLOR item 3
+there is a box with T_INT item of all T_INT different color 3
+there is a box with only T_ONE T_SHAPE 3
+there are T_INT T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE 3
+there is a box with a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_INT T_COLOR item 3
+there is a box with T_INT T_SHAPE 3
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_ONE item which is of T_COLOR color 3
+there is a box with only T_INT T_COLOR and T_COLOR item 3
+there is T_ONE box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE 3
+there are T_INT T_COLOR item as the T_LOC of a tower with T_QUANTITY_COMPARE T_INT item 3
+there are T_INT T_COLOR item touch each other 3
+there is no item closely touch a corner of a box 3
+there is no T_COLOR item as the T_LOC of a tower with T_QUANTITY_COMPARE T_INT item 3
+there is a box with T_INT T_COLOR T_INT T_COLOR and T_ONE T_COLOR item 3
+there are T_INT tower with T_INT T_COLOR item 3
+there is T_QUANTITY_COMPARE T_ONE box with a T_COLOR T_SHAPE and a T_COLOR T_SHAPE 3
+there is T_QUANTITY_COMPARE T_ONE T_SHAPE touch the edge 3
+T_ONE of the box have only T_ONE item 3
+there are T_INT tower that contain T_QUANTITY_COMPARE T_ONE T_COLOR item 3
+there is a box that have T_INT T_COLOR T_SHAPE 3
+there are T_INT box that have T_QUANTITY_COMPARE T_ONE T_COLOR item 3
+T_COLOR T_SHAPE is not touch the edge 3
+there are T_INT tower with T_INT item 3
+there is T_QUANTITY_COMPARE T_ONE T_SHAPE closely touch right edge of a box 3
+there is a box with T_QUANTITY_COMPARE T_INT item include T_COLOR T_SHAPE 3
+T_INT of the T_INT tower have a T_COLOR T_LOC 3
+there is a T_SIZE T_COLOR T_SHAPE not touch the edge 3
+there is a T_COLOR item closely touch a box corner 2
+there are T_INT item touch the side 2
+there is T_ONE box that have T_QUANTITY_COMPARE T_ONE item 2
+there is a T_COLOR item in each box 2
+there is a tower which have only T_COLOR color item 2
+there is a box with T_QUANTITY_COMPARE same set of item 2
+there is a tower which have only T_ONE color 2
+there is a T_COLOR T_SHAPE closely touch a corner of a box 2
+there is a T_COLOR T_SHAPE touch a edge 2
+there is T_QUANTITY_COMPARE T_ONE tower with a T_COLOR item at the T_LOC and T_COLOR item at the T_LOC 2
+there is a box with only T_INT T_SHAPE 2
+there are T_INT tower with the same T_LOC color that is not T_COLOR 2
+there is a box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 2
+there is a box with T_INT item and a T_COLOR T_ONE on T_LOC 2
+there is a box with T_QUANTITY_COMPARE T_INT T_COLOR item and T_ONE T_COLOR item 2
+there is T_ONE T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE 2
+there are T_QUANTITY_COMPARE T_INT item touch the edge 2
+there is a box with only T_ONE T_SIZE T_COLOR item 2
+T_ONE tower have T_INT item of the same color 2
+there is T_ONE T_SHAPE closely touch a corner 2
+there is a T_COLOR item as the T_LOC of T_INT tower 2
+there are T_INT box with T_QUANTITY_COMPARE T_INT item 2
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_INT T_COLOR item 2
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE closely touch a edge of a box 2
+there is a box where a T_COLOR and T_COLOR T_SHAPE are touch each other 2
+the T_COLOR item is not touch the edge 2
+there is a box with T_INT item and a T_COLOR item on T_LOC 2
+there is T_QUANTITY_COMPARE T_ONE T_SHAPE touch the T_LOC 2
+there are T_INT T_COLOR item on T_LOC 2
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item 2
+there is T_ONE box with T_ONE T_COLOR item 2
+there is a box with T_QUANTITY_COMPARE T_INT item and a T_COLOR T_ONE on T_LOC 2
+the T_LOC of the T_INT item tower is T_COLOR 2
+there is a box with a T_COLOR T_SHAPE and many T_COLOR item 2
+there is T_ONE box with T_ONE T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE 2
+T_ONE of the tower have a T_COLOR item on a T_COLOR item 2
+there is a T_COLOR item between a T_COLOR item 2
+there is T_ONE box with T_QUANTITY_COMPARE T_ONE T_COLOR item and T_ONE T_COLOR item 2
+there are T_INT T_COLOR T_SHAPE touch the edge 2
+T_ONE of the box have T_QUANTITY_COMPARE T_INT item which are T_COLOR 2
+there is a box with many item and the T_INT item are T_COLOR 2
+there are T_QUANTITY_COMPARE T_INT tower with T_COLOR item at the T_LOC 2
+there are T_QUANTITY_COMPARE T_INT T_COLOR item on a T_COLOR item 2
+there is a tower with T_INT item not have a T_COLOR item at T_LOC 2
+T_ONE of the box have T_QUANTITY_COMPARE T_INT item T_ONE of which is a T_SHAPE 2
+there is T_QUANTITY_COMPARE T_ONE box with T_QUANTITY_COMPARE T_ONE item 2
+T_ONE of the box contain T_QUANTITY_COMPARE T_ONE item which is a T_COLOR T_SHAPE 2
+there is a T_COLOR tower with T_QUANTITY_COMPARE T_INT item 2
+there is a tower with T_QUANTITY_COMPARE T_INT item have a T_COLOR item at the T_LOC 2
+there is T_QUANTITY_COMPARE T_ONE tower with T_ONE item which is of T_COLOR color 2
+there are T_INT box with a T_COLOR T_SHAPE 2
+there is T_ONE box with T_ONE T_COLOR item and T_ONE T_COLOR item 2
+there are T_INT tower with a T_COLOR T_LOC 2
+there is T_QUANTITY_COMPARE T_ONE tower which have a T_COLOR item at the T_LOC 2
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 2
+there are T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE touch the T_LOC 2
+there is a T_COLOR T_SHAPE closely touch the corner 2
+there is a tower that have T_INT T_COLOR item 2
+there is a box with T_QUANTITY_COMPARE T_INT T_COLOR item and T_QUANTITY_COMPARE T_INT T_COLOR item 2
+there is a tower with T_INT T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR item 2
+there is a T_COLOR item touch the edge 2
+there is T_ONE T_COLOR T_SHAPE touch the T_LOC bottom 2
+all T_COLOR T_SHAPE are touch the edge 2
+there is a T_SHAPE closely touch the corner 2
+there are T_INT box that have the same number of item 2
+there are T_QUANTITY_COMPARE T_INT item touch the T_LOC 2
+T_ONE of the box contain T_INT T_COLOR item 2
+there is a T_INT item tower that the T_LOC is T_COLOR 2
+there is a tower with only T_ONE item and the color is T_COLOR 2
+there is as T_COLOR item on a T_COLOR item 2
+there is a box with a T_COLOR T_SHAPE a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_SHAPE 2
+there is T_ONE T_COLOR T_SHAPE closely touch a corner 2
+there is T_QUANTITY_COMPARE T_ONE tower with only T_ONE T_COLOR item 2
+there is T_ONE box with only T_COLOR item 2
+there is a box with a T_COLOR item on T_LOC and a T_COLOR item right below it 2
+there is a T_COLOR item touch a T_COLOR item 2
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_ONE T_COLOR item 2
+there is T_ONE tower with only T_COLOR and T_COLOR item 2
+there is T_ONE tower with a T_COLOR item on the T_COLOR item 2
+there is a T_COLOR item touch the T_LOC 2
+there is T_ONE box with only T_ONE item 2
+there is T_QUANTITY_COMPARE T_ONE box with many item 2
+there are T_INT T_COLOR T_SHAPE not touch a edge 2
+there is a T_COLOR item closely touch a corner of a box 2
+there is only T_ONE T_COLOR item touch the edge 2
+there is a T_SIZE T_COLOR item touch the edge 2
+there is a box with T_INT item and a T_COLOR T_ONE is touch the edge 2
+there is no tower with T_INT T_COLOR item 2
+there is a tower which have T_INT T_COLOR item 2
+there is T_ONE tower with T_COLOR item only 2
+there is T_ONE tower which have a T_COLOR item at the T_LOC 2
+there is a box with many item and the T_INT are T_COLOR 2
+there are T_INT T_COLOR item touch the side 2
+there is a box with T_INT item and T_ONE is touch the side 2
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT item have a T_COLOR item on a T_COLOR item 2
+there is a box with T_COLOR T_SHAPE and T_COLOR T_SHAPE 2
+there is T_ONE tower with T_QUANTITY_COMPARE T_ONE item which is T_COLOR in color 2
+there is a box with only T_INT T_COLOR item 2
+there is a T_COLOR item on the T_COLOR item 2
+there is a box with only T_ONE item that is T_COLOR 2
+there is a tower with a T_COLOR item at the T_LOC and a T_COLOR item at the T_LOC 2
+there is T_ONE tower with T_QUANTITY_COMPARE T_INT item of same color 2
+there is no box with only T_ONE item 2
+T_ONE of the box have T_INT T_SHAPE 2
+there are T_INT tower that have T_INT T_COLOR item each 2
+there is a tower with T_INT T_COLOR item and T_INT T_COLOR item 2
+there is T_ONE box with only T_ONE T_COLOR T_SHAPE 2
+there is a T_COLOR item closely touch right edge of a box 2
+there are T_INT box with T_ONE T_COLOR T_SHAPE 2
+there is a tower with T_QUANTITY_COMPARE T_INT item with a T_COLOR item at the T_LOC 2
+there is a box with T_INT T_COLOR item touch each other 2
+there is a box with T_ONE T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE 2
+there is a tower with a T_COLOR T_LOC 2
+there is a box with T_INT T_COLOR and T_INT T_COLOR item 2
+there is T_ONE box with T_QUANTITY_COMPARE T_ONE T_SHAPE in it 2
+there is T_QUANTITY_COMPARE T_ONE box with only T_INT item 2
+the tower with T_INT item have a T_COLOR item on the T_COLOR item 2
+there is T_ONE box with only T_ONE item in it 2
+there is T_ONE T_COLOR T_SHAPE touch a edge 2
+there is a box with a T_COLOR T_SHAPE a T_COLOR T_SHAPE and T_INT T_COLOR T_SHAPE 2
+there is a box with T_QUANTITY_COMPARE T_INT item of T_COLOR and T_COLOR color 2
+T_ONE of the T_INT tower is T_COLOR 2
+there is T_QUANTITY_COMPARE T_ONE box with T_QUANTITY_COMPARE T_INT T_COLOR item 2
+there is a box with the exacts set of item 2
+there is T_ONE tower which have a T_COLOR item on a T_COLOR item 2
+T_ONE of the box have T_QUANTITY_COMPARE T_INT item T_ONE of which is a T_COLOR T_SHAPE 2
+the tower with T_INT item have a T_COLOR item as a middle item 2
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item touch a edge 2
+there is T_QUANTITY_COMPARE T_ONE tower with T_ONE item which is T_COLOR 2
+there is a box with a T_SHAPE and T_QUANTITY_COMPARE T_INT T_SHAPE 2
+T_ONE box have T_ONE T_COLOR T_SHAPE 2
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item as the T_LOC of a tower with T_INT item 2
+there are T_INT box with T_ONE T_COLOR item 2
+there is T_QUANTITY_COMPARE T_ONE box with T_INT T_COLOR T_SHAPE 2
+there is a tower that the T_LOC item from the T_LOC is T_COLOR 2
+there are T_INT box with T_COLOR T_SHAPE 2
+there is a box with a T_COLOR T_SHAPE a T_COLOR T_SHAPE and a T_COLOR item 2
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE in each box 2
+there is a box with a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR item 2
+there are T_QUANTITY_COMPARE T_INT T_SHAPE closely touch the T_LOC of a box 2
+there is a T_COLOR item closely touch the T_LOC wall of a box 2
+there are T_INT tower with a T_COLOR item on a T_COLOR item 2
+the item of all T_INT color are touch the edge 1
+T_INT box have the same T_INT T_COLOR item each 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE touch the T_LOC edge 1
+there is a box that have only T_INT item that are not the same 1
+the tower with T_INT item have T_INT T_COLOR item 1
+T_ONE of the box contain only T_ONE item which is a T_COLOR T_SHAPE 1
+there is box with a T_SIZE T_COLOR T_SHAPE and it is not touch the edge 1
+there is a box that T_INT T_SHAPE are touch a edge 1
+there is a box that have T_INT T_COLOR item 1
+there is a box with T_INT T_SHAPE and only T_ONE item of different shape 1
+each box have T_QUANTITY_COMPARE T_ONE T_COLOR item in it 1
+there is a box with T_INT item of which T_QUANTITY_COMPARE T_INT are T_COLOR and T_COLOR 1
+there is a tower which have T_INT item and the T_LOC is T_COLOR 1
+there are T_INT T_SHAPE 1
+there is a box with T_INT item and the T_COLOR T_ONE is on T_LOC 1
+T_COLOR T_SHAPE are touch the T_LOC 1
+there is a box with T_QUANTITY_COMPARE T_INT item and a T_COLOR item on T_LOC 1
+there is a tower with T_INT item have item of all T_INT color 1
+there is T_COLOR item touch the edge with a T_COLOR item on T_LOC 1
+there are T_INT T_COLOR T_SHAPE touch the T_LOC 1
+T_ONE box have T_INT T_COLOR item 1
+there is no tower with T_QUANTITY_COMPARE T_INT item 1
+T_ONE of the tower have a different colored item on a T_COLOR item 1
+there are T_INT tower with T_COLOR item as the T_LOC level 1
+there is a box with a T_COLOR item a T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is a box with T_INT item of which T_QUANTITY_COMPARE T_ONE is T_COLOR 1
+there is a box that have T_INT T_COLOR item which are T_SHAPE and T_SHAPE 1
+there is a T_COLOR T_SHAPE closely touch a edge of a box 1
+there is T_ONE box with T_ONE T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+the number of item in the box is different 1
+there is a box which have only T_INT item and they are both T_SHAPE 1
+there is T_ONE T_SHAPE 1
+there are T_INT T_COLOR T_SHAPE and T_INT T_COLOR T_SHAPE 1
+T_ONE of the box have T_QUANTITY_COMPARE T_INT item T_ONE of which is T_COLOR T_SHAPE 1
+item of all T_INT different color are touch the edge 1
+there is T_ONE box with a T_COLOR T_SHAPE and T_COLOR T_SHAPE in it 1
+there is a box with a T_COLOR T_SHAPE and a T_SHAPE 1
+all box have T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is a box with only T_ONE item that is not a T_SHAPE 1
+there is a tower with T_QUANTITY_COMPARE T_INT item and the T_LOC is T_COLOR 1
+there is a box with T_INT T_COLOR T_SHAPE and a T_COLOR T_SHAPE 1
+there is a tower with item of T_INT different color 1
+there is T_ONE box with T_QUANTITY_COMPARE T_ONE item in it 1
+there is box with T_INT T_SHAPE touch the T_LOC 1
+there are T_INT tower that are not the same in height 1
+there is no tower with only T_COLOR item 1
+there is T_ONE tower that have T_QUANTITY_COMPARE T_ONE item 1
+all the T_INT tower have a T_COLOR item 1
+there is no tower with only T_ONE item 1
+all the T_INT tower have different T_LOC color 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_INT item have T_COLOR item at the T_LOC and T_COLOR item at the T_LOC 1
+there is T_ONE box with only T_INT item 1
+the total T_COLOR item of the T_INT box is T_INT 1
+there is a T_INT item tower where the T_LOC and T_LOC item are the same in color 1
+the T_COLOR T_SHAPE is not touch the edge 1
+there is T_ONE tower with item of all T_INT color 1
+there is T_ONE box with T_QUANTITY_COMPARE T_INT item and they are the same color 1
+there is only T_ONE box with T_INT item 1
+there are T_INT T_COLOR item and they are the same shape of item 1
+there is T_ONE T_COLOR T_SHAPE not touch the edge 1
+there is T_ONE tower with a T_COLOR item in between T_INT T_COLOR item 1
+the middle item of the tower is T_COLOR 1
+there is T_ONE box with T_QUANTITY_COMPARE T_INT T_SHAPE of the same color 1
+there is T_ONE tower with T_ONE item in it 1
+there is T_ONE tower with T_QUANTITY_COMPARE T_ONE item which is T_COLOR 1
+there is T_ONE box with T_INT T_COLOR item in it 1
+there is a T_COLOR T_SHAPE of T_SIZE size touch the edge 1
+all the T_LOC of the tower have the same color 1
+there is a tower with a T_COLOR item at the T_LOC and at the T_LOC 1
+there is a box with T_INT item and a T_COLOR item below the item on T_LOC 1
+there is a box with a T_SIZE T_COLOR T_SHAPE and another T_COLOR item 1
+there is a box with T_INT item of which T_QUANTITY_COMPARE T_INT are T_COLOR item touch each other 1
+there is a tower with T_INT item with a T_COLOR item on T_LOC item of different color 1
+there are T_QUANTITY_COMPARE T_INT T_COLOR item on the item touch the edge 1
+T_ONE of the box have T_QUANTITY_COMPARE T_ONE item which is T_COLOR 1
+there is a box with a T_COLOR item touch the edge and a T_COLOR T_ONE right on it 1
+only T_ONE T_COLOR item is touch the edge 1
+none of the T_COLOR item are touch the edge 1
+there are T_INT tower with T_COLOR item on the T_LOC 1
+there is a box with a T_COLOR T_SHAPE a T_COLOR T_SHAPE and a T_SHAPE 1
+T_ONE of the box have T_INT item touch the edge 1
+there is a tower with T_INT T_COLOR item and the T_LOC and T_LOC are T_COLOR 1
+there is T_QUANTITY_COMPARE T_ONE box with a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is only T_ONE box with T_COLOR T_SHAPE 1
+there are T_INT box which have the same number of item and T_INT shape of color 1
+there are only T_INT tower with T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is T_ONE tower with a T_COLOR item at T_LOC 1
+there is a tower with T_INT item where a T_COLOR item is at T_LOC of the tower 1
+there is a tower that the color on the T_LOC is T_COLOR only 1
+there is a box with T_INT T_SHAPE and other item 1
+there is a box with T_INT T_COLOR item and T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE 1
+there is no box with a T_COLOR item and T_INT T_COLOR item 1
+there is a box with a T_COLOR item and only T_COLOR item on it 1
+all the tower have T_QUANTITY_COMPARE T_ONE item that is the same in color 1
+all the box have T_ONE T_COLOR item each 1
+there is a box with T_INT item of T_INT different color of which there are T_INT T_COLOR T_ONE T_QUANTITY_COMPARE 1
+there is a box that have only T_INT item and they are all T_COLOR 1
+there is a tower with a T_COLOR item on T_LOC item 1
+there are T_INT box with T_INT item of T_INT different color 1
+there is box with a T_COLOR T_SHAPE of T_SIZE size and a T_COLOR T_SHAPE 1
+T_ONE tower have a T_COLOR item at its T_LOC 1
+T_ONE of the box contain T_INT T_COLOR T_ONE T_COLOR and T_ONE T_COLOR item 1
+there is a T_COLOR item on a T_COLOR item in a tower with T_INT item 1
+there is a box with T_INT item T_QUANTITY_COMPARE of which T_INT are T_COLOR 1
+there are T_INT tower with item of same color at T_LOC 1
+there is T_QUANTITY_COMPARE T_ONE box with T_QUANTITY_COMPARE T_INT T_SHAPE of the same color 1
+there is a box with T_INT item and the T_INT are T_COLOR T_SHAPE 1
+there is a box with T_INT item of which T_INT are T_SHAPE and T_ONE is a T_SHAPE 1
+there is a box with T_COLOR and T_COLOR item of which T_ONE is a T_SIZE T_COLOR T_SHAPE and another is a T_SIZE T_COLOR T_SHAPE 1
+there are T_INT T_SHAPE touch the edge 1
+there are T_INT tower which have only T_INT item 1
+there is T_ONE T_SHAPE touch the T_LOC 1
+the tower with T_QUANTITY_COMPARE T_INT item have a T_COLOR item at the T_LOC and T_LOC 1
+there is a box with T_QUANTITY_COMPARE T_INT T_COLOR and T_ONE T_COLOR item 1
+there is a box with only T_COLOR and T_COLOR item of which there are only T_COLOR T_SHAPE 1
+there is a box with T_INT item and the T_ONE item is T_COLOR 1
+T_ONE tower have a T_COLOR item on the T_LOC 1
+there is a box with T_INT T_COLOR T_INT T_COLOR and T_INT T_COLOR item 1
+there is a box with only T_ONE item that is not a T_COLOR T_SHAPE or a T_COLOR T_SHAPE 1
+there is T_ONE box with T_INT item of the same color 1
+there is T_ONE tower with T_QUANTITY_COMPARE T_INT item which have T_COLOR item at the T_LOC 1
+there is a box with T_INT item of which T_COLOR item are both on T_LOC and on T_LOC 1
+there is a tower with T_COLOR T_LOC 1
+there is T_ONE item touch the left corner 1
+there is a box with T_ONE T_SHAPE 1
+only T_ONE T_SIZE T_COLOR T_SHAPE is touch the edge 1
+there is a T_COLOR item as the T_LOC of a tower with only T_COLOR and T_COLOR item 1
+there is a box with T_INT T_COLOR item and a T_COLOR item 1
+T_ONE of the box have T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is not T_QUANTITY_COMPARE T_ONE box with T_QUANTITY_COMPARE T_INT item 1
+T_ONE of the box have T_INT T_COLOR T_SHAPE 1
+there is a box with many item and there is T_ONE T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE 1
+there is a T_COLOR T_SHAPE touch the edge with T_QUANTITY_COMPARE T_INT item on it 1
+there is a tower with only T_COLOR item with T_QUANTITY_COMPARE T_INT item 1
+there is a box that have T_ONE T_SHAPE and T_ONE T_SHAPE that are T_COLOR 1
+there is a T_COLOR item on the T_LOC item 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT item and with a T_COLOR item at the T_LOC 1
+there is a box with T_QUANTITY_COMPARE T_INT item touch the edge 1
+there is T_ONE tower with T_QUANTITY_COMPARE T_INT item have the same color item on each other 1
+there is a box with T_INT T_COLOR item and T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is T_ONE T_COLOR T_SHAPE closely touch the T_LOC right corner 1
+all T_INT tower contain T_COLOR item 1
+there is a box with only T_COLOR item of which T_QUANTITY_COMPARE T_ONE is a T_SHAPE 1
+T_QUANTITY_COMPARE T_ONE of the box contain item of T_INT color 1
+in on of the tower there is a T_COLOR item on a T_COLOR item with a T_COLOR item at the T_LOC 1
+there is a tower with T_ONE T_COLOR item and T_ONE T_COLOR item 1
+there is a box with only T_COLOR and T_COLOR item and a T_SIZE T_COLOR T_SHAPE 1
+there are only T_INT T_COLOR T_SHAPE touch the edge 1
+there are T_INT T_COLOR T_SHAPE of different size in T_INT different box 1
+there is a box with T_INT item and there T_COLOR T_SHAPE is touch the side 1
+there is only T_ONE box with T_COLOR T_SHAPE in it 1
+there is a box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and a T_COLOR T_SHAPE 1
+there is no item closely touch the T_LOC of a box 1
+there is a T_INT item tower and the T_LOC is T_COLOR 1
+all the T_INT box either contain item in even or odd number 1
+there are T_INT box with item of all T_INT color 1
+the is T_ONE tower with a T_COLOR item at the T_LOC 1
+there are T_INT tower with the same height that are smaller than the T_LOC tower 1
+there is a T_INT item tower 1
+there is T_QUANTITY_COMPARE T_ONE tower with a T_COLOR item on a T_COLOR T_COLOR 1
+T_ONE box have T_INT T_COLOR T_SHAPE 1
+there is a tower with a T_COLOR item on a T_COLOR item and a T_COLOR item at the T_LOC 1
+there is a box with all T_INT different color and a T_COLOR T_SHAPE touch the edge with its T_LOC 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT item have T_COLOR item at the T_LOC 1
+there are T_INT T_SHAPE touch the side 1
+T_ONE of the box contain T_QUANTITY_COMPARE T_INT item where T_ONE of the item is a T_COLOR T_SHAPE 1
+there is a box with a T_COLOR T_SHAPE touch the edge and another T_ONE on it all 1
+there is a T_COLOR T_SHAPE that is closely touch the side 1
+there is a box with T_INT item T_QUANTITY_COMPARE of which T_ONE is a T_SHAPE 1
+there is a box with item of only T_INT different color and a T_SIZE T_COLOR T_SHAPE touch the edge 1
+there is T_ONE T_COLOR item that is a T_SHAPE 1
+there are T_QUANTITY_COMPARE T_INT box with T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there are only T_INT tower that have T_COLOR item 1
+there is a box with T_ONE item and it is T_COLOR 1
+there is a T_COLOR T_SHAPE touch the right corner 1
+there is T_QUANTITY_COMPARE T_ONE tower with only T_INT item 1
+there is a box with T_INT T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 1
+there is a box with T_COLOR and T_COLOR item of which there are T_INT item of different size 1
+there is a box with T_INT item and the T_INT item are the same 1
+there is a box that have T_INT item with T_INT color 1
+there is T_ONE box with T_INT T_COLOR item of the same shape 1
+there is a box with item of T_INT different color and T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is a box that have only T_ONE shape 1
+there is a box with T_INT T_COLOR item not touch each other 1
+there is a T_COLOR item as the T_LOC of only T_INT tower 1
+there is a box with T_QUANTITY_COMPARE T_INT T_SHAPE and T_QUANTITY_COMPARE T_INT T_SHAPE 1
+there is a item closely touch the T_LOC of a box 1
+there is T_ONE box with only T_INT T_COLOR T_SHAPE 1
+there is a box with only T_COLOR and T_COLOR item alternately position 1
+there are T_INT T_SHAPE closely touch right edge of a box 1
+there is a box with a T_COLOR item touch the edge 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item on of a T_COLOR item 1
+there is a box which have T_INT T_COLOR item 1
+there are T_INT T_COLOR T_SHAPE touch a edge 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR tower with only T_ONE item 1
+there are T_SHAPE closely touch the T_LOC of a box 1
+the tower with T_INT item have T_COLOR item at the T_LOC 1
+there is a box with T_ONE T_COLOR item and T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is only T_ONE tower with T_ONE T_COLOR item 1
+there are T_QUANTITY_COMPARE T_INT tower with T_COLOR item and T_QUANTITY_COMPARE T_INT tower with T_COLOR item 1
+there is a box which have only T_INT item and the color is T_COLOR 1
+there is T_ONE tower with only T_COLOR color item 1
+none of the T_SHAPE are touch a edge 1
+all of the box have a T_COLOR item touch the edge of the box 1
+there is T_QUANTITY_COMPARE T_ONE T_SHAPE closely touch a corner 1
+there is a item that is not a T_SHAPE touch the corner 1
+there are T_INT box that have T_INT different shape T_COLOR item 1
+the tower with T_INT item have a T_COLOR item 1
+there are T_INT tower with T_QUANTITY_COMPARE T_ONE item 1
+all box have T_QUANTITY_COMPARE T_INT item 1
+the T_LOC of a tower is T_COLOR and the T_LOC is T_COLOR 1
+there is only T_ONE T_COLOR item on a T_COLOR item 1
+T_ONE of the tower with item block have a T_COLOR item below the T_LOC item 1
+there is T_ONE tower have a T_COLOR item on a T_COLOR item 1
+there is a T_COLOR item touch the corner and the shape is not T_SHAPE 1
+there is a tower with T_ONE T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is T_ONE tower that contain T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is a box with T_INT item of different color 1
+there is a box with T_QUANTITY_COMPARE T_INT T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 1
+each box have many item 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_COLOR item on a T_COLOR item 1
+there is a box that have only T_INT T_COLOR item 1
+there is a box with T_INT item T_QUANTITY_COMPARE of which T_ONE is T_COLOR 1
+there is T_ONE box where the only T_COLOR item is a T_SHAPE 1
+there is T_QUANTITY_COMPARE T_ONE T_SHAPE in each box 1
+there are T_INT tower with not T_QUANTITY_COMPARE T_INT item that are the same in height 1
+there is a box with T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 1
+there is a box with only T_COLOR and T_COLOR color and a T_SIZE T_SHAPE 1
+there is a box with many item and the only T_COLOR is a T_SHAPE 1
+there are T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE touch the T_LOC bottom 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT item with a T_COLOR item at the T_LOC and a T_COLOR item below the T_LOC item 1
+there is a T_SHAPE touch the corner 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_ONE item which is T_COLOR 1
+there is a tower with T_INT item have a T_COLOR item at the T_LOC and a different color item at the T_LOC 1
+the T_LOC and T_LOC of a T_INT item tower are the the same in color 1
+T_INT tower have a T_COLOR item 1
+there is T_ONE tower with T_QUANTITY_COMPARE T_ONE T_COLOR item and T_ONE T_COLOR item 1
+there is a box that have T_ONE T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE 1
+there is a box that a T_COLOR and T_COLOR item are touch side of the box 1
+there are T_INT T_SHAPE shape 1
+there is a box with many item and there is a T_COLOR T_SHAPE and T_SHAPE 1
+there is a box with a T_COLOR T_SHAPE T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_INT T_COLOR item 1
+T_ONE of the box contain only T_INT item 1
+tower with T_INT item have a T_COLOR item 1
+the same color is on T_LOC in all T_INT box 1
+there are T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE touch a edge 1
+there is T_QUANTITY_COMPARE T_ONE tower with a T_COLOR T_COLOR at the T_LOC 1
+there are T_INT item in a box and many of the item are T_COLOR 1
+T_ONE of the box with T_QUANTITY_COMPARE T_INT item have T_COLOR and T_COLOR color item 1
+there is a box with T_INT item of which T_QUANTITY_COMPARE T_INT are T_COLOR 1
+there are T_INT tower that have different T_LOC color and the same color in the T_LOC item 1
+there are T_QUANTITY_COMPARE T_INT T_COLOR item as the T_LOC of a tower with T_QUANTITY_COMPARE T_INT item 1
+there are T_QUANTITY_COMPARE T_INT tower with T_INT item 1
+there is T_ONE box with T_QUANTITY_COMPARE T_ONE T_SHAPE item 1
+there is the box with the same set of item 1
+T_QUANTITY_COMPARE T_ONE of the box contain T_QUANTITY_COMPARE T_ONE item which is a T_SHAPE 1
+there is a tower that have T_INT T_COLOR and T_ONE T_COLOR item 1
+there is a tower with a T_COLOR item at T_LOC 1
+there is a box with item of all T_INT different color 1
+there is a box with item of T_COLOR and T_COLOR color only 1
+there is a tower with a T_COLOR item and other T_INT item 1
+T_ONE of the box have T_QUANTITY_COMPARE T_ONE T_COLOR item of which T_ONE T_COLOR item is touch the edge 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT item have a T_COLOR item at the T_LOC 1
+there is a tower with T_INT item have a T_COLOR item on a T_COLOR item 1
+there is T_ONE box with T_INT T_COLOR item and T_INT T_COLOR item and T_ONE T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT T_COLOR item stack together 1
+there is a T_COLOR item touch the T_LOC bottom 1
+the middle item of a T_INT tower item is T_COLOR 1
+there is a box with a T_COLOR item a T_COLOR T_SHAPE a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 1
+T_ONE of the T_INT tower have T_INT color 1
+T_ONE of the box contain item where T_QUANTITY_COMPARE T_INT of the item are T_COLOR 1
+T_ONE tower with a T_COLOR item at the T_LOC 1
+there is a back item of T_QUANTITY_COMPARE T_ONE tower 1
+there are T_INT T_COLOR T_SHAPE shape 1
+there is a box with a T_COLOR T_SHAPE touch the edge and a T_COLOR T_SHAPE on T_LOC 1
+there is a box with a T_COLOR and T_COLOR T_SHAPE touch each other 1
+there is a box that have only T_ONE item that is not T_COLOR 1
+there is only T_ONE box with T_QUANTITY_COMPARE T_ONE T_SHAPE 1
+T_INT box have the same number of item 1
+there is T_ONE item tower and the color is T_COLOR 1
+there is a T_INT item tower which have T_INT T_COLOR item 1
+there is T_ONE tower where T_INT of the same color item are at the T_LOC 1
+there is a tower with a T_COLOR T_LOC and T_COLOR T_LOC 1
+there is a T_COLOR item touch the edge which is not a T_SHAPE 1
+there are box with either T_COLOR and T_COLOR or T_COLOR and T_COLOR item 1
+there is a tower and the T_LOC is T_COLOR 1
+there is a item closely touch the T_LOC wall of a box 1
+there is a different number of item in the box 1
+there is no box with only T_COLOR item 1
+there is a box with a T_COLOR T_SHAPE T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there are T_INT item that are not the color T_COLOR 1
+there is as box with only T_ONE item and it is T_COLOR 1
+there is T_QUANTITY_COMPARE T_ONE tower with a T_COLOR item on the T_COLOR item 1
+there is T_ONE box with only T_ONE T_COLOR item and it is a T_SHAPE 1
+the middle of a T_INT item tower is T_COLOR 1
+there is a box with T_INT T_COLOR item and a T_COLOR T_SHAPE 1
+there is a box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_INT T_SHAPE 1
+there is a box with T_ONE T_COLOR item and T_INT item of T_ONE another color 1
+there are T_QUANTITY_COMPARE T_INT box with T_COLOR item 1
+there is a box with T_INT item of all T_INT different color and a T_COLOR on T_LOC 1
+there is only T_ONE tower with T_COLOR at the T_LOC 1
+there is a T_COLOR T_SHAPE touch the edge with its side 1
+there are T_INT tower with T_INT T_COLOR item touch each other 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT item with a T_COLOR item below the T_LOC item 1
+none of the T_COLOR color item are touch the edge 1
+there is a box with T_QUANTITY_COMPARE T_INT T_COLOR item T_QUANTITY_COMPARE T_INT T_COLOR item and only T_ONE T_COLOR item 1
+there is a box with no a T_COLOR item with T_INT T_COLOR and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is only T_ONE box with T_COLOR item 1
+there is T_ONE box with T_QUANTITY_COMPARE T_INT T_SHAPE in it 1
+there is a tower with T_INT item with the T_COLOR item at the T_LOC 1
+there is only T_ONE tower with T_ONE T_COLOR item at the T_LOC 1
+there are T_QUANTITY_COMPARE T_INT box contain T_QUANTITY_COMPARE T_INT item 1
+there is a tower with T_INT T_COLOR item on the T_LOC of a tower 1
+there are T_INT tower with a T_COLOR item at T_LOC 1
+there is a box with a T_SIZE T_COLOR T_SHAPE not touch the edge 1
+there are T_COLOR item in each tower and the position are the same 1
+there is a T_SHAPE in each box 1
+there is a box with item of T_INT different color and only T_ONE T_COLOR T_SHAPE of T_SIZE size 1
+there is a T_SHAPE and a T_SHAPE closely touch a corner 1
+there is a box which have T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE 1
+there is a tower with T_QUANTITY_COMPARE T_INT item have a T_COLOR item at T_LOC 1
+there is T_ONE box with a T_COLOR T_SHAPE and T_SHAPE in it 1
+the T_LOC T_INT item of the tower is T_COLOR and T_COLOR 1
+there is a box with many item and T_INT are T_COLOR 1
+there are T_QUANTITY_COMPARE T_INT tower with T_INT T_COLOR item stack together 1
+there is a box which have only T_INT item and they are T_COLOR 1
+T_COLOR T_SHAPE of T_SIZE size is touch the edge 1
+there is T_QUANTITY_COMPARE T_ONE T_SHAPE touch a edge 1
+there is a box with a T_COLOR item closely touch a T_COLOR item 1
+there is a T_INT item tower and the T_LOC item is T_COLOR 1
+the T_LOC item of a tower from the T_LOC is T_COLOR 1
+the box contain least number of item are T_COLOR 1
+there is a box with T_INT T_COLOR item and T_INT other item 1
+there is a box with a T_COLOR T_SHAPE touch the edge and T_COLOR and T_COLOR T_SHAPE on it 1
+there is as box with only T_ONE item 1
+there is a box with T_INT item where T_COLOR item is touch the edge 1
+there is T_ONE box with only T_INT item of the same color 1
+there are T_INT box that have T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 1
+T_QUANTITY_COMPARE T_INT box have the same number of item each and the same number of item touch the side 1
+there is a box with T_INT T_COLOR item on T_LOC 1
+there is a T_COLOR T_SHAPE touch the right corner of the box 1
+there is a box with T_COLOR and T_COLOR item and a T_SIZE T_COLOR T_SHAPE 1
+T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE is touch the T_LOC bottom 1
+there is a tower with T_QUANTITY_COMPARE T_INT item which are of T_COLOR color 1
+there is a box that have only T_ONE item 1
+the tower have T_QUANTITY_COMPARE T_ONE item have a T_COLOR item at the T_LOC 1
+there is T_QUANTITY_COMPARE T_ONE tower have a T_COLOR item on a T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE box with T_INT T_COLOR item of the same shape 1
+there is a box with T_INT T_SHAPE of same color closely touch each other 1
+T_QUANTITY_COMPARE T_INT T_SHAPE are not touch the edge 1
+there is a box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is a box with T_INT T_SIZE T_SHAPE of which T_ONE is touch the edge 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item not touch a edge 1
+there is a T_COLOR T_SHAPE touch the right side 1
+there is a tower with T_INT item and the T_INT are the same 1
+there is no box with T_QUANTITY_COMPARE T_ONE T_COLOR item and T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE box with a T_SHAPE and T_QUANTITY_COMPARE T_ONE T_SHAPE 1
+the T_LOC of a tower is T_COLOR which is touch a T_COLOR item 1
+there is a T_COLOR T_SHAPE on another T_COLOR T_SHAPE touch the edge 1
+there is a box with a T_COLOR item touch the edge and T_QUANTITY_COMPARE T_INT T_COLOR on it 1
+there is a box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_SHAPE 1
+there is a box with T_QUANTITY_COMPARE T_INT item of all T_INT different color 1
+there is T_QUANTITY_COMPARE on T_COLOR T_SHAPE not touch a edge 1
+there is a tower with T_QUANTITY_COMPARE T_ONE item 1
+there is T_ONE tower with item block only 1
+there is no T_COLOR item as the T_LOC of a tower with T_INT item 1
+there is a box which have T_INT item and the T_INT are T_COLOR the other T_ONE is T_COLOR 1
+there is a box which have only T_ONE item and it is T_SHAPE 1
+there is a box which contain item of T_COLOR and T_COLOR color only 1
+there is a box with T_INT item T_QUANTITY_COMPARE of which a T_COLOR item is touch the corner of the box 1
+there is a T_COLOR item touch the side 1
+there is a T_COLOR item on T_INT T_COLOR item 1
+there are T_INT box contain T_QUANTITY_COMPARE T_INT item 1
+there is a box with a T_COLOR T_SHAPE a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_INT T_SHAPE 1
+there is T_QUANTITY_COMPARE T_ONE tower which have item of all T_INT color 1
+there are T_SHAPE closely touch right edge of a box 1
+there is T_ONE tower with item of T_COLOR and T_COLOR color 1
+there is a box with T_INT item and T_ONE of the item is T_SHAPE 1
+the T_LOC of the tower are T_COLOR and T_COLOR only 1
+the box with the least number of item have a T_SHAPE 1
+there is a box which only have T_SHAPE and T_SHAPE 1
+there is a box with T_INT item T_QUANTITY_COMPARE of T_INT different color T_QUANTITY_COMPARE 1
+there is no T_COLOR T_SHAPE closely touch a edge of a box 1
+there is T_ONE tower with only T_ONE T_COLOR item and only T_ONE T_COLOR item 1
+T_ONE of the box have T_QUANTITY_COMPARE T_ONE item which are all of same shape 1
+there is item which have a T_QUANTITY_COMPARE T_ONE item which is of T_COLOR color 1
+there is a T_COLOR item that is between T_INT T_COLOR item 1
+there are T_QUANTITY_COMPARE T_INT tower with T_COLOR item 1
+there is a tower with only T_INT item 1
+there is box with T_INT item which are T_INT T_COLOR and T_ONE T_COLOR 1
+all the tower have the same T_LOC 1
+there is a tower which have T_QUANTITY_COMPARE T_INT T_COLOR item 1
+all the tower have a T_COLOR item at the T_LOC 1
+there are T_INT T_COLOR T_SHAPE closely touch the T_LOC of a box 1
+there is T_ONE tower with have T_ONE item of T_COLOR color 1
+there is a box that have only T_ONE item which is not T_COLOR 1
+there is a box which have only T_ONE item that is T_COLOR 1
+there is a item touch the corner 1
+there is a box with item of T_INT different color of which the T_COLOR T_ONE is both on T_LOC and on the T_LOC 1
+T_ONE of the box have item of only T_ONE color 1
+there are only T_INT tower that have the same T_LOC color 1
+there is T_ONE box with T_QUANTITY_COMPARE T_INT item in it 1
+there is a box with only T_ONE T_SIZE item 1
+there is a box with T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE and a T_COLOR T_SHAPE 1
+there is a T_INT item tower and only T_ONE color 1
+there is T_ONE box with a T_COLOR T_SHAPE and a T_COLOR T_SHAPE 1
+each box have a T_SHAPE of the same color 1
+there is a tower with T_QUANTITY_COMPARE T_INT item have a T_COLOR item at T_LOC and a T_COLOR item at T_LOC 1
+there is a box with a T_COLOR item and T_INT T_COLOR item touch each other 1
+T_ONE of the box have T_QUANTITY_COMPARE T_INT item where T_ONE of the item is T_COLOR 1
+there is T_QUANTITY_COMPARE T_ONE box which contain only T_SHAPE item 1
+there is a box which have a T_COLOR and T_COLOR T_SHAPE 1
+there is a T_SHAPE touch the T_LOC 1
+there is a T_SHAPE closely touch a edge of a box 1
+T_ONE of the box have only T_SHAPE 1
+there is a T_COLOR T_SHAPE and a T_COLOR T_SHAPE 1
+T_QUANTITY_COMPARE T_ONE of the box contain T_QUANTITY_COMPARE T_ONE item 1
+there is a box that have T_ONE T_COLOR and T_COLOR T_SHAPE 1
+there is a box with T_INT T_SHAPE of the same size not touch the edge 1
+there is a box with T_INT item T_QUANTITY_COMPARE and a T_COLOR item touch the edge 1
+the T_LOC of the T_INT tower are all the same 1
+there is a T_COLOR item that is between the T_INT item that is not T_COLOR 1
+there is a box with a T_COLOR T_SHAPE and a T_SHAPE touch the edge 1
+T_ONE of the box have T_INT T_SHAPE touch the T_LOC 1
+there is a box with T_COLOR item directly on the item touch the edge 1
+there is no T_COLOR T_SHAPE of T_SIZE size touch the edge 1
+there is a tower with a T_COLOR item a T_COLOR item and T_INT T_COLOR item 1
+there is a box with only T_ONE T_SHAPE and it is touch the edge 1
+there is a box with item of all T_INT different color and only T_ONE T_COLOR T_SHAPE 1
+there is as box which have only T_INT item and the T_INT item are T_COLOR 1
+T_INT tower have the same T_LOC 1
+there is a box with T_QUANTITY_COMPARE T_ONE item which is T_COLOR 1
+there is T_QUANTITY_COMPARE T_ONE box with T_COLOR and T_COLOR item 1
+there is a T_COLOR or T_COLOR T_SHAPE closely touch the T_LOC of a box 1
+the T_LOC of the T_INT tower is T_COLOR 1
+there is a tower that have T_INT item 1
+there is a box that have only T_ONE T_COLOR item 1
+there is a box with T_QUANTITY_COMPARE T_INT item of which T_INT are T_COLOR 1
+there are T_INT box with T_ONE T_COLOR item touch the T_LOC bottom 1
+T_ONE of the tower with T_INT item have a T_COLOR item on a T_COLOR item 1
+there is a box with T_COLOR item and T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE 1
+there is a T_COLOR item as the T_LOC of a tower with T_COLOR item 1
+there are T_INT tower of T_INT item each 1
+there are T_INT box which have only T_INT T_COLOR item 1
+there is a box with T_ONE T_COLOR and only T_INT T_COLOR item 1
+there is a box with only T_COLOR item and a T_SHAPE touch the edge 1
+there is a tower with T_QUANTITY_COMPARE T_INT item have a T_COLOR item at the T_LOC and T_LOC 1
+there is T_ONE tower that have T_QUANTITY_COMPARE T_INT T_COLOR item 1
+T_INT tower have T_COLOR T_LOC 1
+there is a box with T_INT T_SHAPE and a T_COLOR T_SHAPE 1
+there is a T_COLOR item as the T_LOC of tower with T_INT item 1
+there is T_ONE tower with a T_COLOR item at the T_LOC and T_COLOR item at the T_LOC 1
+there is T_ONE tower where a T_COLOR item is on a T_COLOR item 1
+there is a box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and a T_COLOR T_SHAPE 1
+there is a tower with T_QUANTITY_COMPARE T_INT item and the T_LOC item is T_COLOR 1
+there are only T_INT tower with T_COLOR item and T_QUANTITY_COMPARE T_ONE of them have T_COLOR item as the T_LOC of a tower 1
+there is T_ONE tower with T_QUANTITY_COMPARE T_ONE T_COLOR and T_ONE T_COLOR item 1
+there is a T_COLOR item touch the corner 1
+there is no T_COLOR T_SHAPE closely touch a corner of a box 1
+there is a tower tower with T_QUANTITY_COMPARE T_ONE T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is a box with T_COLOR and T_COLOR item and the number of the item of each color are the same 1
+there is T_QUANTITY_COMPARE T_ONE box contain T_QUANTITY_COMPARE T_INT item 1
+there are T_QUANTITY_COMPARE T_INT tower with T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE box with T_ONE T_COLOR item and T_ONE T_COLOR item 1
+there is a box with T_INT item and the T_COLOR item is touch the edge 1
+there is T_ONE box with have T_QUANTITY_COMPARE T_ONE T_COLOR item touch the edge 1
+T_QUANTITY_COMPARE T_ONE of the box contain T_INT T_SHAPE item 1
+there is a box with many item and the T_INT have the same shape and color 1
+there is a tower with T_INT item and the T_INT are T_COLOR 1
+there is a box with T_ONE T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE of the same size 1
+there is T_ONE box with T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE 1
+there are T_INT box that have T_INT T_COLOR item each 1
+there is tower with have a T_COLOR item on a T_COLOR item 1
+there is T_ONE box with only T_ONE T_COLOR item in it 1
+there are T_INT box with T_ONE item each 1
+there is a box with T_INT item of the same color 1
+there is T_ONE tower with T_INT item have a T_COLOR item in between T_INT item of same color 1
+there are T_INT box with T_COLOR item 1
+there is a tower with only T_ONE T_COLOR item and T_INT T_COLOR item 1
+T_ONE tower with T_INT T_COLOR item 1
+there is a T_COLOR item that is touch T_COLOR and T_COLOR item 1
+there is a box with item of T_INT different color and T_INT T_COLOR item with T_QUANTITY_COMPARE T_ONE be a T_SHAPE 1
+there are T_QUANTITY_COMPARE T_INT item in a box of which T_ONE is a T_SHAPE 1
+there <UNK> T_ONE tower with T_QUANTITY_COMPARE T_INT T_COLOR item in it 1
+T_INT tower have a T_COLOR item below a T_COLOR item 1
+none of the T_COLOR T_SHAPE not touch a edge 1
+there is T_INT item tower and the color is T_COLOR and T_COLOR 1
+there is a tower with T_QUANTITY_COMPARE T_INT item and each have a T_COLOR item on a T_COLOR item 1
+there are T_INT T_SHAPE touch the T_LOC 1
+there is a tower with T_INT item of T_INT different color 1
+there is T_ONE tower with T_INT item stack together of the same color 1
+each box contain even number of item 1
+there is a tower which is the T_LOC item from the T_LOC is T_COLOR 1
+there is a box with a least T_INT item of all T_INT different color 1
+the T_LOC of the tower with T_INT item is T_COLOR 1
+there is a T_SHAPE that is touch the corner 1
+there are T_INT box with item of T_INT different color 1
+there is a box with T_INT item T_QUANTITY_COMPARE of which T_INT are T_COLOR T_SHAPE 1
+there is box T_COLOR item on a T_COLOR item 1
+there is a T_COLOR T_SHAPE that is touch the side of the box 1
+there is only T_ONE item in a box 1
+there is only T_ONE item closely touch the T_LOC of a box 1
+there is a box with T_ONE T_COLOR item 1
+there is a box with item of only T_INT different color 1
+there are T_INT box with a least T_INT T_COLOR item 1
+there is T_ONE tower with T_INT item 1
+there are T_INT the same color item touch the different corner of a T_SHAPE 1
+there is a box with T_INT item and the T_INT item have different color 1
+T_ONE tower contain T_INT T_COLOR item 1
+there is a box which have T_INT T_SHAPE 1
+T_ONE tower have T_INT T_COLOR item and T_ONE T_COLOR item 1
+the tower with T_INT item have item of T_COLOR and T_COLOR color 1
+there are T_COLOR item closely touch the T_LOC of a box 1
+the box with least number of item contain T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is T_ONE tower than contain T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item is touch a edge 1
+T_QUANTITY_COMPARE T_ONE of the tower with T_INT item have T_QUANTITY_COMPARE same color item at the T_LOC and T_LOC 1
+there is a T_INT tower item that the T_LOC item from the T_LOC is T_COLOR 1
+there is a box with only T_ONE T_COLOR item and T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there a T_INT T_COLOR item 1
+T_INT T_COLOR T_SHAPE are touch the edge 1
+there is a box with a T_SIZE T_COLOR T_SHAPE touch the edge 1
+T_ONE tower have T_QUANTITY_COMPARE T_ONE T_COLOR item and T_ONE T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE box with only T_COLOR and T_COLOR item 1
+there is a box with a T_COLOR item touch the edge and T_INT item T_QUANTITY_COMPARE on it 1
+there are T_INT T_COLOR item touch the T_LOC 1
+there is a box with only T_ONE T_COLOR item and T_QUANTITY_COMPARE T_INT item of another color 1
+there are T_INT tower with the same number of item 1
+there is only T_ONE tower with T_QUANTITY_COMPARE T_ONE T_COLOR item in it 1
+the T_LOC and the T_LOC of a T_INT item tower are the same in color 1
+there is a box that have a T_COLOR and T_COLOR T_SHAPE 1
+there is a tower that have T_INT T_COLOR item touch each other 1
+the color of the T_INT item of a tower after the T_LOC are all the same 1
+T_ONE of the box contain item of which only T_ONE item is T_COLOR 1
+T_ONE of the box have T_QUANTITY_COMPARE T_ONE T_SHAPE item only 1
+the T_LOC T_INT color of a tower from the T_LOC are T_COLOR yellow and T_COLOR 1
+there is a item closely touch a corner of a box 1
+there is a box which have a T_COLOR T_SHAPE and a T_COLOR T_SHAPE 1
+there is a T_COLOR item between T_INT item 1
+there are T_INT item touch the edge 1
+T_ONE of the tower with the T_INT item have a T_COLOR item at the T_LOC 1
+T_ONE of the box have a T_COLOR T_SHAPE touch the edge 1
+there are T_QUANTITY_COMPARE T_INT T_COLOR item touch the T_LOC 1
+T_QUANTITY_COMPARE T_ONE of the box contain T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is a box with T_INT T_COLOR T_SHAPE and other item 1
+there are T_INT tower with T_COLOR T_LOC 1
+there are only T_INT tower with T_COLOR item T_LOC 1
+there is T_ONE box with item of all T_INT color 1
+there is a box with T_INT T_COLOR item and a T_COLOR item on T_LOC 1
+the T_SIZE T_COLOR T_SHAPE is closely touch the edge 1
+there is T_ONE box with T_QUANTITY_COMPARE T_INT item of the same color 1
+there is T_ONE tower with T_COLOR and T_COLOR item 1
+there is a box where none of the T_COLOR item are touch the edge 1
+there is a box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and a T_INT T_SHAPE 1
+there is a box that have T_INT item are touch the side 1
+there are T_INT tower that have a T_COLOR item on a T_COLOR item 1
+the T_COLOR T_SHAPE is touch the edge with its side 1
+there is a T_SHAPE that is touch the T_LOC corner 1
+there is a T_SHAPE closely touch the T_LOC wall of a box 1
+least T_ONE of the T_SHAPE box contain odd number of item 1
+there is T_ONE tower with T_INT item of the same color 1
+there is a box with T_QUANTITY_COMPARE T_INT item and a T_COLOR T_ONE touch the edge 1
+T_ONE of the tower with T_INT item have a T_COLOR item on the T_LOC 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item closely touch a corner 1
+there is a box with item of T_INT different color and a T_COLOR T_ONE touch the edge 1
+there is a T_COLOR T_SHAPE and T_COLOR T_SHAPE in a box 1
+there is a tower with T_ONE or more item of T_COLOR color only 1
+there is a box with only T_ONE item of T_SIZE size not touch the edge 1
+there is as box that have no color T_COLOR 1
+there is a box which have T_INT T_COLOR item and T_INT T_COLOR item 1
+all the tower have a T_COLOR item 1
+there are T_INT the same color T_SHAPE that are touch the corner 1
+there is a box with item of the same color and a T_SIZE T_SHAPE 1
+there is a box with T_ONE item that is T_COLOR 1
+there is a box with only T_ONE item that is not T_COLOR 1
+there is T_ONE tower with T_INT T_COLOR item on a different colored item 1
+T_ONE of the box contain T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+T_INT tower have the same T_LOC and different on T_LOC 1
+there is a tower with only T_ONE item that is not T_COLOR 1
+there is a tower which have a T_COLOR item in between T_INT T_COLOR item 1
+there is a box with a T_COLOR item touch the edge and a T_COLOR T_ONE on it 1
+there is a box with a T_COLOR item on T_LOC and T_INT T_COLOR item below it 1
+there is a box which have a T_COLOR T_SHAPE a T_COLOR T_SHAPE and T_INT T_COLOR item 1
+there is T_ONE T_COLOR item in each box 1
+there is a box with T_INT T_COLOR item and T_ONE T_COLOR item 1
+there is a box with no a T_COLOR item 1
+there is a tower which have T_QUANTITY_COMPARE T_INT item and only have T_INT T_COLOR item 1
+there is a box with T_QUANTITY_COMPARE T_ONE T_SHAPE and T_QUANTITY_COMPARE T_INT T_SHAPE 1
+there is a T_INT item tower which the T_LOC and T_LOC are not the same in color 1
+T_ONE of the box have T_QUANTITY_COMPARE T_INT item touch the T_LOC which are not T_COLOR 1
+there is a T_COLOR item with a T_COLOR item on it 1
+there is a T_COLOR T_SHAPE not touch the T_LOC or edge 1
+T_ONE of the T_INT tower T_LOC is T_COLOR 1
+there are T_INT tower with T_ONE T_COLOR item 1
+the T_INT tower have T_ONE T_INT and T_INT item each 1
+there is a box with item of T_INT different color of which only T_ONE is T_COLOR 1
+there is a tower which have T_QUANTITY_COMPARE T_ONE item 1
+there is a box with a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_SHAPE 1
+there is T_QUANTITY_COMPARE T_ONE box with T_ONE item 1
+of the T_INT tower T_ONE have only T_COLOR T_LOC 1
+there is T_QUANTITY_COMPARE T_ONE T_SHAPE not touch a edge 1
+there are T_INT tower where the T_LOC and T_LOC item are both T_COLOR 1
+there is a tower and the color of the T_LOC and T_LOC item is T_COLOR 1
+there is a box with T_INT item of which T_ONE is a T_SHAPE not touch the edge 1
+there are T_QUANTITY_COMPARE T_INT tower with the same color 1
+there is a box with a T_COLOR T_SHAPE a T_COLOR T_SHAPE and T_INT T_COLOR item 1
+T_ONE of the box contain only T_COLOR color item 1
+there is only T_ONE box with T_COLOR and T_COLOR item 1
+there is no item closely touch a edge of a box 1
+there is T_ONE tower with T_INT item where T_QUANTITY_COMPARE T_ONE item is T_COLOR 1
+all the box do not have the same number of item 1
+there is a T_COLOR T_SHAPE on the T_COLOR T_SHAPE 1
+T_ONE of the box contain only T_ONE item and this item is not touch the edge 1
+there is a T_INT item tower that the T_LOC and T_LOC is T_COLOR 1
+there is a T_SHAPE touch the side 1
+there is a tower with T_ONE item 1
+there is a tower that have T_QUANTITY_COMPARE T_INT T_COLOR item touch each other 1
+there is a tower with T_INT item have T_QUANTITY_COMPARE T_INT item of T_COLOR color 1
+there is only T_ONE T_COLOR item as the T_LOC of a tower with T_INT item 1
+there is a box which have only T_ONE item and it is not T_COLOR 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_INT item have a T_COLOR item at the T_LOC 1
+there is a box with many item and only T_ONE is touch the edge 1
+there is a T_INT item tower which the T_LOC and T_LOC is T_COLOR 1
+there is T_QUANTITY_COMPARE T_ONE box which have a T_COLOR T_SHAPE and a T_COLOR T_SHAPE 1
+there is a box that have T_INT item and the T_INT item are T_INT T_COLOR T_SHAPE and T_ONE T_COLOR T_SHAPE 1
+there is a box with a T_COLOR T_SHAPE and a T_COLOR item 1
+T_ONE of the box contain T_QUANTITY_COMPARE T_ONE item touch the T_LOC bottom 1
+there are T_INT box with item of only T_INT different color 1
+there is a tower with T_INT item have T_COLOR item at the T_LOC 1
+there is T_ONE tower that have T_INT T_COLOR item that are not touch each other 1
+there is only T_ONE T_COLOR item closely touch the T_LOC of a box 1
+there is a T_INT item tower that have T_QUANTITY_COMPARE T_INT T_COLOR item touch 1
+there is a box with a T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 1
+there is a box with many item and only T_ONE item have a different color 1
+there is a T_INT item tower that have T_ONE color 1
+there is a box with a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_INT T_SHAPE 1
+there is a box which have T_INT item and the T_INT are the same in shape 1
+there is a box with T_QUANTITY_COMPARE T_INT item where the item are T_COLOR and T_COLOR in color 1
+there is a box with T_INT item T_QUANTITY_COMPARE of only T_ONE color 1
+there is a box with only T_INT item of which T_ONE is T_COLOR 1
+there is a box that have T_INT T_SHAPE 1
+T_COLOR T_SHAPE are not touch a edge 1
+the T_LOC and T_LOC item of the tower are T_COLOR 1
+there is a box have only T_COLOR color item where T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE is not touch a edge 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_INT T_COLOR item stack together 1
+there is a box with T_INT item of all T_INT different color of which T_INT item are T_COLOR 1
+all of the box have many item 1
+there are T_COLOR item in each box that have the same position 1
+there is T_ONE tower with have item of T_COLOR color only 1
+there is a tower with T_QUANTITY_COMPARE T_ONE T_COLOR item which is at the T_LOC 1
+there is T_ONE tower with T_ONE T_COLOR item and T_ONE T_COLOR item and T_ONE T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE tower with a T_COLOR item on T_COLOR item 1
+T_ONE T_COLOR item is touch the T_LOC 1
+there is a box with T_INT T_COLOR item T_INT T_COLOR item and T_INT T_COLOR item 1
+there is a tower where only T_INT item are the same color 1
+there is a item closely touch a corner 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE not touch the T_LOC 1
+there are T_INT T_SHAPE with T_ONE T_COLOR item 1
+there are T_INT item touch the edge of the box 1
+all tower have T_QUANTITY_COMPARE T_ONE T_COLOR item in it 1
+there is only T_ONE T_COLOR T_SHAPE 1
+there is a tower which have a T_COLOR item on a T_COLOR item 1
+there is a tower with T_INT item and the T_LOC is T_COLOR 1
+T_INT T_SIZE T_COLOR item are touch the edge 1
+there is a box with many item and the T_INT T_COLOR are T_SHAPE 1
+there is a box with a T_COLOR item between T_INT item of the same color 1
+there are T_INT T_COLOR item on a T_COLOR item 1
+there are T_INT tower with the same height and their T_LOC is not the same in color 1
+there is box with item of different color and T_INT T_COLOR item T_QUANTITY_COMPARE 1
+T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE are touch the edge 1
+there is T_QUANTITY_COMPARE T_ONE tower of T_INT item which have item of either T_COLOR or T_COLOR color only 1
+there is a box with T_COLOR and T_COLOR item and only T_ONE is T_COLOR 1
+there is T_QUANTITY_COMPARE T_ONE item closely touch T_LOC right corner of a box 1
+the box with least number of item contain only T_ONE T_COLOR item 1
+there is a box with T_INT T_COLOR item T_QUANTITY_COMPARE and no other color 1
+there is a tower with a T_COLOR item on a T_LOC item 1
+there are T_INT box which have T_INT item each 1
+there is T_QUANTITY_COMPARE T_ONE box with T_QUANTITY_COMPARE T_ONE T_SHAPE in it 1
+there are T_INT T_COLOR T_SHAPE in T_ONE box 1
+T_QUANTITY_COMPARE T_ONE tower with T_INT item have a T_COLOR item at the T_LOC 1
+T_INT tower have the same height and the same T_LOC color 1
+there is T_ONE T_SHAPE touch a edge 1
+T_ONE of the tower with T_INT item have a T_COLOR item at the T_LOC 1
+there are T_INT tower with T_INT item and each have T_QUANTITY_COMPARE T_INT T_COLOR item 1
+the T_COLOR item is on T_LOC 1
+T_INT of the T_INT tower have the same T_LOC color that is not T_COLOR 1
+there is a box with T_INT item and the it have T_INT color 1
+there is T_ONE box with only T_COLOR and T_COLOR item in it 1
+there is a box with T_INT item and not all T_INT different color 1
+there is a box with item of all T_INT different color and T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE tower with only T_COLOR item 1
+there are T_INT item 1
+T_ONE of the box contain T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE 1
+all there tower contain T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+T_ONE tower have only T_COLOR and T_COLOR item 1
+there is a box with all T_INT color and a T_COLOR T_ONE on T_LOC 1
+T_ONE of the box have T_QUANTITY_COMPARE T_ONE item 1
+the T_COLOR T_SHAPE is touch the edge 1
+the T_LOC of the T_INT tower are T_INT T_COLOR and T_ONE T_COLOR 1
+there is T_ONE box with T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE in it 1
+all the tower have T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+none of the T_COLOR T_SHAPE are touch the T_LOC 1
+there is T_QUANTITY_COMPARE T_ONE box that have T_ONE of the item is T_COLOR 1
+there is a box with item of all T_INT different color and a T_COLOR T_SHAPE touch the edge 1
+there is a tower that the T_LOC and T_LOC item are the same in color 1
+there is a box with T_INT item of all T_INT different color and T_ONE T_COLOR T_SHAPE 1
+there is only T_ONE box with T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is a box with T_INT T_COLOR item include T_SHAPE 1
+there is a box that have only T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_INT item with a T_COLOR item at the T_LOC 1
+there is a box with T_INT item and the T_ONE is a T_COLOR T_SHAPE 1
+there is T_ONE tower with only T_ONE T_COLOR item and T_ONE T_COLOR item 1
+there is a tower with T_INT item of which T_INT are T_COLOR item 1
+there is a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there is a box with T_INT item of which T_ONE is a T_COLOR item and T_INT are T_COLOR item 1
+there is a box with T_QUANTITY_COMPARE T_ONE item which is a T_SHAPE 1
+there are T_INT tower which have T_COLOR item at the T_LOC 1
+there is a box with only T_INT item of T_COLOR and T_COLOR color 1
+T_ONE of the box contain T_QUANTITY_COMPARE T_ONE item which is T_COLOR 1
+there is a tower with T_INT item where the T_LOC is T_COLOR and the T_LOC is T_COLOR 1
+there is T_ONE tower with T_QUANTITY_COMPARE T_ONE item which is not T_COLOR 1
+there is a box with a T_COLOR T_SHAPE and a other T_SHAPE 1
+there are T_QUANTITY_COMPARE T_INT tower that are not the same in height 1
+there is as T_COLOR item on the T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_ONE item 1
+there are T_INT tower which have T_QUANTITY_COMPARE T_ONE T_COLOR item as the T_LOC most item 1
+there is a box with a T_COLOR item touch the edge and another T_COLOR item on it 1
+there is only T_ONE T_COLOR item touch a edge 1
+there is a tower with T_QUANTITY_COMPARE T_INT item where both item are of same color 1
+T_ONE of the box have T_QUANTITY_COMPARE T_ONE T_SHAPE and T_ONE T_SHAPE touch the edge 1
+there is a box with T_INT T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_INT T_COLOR T_SHAPE 1
+the T_SIZE T_COLOR T_SHAPE is not touch the edge 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item touch the T_LOC bottom 1
+there is a box which have only T_ONE T_COLOR item which is T_SHAPE 1
+the box with least number of item contain T_ONE T_COLOR T_SHAPE 1
+there are T_QUANTITY_COMPARE T_INT tower that have only T_INT T_COLOR item 1
+there is T_ONE tower with T_ONE item which is of T_COLOR color 1
+T_ONE of the T_INT tower have a T_COLOR T_LOC 1
+the T_LOC of the T_INT tower are T_INT T_COLOR and T_ONE T_COLOR item 1
+there are T_INT T_COLOR item not touch a edge 1
+there is only T_ONE T_SIZE item touch the edge 1
+there is a T_SIZE T_COLOR T_SHAPE near a T_COLOR T_SHAPE 1
+there is a box with T_ONE item that is T_COLOR T_SHAPE 1
+there is no T_COLOR tower with only T_ONE item 1
+there is a box with many item which have only T_ONE T_COLOR item that is T_SHAPE 1
+there is a box where a T_COLOR T_SHAPE is touch the edge with another T_COLOR T_SHAPE on it 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_INT item with a T_COLOR item at the T_LOC 1
+all the box have a T_COLOR item 1
+there is box with T_INT item and a T_COLOR item touch the edge 1
+there are T_INT item with a T_COLOR item at the T_LOC 1
+there is a T_INT item tower and the T_ONE item is T_COLOR 1
+there are T_INT tower that contain T_COLOR item 1
+T_ONE of the box have T_QUANTITY_COMPARE T_INT item of T_QUANTITY_COMPARE T_INT different color 1
+there is a tower with T_INT item have a T_COLOR item on a T_COLOR item with a T_COLOR item at the T_LOC of the tower 1
+there is T_ONE tower that is make of only T_ONE item 1
+there is a box with T_INT item with only T_COLOR and T_COLOR color 1
+there is a tower with T_INT item include T_INT T_COLOR T_ONE 1
+there is T_COLOR T_SHAPE touch the side of the box 1
+there is T_QUANTITY_COMPARE T_ONE T_SHAPE touch the T_LOC bottom 1
+the is no T_SHAPE closely touch T_LOC right corner of a box 1
+the tower with T_INT item have same color item on each other 1
+there are T_INT box with T_INT item of different color 1
+there is T_ONE T_COLOR T_SHAPE closely touch a box corner 1
+there is a box with only T_INT item of different color 1
+the box with least number of item have T_QUANTITY_COMPARE T_INT item 1
+there are T_INT tower with only T_COLOR item 1
+there is a T_COLOR item on a T_COLOR item as the T_LOC of a tower with T_INT item 1
+there is a tower with T_QUANTITY_COMPARE T_INT item all of which are of T_COLOR color 1
+the color of a T_INT item tower is T_COLOR and T_COLOR 1
+there is a T_COLOR tower that the item are not T_QUANTITY_COMPARE T_INT 1
+T_INT tower are the same in height 1
+T_INT out of the T_INT tower have the same T_LOC 1
+there is tower with T_COLOR T_LOC item 1
+there is a box with T_COLOR and T_COLOR item and the T_COLOR T_ONE on T_LOC 1
+there is only T_ONE color on the T_LOC in all T_INT box 1
+T_ONE tower with T_INT T_COLOR item stack together 1
+there is a box which have only T_INT item and the color are the same 1
+there are T_ONE T_COLOR T_SHAPE 1
+there is a T_COLOR item that do have a item on it 1
+T_ONE of the box contain T_QUANTITY_COMPARE T_INT item of which T_INT are T_COLOR and T_ONE is of T_COLOR color 1
+there are T_INT box with only T_ONE T_COLOR item and other item 1
+there is a box with a T_COLOR T_SHAPE and T_QUANTITY_COMPARE T_INT T_COLOR item include T_SHAPE 1
+there is a T_COLOR T_SHAPE in the corner of the box 1
+there are T_QUANTITY_COMPARE T_INT T_COLOR item not touch the a edge 1
+there are T_INT tower with T_QUANTITY_COMPARE T_INT item each 1
+there is only T_ONE tower which have T_LOC T_COLOR item 1
+there is a T_COLOR T_SHAPE touch the edge of the T_SHAPE 1
+there are T_INT item touch the corner 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_INT T_COLOR item have a T_COLOR item at the T_LOC 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_INT item have all item of the same color 1
+there is a box which have T_COLOR and T_COLOR item only 1
+there is T_QUANTITY_COMPARE T_ONE box with only T_ONE item 1
+there is a box with a T_COLOR T_SHAPE T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE and T_COLOR item 1
+there is T_ONE box with T_ONE T_COLOR T_SHAPE 1
+there is a box with T_INT item of which T_INT have the same shape 1
+there is a box with T_INT item and a T_COLOR on T_LOC 1
+there are T_INT tower with T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is a box with T_INT item and the T_INT T_COLOR item are the same in shape 1
+all the T_LOC of the tower are T_COLOR 1
+there are T_QUANTITY_COMPARE T_INT T_SHAPE not touch the edge 1
+there is a T_COLOR item that is touch a T_COLOR item 1
+there is T_ONE tower with T_QUANTITY_COMPARE T_INT item of a T_COLOR a a T_COLOR color each 1
+there are T_QUANTITY_COMPARE T_INT item touch a edge 1
+all T_INT tower contain T_ONE T_COLOR item 1
+there is a box with T_INT item of which T_ONE is a T_COLOR T_SHAPE 1
+there are T_INT tower with T_ONE T_COLOR item at the T_LOC 1
+there is a T_SHAPE touch the edge of the T_SHAPE 1
+there is a box with only T_INT T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there are T_QUANTITY_COMPARE T_INT tower with T_ONE T_COLOR item 1
+there is a box with T_INT T_SIZE item of all T_INT different color 1
+there is T_ONE tower with T_ONE T_COLOR item in the middle of it 1
+there is a tower with T_QUANTITY_COMPARE T_INT item have a T_COLOR item on a T_COLOR item 1
+there is a box with T_COLOR and T_COLOR item and the T_COLOR are T_SHAPE 1
+there are T_INT T_COLOR T_SHAPE in the same box 1
+the T_LOC of the T_INT tower are T_COLOR 1
+there is a T_COLOR tower that have T_QUANTITY_COMPARE T_INT item 1
+there is a box with only T_COLOR and T_COLOR item of which T_ONE is a T_COLOR T_SHAPE 1
+all the T_INT tower have the same color item at the T_LOC 1
+there is tower with a T_COLOR T_LOC 1
+there is only T_ONE box with T_INT T_COLOR item 1
+there is a tower with only T_ONE item which is T_COLOR 1
+there are T_INT item in a box 1
+there is a box with T_INT item and the T_INT item are T_COLOR in color 1
+there is a T_INT item tower and the T_LOC item from the T_LOC is T_COLOR 1
+there is a T_COLOR item as the T_LOC of tower 1
+tower with T_INT item have item of all the T_INT color 1
+there are T_INT tower with T_QUANTITY_COMPARE T_INT item 1
+there is T_QUANTITY_COMPARE T_ONE box with T_QUANTITY_COMPARE T_INT item include T_COLOR T_ONE 1
+T_ONE of the box contain T_INT T_COLOR item among other item 1
+there are T_QUANTITY_COMPARE T_INT T_SHAPE touch the right side edge 1
+there is only T_ONE box which have no T_COLOR item 1
+there is a box with a T_COLOR item and T_INT T_COLOR item 1
+there is T_QUANTITY_COMPARE T_ONE box with only T_COLOR and T_COLOR item in it 1
+there is T_ONE tower where the T_LOC and the T_LOC item are the same color 1
+only T_COLOR and T_COLOR item are touch the edge 1
+the tower with T_INT item have item of T_INT different color 1
+there is a box with T_QUANTITY_COMPARE T_INT T_COLOR T_ONE T_COLOR and T_ONE T_COLOR item 1
+there is a tower with a T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
+there are T_QUANTITY_COMPARE T_INT item in T_ONE box 1
+there is a box with T_INT item T_QUANTITY_COMPARE of all T_INT different color 1
+there is a box with only T_COLOR T_SHAPE 1
+there is a box which have only T_ONE T_COLOR item T_LOC 1
+there is T_ONE tower with only T_INT T_COLOR item and T_ONE T_COLOR item 1
+there is a box with T_INT item T_QUANTITY_COMPARE of which there are T_QUANTITY_COMPARE T_ONE T_COLOR and T_ONE T_COLOR item 1
+there are T_INT tower that have T_INT the same color item touch each other 1
+there is a box with T_INT item and the T_INT are T_SHAPE 1
+there is a box that have only T_INT item and color of the item is T_COLOR and T_COLOR 1
+the T_LOC T_INT item from the T_LOC of a tower are T_COLOR 1
+there is a box which have only T_INT item 1
+there is a box with T_COLOR item and only T_ONE other color 1
+there is T_QUANTITY_COMPARE T_ONE T_COLOR item in each tower 1
+there is a T_COLOR T_SHAPE touch the side of the box 1
+there is a tower with a T_COLOR item in <UNK> 1
+there are T_INT box with many item and each have T_INT T_COLOR item 1
+there is a box with only T_INT T_COLOR T_SHAPE 1
+there is a box with a T_COLOR item and T_QUANTITY_COMPARE T_INT T_COLOR item 1
+there is a box which have T_ONE T_COLOR and T_ONE T_COLOR 1
+there is a box with a T_COLOR item touch the edge and T_INT T_COLOR item on it 1
+there is a box with a T_COLOR item on the T_COLOR item 1
+there is T_ONE tower with T_ONE T_COLOR item and T_ONE T_COLOR item 1
+there is a box with item of all T_INT different color and a T_COLOR T_SHAPE 1
+there are T_INT T_COLOR item in T_ONE box 1
+there is a box with T_INT T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE 1
+there is a box with T_QUANTITY_COMPARE T_INT item of which T_QUANTITY_COMPARE T_ONE item is touch the edge 1
+there is T_QUANTITY_COMPARE T_ONE tower with T_QUANTITY_COMPARE T_INT item have a T_COLOR item as a middle item 1
+there is a box with a T_COLOR T_SHAPE touch the edge with its T_LOC 1
+there is a box with T_INT T_COLOR item and T_QUANTITY_COMPARE T_ONE T_COLOR item 1
