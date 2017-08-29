@@ -90,6 +90,25 @@ def check_generated_forms(forms_doctionary, samples):
                         print("original=" + logsent)
                         print()
 
+def generate_pairs(forms_doctionary):
+    all_pairs =[]
+    parsing_dict = {}
+    for engsent, (form_count, logsents) in sorted(forms_doctionary.items(), key=lambda k: - k[1][0]):
+        for logsent in logsents:
+            num = 10 *form_count // len(logsents)
+            all_pairs.extend(generate_eng_log_pairs(engsent, logsent, num))
+
+
+    for k,v in all_pairs:
+        parsing_dict[k] = v
+
+    pairs = [(k,v) for k,v in parsing_dict.items()]
+
+    return pairs
+
+
+
+
 
 
 
@@ -185,11 +204,7 @@ def sents_maker(path = r'temp_sents.txt'):
 
 if __name__ == '__main__':
     parsed_forms = load_forms(PARSED_FORMS_PATH)
-    samples, sentences = build_data(read_data(definitions.TRAIN_JSON))
-    check_generated_forms(parsed_forms, samples)
-
-
-    # sents = sents_maker()
-    # file = open('sents_for_pretain', 'wb')
-    # pickle.dump(sents, file)
-    # file.close()
+    file = open('sents_for_pretain_2', 'rb')
+    pairs = pickle.load(file)
+    file.close()
+    print("")
