@@ -414,6 +414,7 @@ def run_supervised_training(sess):
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
         logical_tokens_embeddings_dict = \
             {token : current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens}
+        correct, total = 0, 0
         for step in range(batch_size):
             s = sentences[step]
             x = embedded_sentences[step]
@@ -429,6 +430,7 @@ def run_supervised_training(sess):
             one_hot_reshaped = []
             histories =[]
 
+            p = PartialProgram()
             for i in range(len(golden_parsing)):
 
                 # embed golden history
@@ -444,6 +446,25 @@ def run_supervised_training(sess):
                 current_probs = np.squeeze(sess.run(token_unnormalized_dist, feed_dict={e_m: sentence_e_m,
                                                                                         h: sentence_h,
                                                                                         history_embedding: history_embs}))
+
+                total += 1
+
+                # ignore invalid continuation tokens
+                #valid_next_tokens = p.get_possible_continuations(logical_tokens_mapping)
+                #valid_vector = np.zeros(n_logical_tokens)
+                #for tok in logical_tokens:
+                #    if tok in valid_next_tokens:
+                #        valid_vector[logical_tokens_ids[tok]] = 1
+                #    else:
+                #        valid_vector[logical_tokens_ids[tok]] = -np.inf
+                #valid_probs = np.multiply(current_probs, valid_vector)
+                #p.add_token(logical_tokens_ids[golden_parsing[i]])
+                #if logical_tokens_ids[golden_parsing[i]] == np.argmax(valid_probs):
+                #   # need to take care of lambda case
+                #    correct += 1
+                #    continue
+
+
                 # get one-hot representation of the golden token
                 one_hot_vec = np.zeros(n_logical_tokens)
                 if golden_parsing[i] == 'and':
@@ -453,6 +474,10 @@ def run_supervised_training(sess):
 
                 #if train.epochs_completed == 4:
                 output.append(logical_tokens[np.argmax(current_probs)])
+
+                if logical_tokens_ids[golden_parsing[i]] == np.argmax(current_probs):
+                    correct += 1
+
 
             one_hot_stacked = np.stack(one_hot_reshaped)
             histories_stacked = np.squeeze(np.stack(histories), axis=1)
@@ -466,9 +491,11 @@ def run_supervised_training(sess):
             for var,grad in enumerate(token_grad):
                gradBuffer[var] += grad[0]
             #if train.epochs_completed == 4:
-            print("outputted: %s" % " ".join(output))
+            #print("outputted: %s" % " ".join(output))
 
         sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
+        acc = correct / total * 100
+        print("accuracy: %.2f" % str(acc))
 
         for var, grad in enumerate(gradBuffer):
             gradBuffer[var] = gradBuffer[var]*0
