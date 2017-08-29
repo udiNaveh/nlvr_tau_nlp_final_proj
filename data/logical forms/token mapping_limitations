@@ -29,42 +29,42 @@ all_same_attribute	2	set<?>	func<?>	bool
 
 ## boolean Item functions
 
-is_yellow	1	Item	bool
+is_yellow	1	Item	bool	:	yellow
 
-is_blue	1	Item	bool
+is_blue	1	Item	bool	:	blue
 
-is_black	1	Item	bool
+is_black	1	Item	bool	:	black
 
-is_circle	1	Item	bool
+is_circle	1	Item	bool	:	circle
 
-is_square	1	Item	bool
+is_square	1	Item	bool	:	square
 
-is_triangle	1	Item	bool
+is_triangle	1	Item	bool	:	triangle
 
-is_big	1	Item	bool
+is_big	1	Item	bool	:	big
 
-is_medium	1	Item	bool
+is_medium	1	Item	bool	: medium
 
-is_small	1	Item	bool
+is_small	1	Item	bool	: small
 
-is_top	1	Item	bool
+is_top	1	Item	bool	:	top	first
 
-is_bottom	1	Item	bool
+is_bottom	1	Item	bool	:	bottom	first
 
-is_second	1	Item	bool
+is_second	1	Item	bool	:	second	middle
 
-is_third	1	Item	bool
+is_third	1	Item	bool	: third
 
-is_touching_wall 	2	Item	Side	bool
+is_touching_wall	2	Item	Side	bool	: edge
 
-is_touching_corner	2	Item	Side	bool
+is_touching_corner	2	Item	Side	bool	: corner
 
 
-query_color	1	Item|set<Item>	set<Color>
+query_color	1	Item|set<Item>	set<Color>	: color blue yellow black
 
-query_size	1	Item|set<Item>	set<Size>	
+query_size	1	Item|set<Item>	set<Size>	: size	big medium small
 
-query_shape	1	Item|set<Item>	set<Shape>
+query_shape	1	Item|set<Item>	set<Shape>	: shape	square	circle	triangle
 
 le	2	int int	bool
 
@@ -106,11 +106,11 @@ union_all	1	set<set<Item>>	set<Item>
 
 #intersect_all	1 set<set<?>>	set<?>
 
-get_above	1	set<Item>|Item	set<Item>	
+get_above	1	set<Item>|Item	set<Item>	:	on
 
-get_below	1	set<Item>|Item	set<Item>
+get_below	1	set<Item>|Item	set<Item>	:	below
 
-get_touching	1	set<Item>|Item	set<Item>
+get_touching	1	set<Item>|Item	set<Item>	:	touch stack
 
 select 2	int	set<?>	set<set<?>>	
 
@@ -118,26 +118,26 @@ select 2	int	set<?>	set<set<?>>
 
 ALL_ITEMS 	0	set<Item>
 
-ALL_BOXES	0	set<set<Item>>
+ALL_BOXES	0	set<set<Item>>	: box	tower
 
-Color.BLUE	0	Color
+Color.BLUE	0	Color	:	blue
 
-Color.BLACK	0	Color
+Color.BLACK	0	Color	:	black
 
-Color.YELLOW	0	Color
+Color.YELLOW	0	Color	:	yellow
 
-Shape.TRIANGLE	0	Shape
+Shape.TRIANGLE	0	Shape	:	triangle
 
-Shape.SQUARE	0	Shape
+Shape.SQUARE	0	Shape	:	square
 
-Shape.CIRCLE	0	Shape
+Shape.CIRCLE	0	Shape	:	circle
 
-Side.RIGHT	0	Side
+Side.RIGHT	0	Side	:	right
 
-Side.LEFT	0	Side
+Side.LEFT	0	Side	:	left
 
-Side.TOP	0	Side
+Side.TOP	0	Side	:	top first
 
-Side.BOTTOM	0	Side
+Side.BOTTOM	0	Side	:	bottom	first
 
 Side.ANY	0	Side

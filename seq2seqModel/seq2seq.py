@@ -31,9 +31,9 @@ history_embedding_size = history_length * logical_tokens_embedding_size
 #other hyper parameters
 learning_rate = 0.001
 beta = 0.5
-epsilon = 0.3
+epsilon = 0.5
 num_of_steps = 10000
-max_decoding_length = 15
+max_decoding_length = 20
 beam_size = 50
 batch_size = 8
 
@@ -162,6 +162,17 @@ def sample_decoding_prefixes(next_token_probs_getter, n_decodings, length):
         decodings.append(partial_program)
     return decodings
 
+def create_partial_program(next_token_probs_getter, token_seq):
+    partial_program = PartialProgram()
+    for tok in token_seq:
+        valid_next_tokens, probs_given_valid = \
+            next_token_probs_getter(partial_program)
+        if tok not in valid_next_tokens:
+            return None
+        p = probs_given_valid[valid_next_tokens.index(tok)]
+        partial_program.add_token(tok, np.log(p), logical_tokens_mapping)
+    return partial_program
+
 
 def beam_search(next_token_probs_getter):
 
@@ -171,7 +182,7 @@ def beam_search(next_token_probs_getter):
 
     for t in range(max_decoding_length):
         if t>1 :
-            sampled_prefixes = sample_decoding_prefixes(next_token_probs_getter, 10, t)
+            sampled_prefixes = sample_decoding_prefixes(next_token_probs_getter, 5, t)
             beam.extend(sampled_prefixes)
         continuations = {}
 
@@ -314,7 +325,8 @@ def run_unsupervised_training(sess):
                                      for sample in related_samples])
                 actual_labels = np.array([sample.label for sample in related_samples])
                 compiled+= sum(res is not None for res in execution_results)
-                reward = 1 if all(execution_results==actual_labels) else 0
+                #reward = 1 if all(execution_results==actual_labels) else 0
+                reward=1
                 correct+=reward
                 if reward>0:
                     rewarded_programs.append(prog)
