@@ -3,7 +3,7 @@ import numpy as np
 
 from logical_forms_new import *
 
-def epsilon_greedy_sample(choices, num_to_sample, epsilon=0.05):
+def epsilon_greedy_sample(choices, num_to_sample, prefixes, epsilon=0.05):
     """Samples without replacement num_to_sample choices from choices
     where the ith choice is choices[i] with prob 1 - epsilon, and
     uniformly at random with prob epsilon
@@ -26,9 +26,17 @@ def epsilon_greedy_sample(choices, num_to_sample, epsilon=0.05):
 
     sample = []
     index_choices = [j for j in range(len(choices))]
+    nonempty_prefixes = [conts for pref, conts in prefixes.items() if conts]
+    choice_index = -1
     for i in range(num_to_sample):
         if random.random() <= epsilon or not i in index_choices:
-            choice_index = random.choice(index_choices)
+            while True:
+                prefix_conts = random.choice(nonempty_prefixes)
+                prog = random.choice(prefix_conts)
+                choice_index = choices.index(prog)
+                if choice_index in index_choices:
+                    break
+
         else:
             choice_index = i
         index_choices.remove(choice_index)
