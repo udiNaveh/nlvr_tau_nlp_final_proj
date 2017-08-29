@@ -7,10 +7,11 @@ import definitions
 from seq2seqModel.logical_forms_generator import load_functions
 from seq2seqModel.utils import execute
 from handle_data import *
+from display_images import *
 
 
 
-LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
+LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping')
 PARSED_FORMS_PATH = 'temp_sents.txt'
 
 colors = ['yellow', 'blue', 'black']
@@ -22,7 +23,7 @@ ones = ['1']
 
 replacements_dic = {'T_SHAPE' : [('square', ['square']),('triangle', ['triangle']),('circle', ['circle'])],
              'T_COLOR' : [('yellow', ['yellow']),('blue', ['blue']),('black', ['black'])],
-             'T_LOC' :  [('top', ['top']),('bottom', ['bottom'])],
+             'T_LOC' :  [('top', ['top']),('bottom', ['bottom']),('bottom', ['base'])],
              'T_ONE' : [('1', ['1', 'one', 'a'])],
              'T_INT' : [(str(i), [str(i)]) for i in range (2,8)],
              'T_QUANTITY_COMPARE' : [('equal_int', ['exactly']),('le', ['at least']),('ge', ['at most']),
@@ -81,7 +82,6 @@ def check_generated_forms(forms_doctionary, samples):
             curr_samples = random.sample(samples, 5)
             generated_forms = generate_eng_log_pairs(engsent, logsent, 5)
             for gen_sent, gen_log in generated_forms:
-
                 for sample in curr_samples:
                     r = execute(gen_log.split(), sample.structured_rep, logical_tokens_mapping)
                     if r is None:
