@@ -55,7 +55,7 @@ is_second	1	Item	bool
 
 is_third	1	Item	bool
 
-is_touching_wall	2	Item	Side	bool
+is_touching_wall 	2	Item	Side	bool
 
 is_touching_corner	2	Item	Side	bool
 
