@@ -303,7 +303,7 @@ def run_supervised_training(sess):
     # computes a probability distribution over the tokens.
     history_embedding, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
     # a one-hot vector represents the action taken at each step
-    chosen_logical_tokens = tf.placeholder(tf.float32, [1, n_logical_tokens], name="chosen_action_token")
+    chosen_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens], name="chosen_action_token")
 
     #chosen_logical_tokens_reshaped = np.reshape(chosen_logical_tokens,[n_logical_tokens,1])
     token_unnormalized_dist = tf.transpose(token_unnormalized_dist)
@@ -332,7 +332,7 @@ def run_supervised_training(sess):
 
     steps_num = 0
 
-    while train.epochs_completed < 5:
+    while train.epochs_completed < 10:
         print("epoch %d, step %d" % (train.epochs_completed, steps_num))
         #print("train.epochs_completed= {}".format(train.epochs_completed))
         steps_num += batch_size
@@ -345,18 +345,17 @@ def run_supervised_training(sess):
         for step in range(batch_size):
             s = sentences[step]
             x = embedded_sentences[step]
-            #print(s)
-            #print(labels[step])
 
             sentence_embedding = np.reshape(x, [1, len(x), words_embedding_size])
             length = [len(s.split())]
             encoder_feed_dict = {sentence_placeholder: sentence_embedding, sent_lengths_placeholder: length}
             sentence_h, sentence_e_m = sess.run((h,e_m), feed_dict=encoder_feed_dict)
             golden_parsing = labels[step].split()
-            #print(golden_parsing)
-            golden_parsing.append('<EOS>')
+            #golden_parsing.append('<EOS>')
 
             output = []
+            one_hot_reshaped = []
+            histories =[]
 
             for i in range(len(golden_parsing)):
 
@@ -366,6 +365,7 @@ def run_supervised_training(sess):
                                  golden_parsing[:i][-history_length:]
                 history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens]
                 history_embs = np.reshape(np.concatenate(history_embs), [1, history_embedding_size])
+                histories.append(history_embs)
 
                 # run forward pass
 
@@ -377,19 +377,22 @@ def run_supervised_training(sess):
                 if golden_parsing[i] == 'and':
                     golden_parsing[i] = 'AND'
                 one_hot_vec[logical_tokens_ids[golden_parsing[i]]] = 1
-                one_hot_reshaped = np.reshape(one_hot_vec,[1,n_logical_tokens])
+                one_hot_reshaped.append(one_hot_vec)
 
                 #if train.epochs_completed == 4:
                 output.append(logical_tokens[np.argmax(current_probs)])
 
-                # calculate gradient
-                token_grad = sess.run(compute_program_grads, feed_dict={sentence_placeholder: sentence_embedding,
-                                                                        sent_lengths_placeholder: length,
-                                                                        history_embedding: history_embs,
-                                                                        chosen_logical_tokens: one_hot_reshaped})
+            one_hot_stacked = np.stack(one_hot_reshaped)
+            histories_stacked = np.squeeze(np.stack(histories), axis=1)
 
-                for var,grad in enumerate(token_grad):
-                   gradBuffer[var] -= grad[0]
+            # calculate gradient
+            token_grad = sess.run(compute_program_grads, feed_dict={sentence_placeholder: sentence_embedding,
+                                                                    sent_lengths_placeholder: length,
+                                                                    history_embedding: histories_stacked,
+                                                                    chosen_logical_tokens: one_hot_stacked})
+
+            for var,grad in enumerate(token_grad):
+               gradBuffer[var] += grad[0]
             #if train.epochs_completed == 4:
             print("outputted: %s" % " ".join(output))
 
