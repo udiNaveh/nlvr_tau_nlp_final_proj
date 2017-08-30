@@ -119,7 +119,22 @@ class CNLVRDataSet:
         self.__ids = [k for k in self.original_sentences.keys()]
         self.__num_examples = len(self.__ids)
 
+    def use_subset_by_sentnce_condition(self, f_s):
+        ''' f_id is a boolean function on ids'''
+        new_ids = []
+        for k, s in self.processed_sentences.items():
+            if f_s(s):
+                new_ids.append(k)
+        self.__ids = new_ids
 
+    def use_subset_by_images_condition(self, f_im):
+        ''' f_id is a boolean function on a set of samples'''
+        new_ids = []
+        for k, s in self.processed_sentences.items():
+            related_samples = self.get_samples_by_sentence_id(k)
+            if f_im(related_samples):
+                new_ids.append(k)
+        self.__ids = new_ids
 
     def sort_sentences_by_complexity(self, n_classes):
         '''
