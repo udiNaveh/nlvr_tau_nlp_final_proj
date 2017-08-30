@@ -201,8 +201,16 @@ def sents_maker(path = r'temp_sents.txt'):
 
 
 if __name__ == '__main__':
-    parsed_forms = load_forms(PARSED_FORMS_PATH)
-    file = open('sents_for_pretain_2', 'rb')
-    pairs = pickle.load(file)
-    file.close()
-    print("")
+    pass
+    # parsed_forms = load_forms(PARSED_FORMS_PATH)
+    # file = open('sents_for_pretain_2', 'rb')
+    # pairs = pickle.load(file)
+    # file.close()
+    # n = len(pairs)
+    # np.random.shuffle(pairs)
+    # pairs_train = pairs[: int( 0.75 * n)]
+    # pairs_validation = pairs[int( 0.75 * n): ]
+    # pickle.dump(pairs_train, open('pairs_train', 'wb') )
+    # pickle.dump(pairs_validation, open('pairs_validation', 'wb'))
+    #
+    # print("")
