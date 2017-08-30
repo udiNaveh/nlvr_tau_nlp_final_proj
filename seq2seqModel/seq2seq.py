@@ -6,7 +6,7 @@ from handle_data import CNLVRDataSet, SupervisedParsing
 import pickle
 import numpy as np
 import time
-
+import os
 
 #paths
 
@@ -51,7 +51,9 @@ assert words_embedding_size == np.size(embeddings_dict['blue'])
 
 #load logical tokens inventory
 logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
-logical_tokens = [token for token in logical_tokens_mapping.keys()]
+#logical_tokens = [token for token in logical_tokens_mapping.keys()] ####TODO change here to load from file
+#pickle.dump(logical_tokens,open('logical_tokens_list','wb'))
+logical_tokens = pickle.load(open('logical_tokens_list','rb'))
 for var in "xyzwuv":
     logical_tokens.extend([var, 'lambda_{}_:'.format(var) ])
 logical_tokens.extend(['<s>', '<EOS>'])
@@ -244,7 +246,7 @@ def get_gradient_weights_for_beam(beam_rewarded_programs):
     return np.power(q_mml,beta) / np.sum(np.power(q_mml,beta))
 
 
-def sentences_to_embeddings(sentences, enbedding_dict):
+def sentences_to_embeddings(sentences, enbedding_dict): #TODO is it supposed to be "embeddings_dict"?
     return np.array([[embeddings_dict.get(w, embeddings_dict['<UNK>']) for w in sentence] for sentence in sentences])
 
 
@@ -270,9 +272,11 @@ def run_unsupervised_training(sess):
     batch_grad = build_batchGrad()
     update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
 
-    init = tf.global_variables_initializer()
+    # init = tf.global_variables_initializer()
+    saver = tf.train.Saver()
+    saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
 
-    sess.run(init)
+    # sess.run(init)
     step=1
     gradList = sess.run(theta) # just to get dimensions
     gradBuffer = {}
@@ -285,6 +289,8 @@ def run_unsupervised_training(sess):
     #initialize gradients
     for var, grad in enumerate(gradList):
         gradBuffer[var] = grad*0
+    batch_num = 0
+    total_correct = 0
     while train.epochs_completed < 5:
         print("train.epochs_completed= {}".format(train.epochs_completed))
 
@@ -335,6 +341,7 @@ def run_unsupervised_training(sess):
             #print("beam size = {0}, {1} programs compiled, {2} correct".format(len(beam), compiled, correct))
 
             print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
+            total_correct += 1 if correct else 0 # if some program in beam got a reward
 
             if not rewarded_programs:
                 continue
@@ -360,10 +367,16 @@ def run_unsupervised_training(sess):
                 for var,grad in enumerate(program_grad):
                    gradBuffer[var] -=  programs_gradient_weights[idx] * grad[0]
 
+        if batch_num % 10 == 0:
+            print("accuracy: %.2f" % (total_correct / (batch_size * 10)))
+            total_correct = 0
+        batch_num += 1
 
         sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
         for var, grad in enumerate(gradBuffer):
             gradBuffer[var] = gradBuffer[var]*0
+
+    saver.save(sess, os.path.join(os.getcwd(), 'trained_variables_unsupervised.ckpt'))
 
 
 def run_supervised_training(sess):
@@ -391,8 +404,9 @@ def run_supervised_training(sess):
     update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
 
     init = tf.global_variables_initializer()
-
     sess.run(init)
+    saver = tf.train.Saver()
+    #saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
     gradList = sess.run(theta) # just to get dimensions
     gradBuffer = {}
 
@@ -409,7 +423,7 @@ def run_supervised_training(sess):
     correct, correct_valid, total = 0, 0, 0
     epoch_number = -1
     validation_beam_sucess = []
-    while train.epochs_completed < 10:
+    while train.epochs_completed < 4:
         if train.epochs_completed != epoch_number:
             epoch_number+=1
             # print(validation_beam_sucess)
@@ -471,6 +485,21 @@ def run_supervised_training(sess):
                         print("{0} : {1} : {2} \n".format(golden_parsing, i, golden_parsing[i]))
 
                     p.add_token(golden_parsing[i], -1, logical_tokens_mapping) # ignore logprob
+
+                    # ignore invalid continuation tokens
+                    # valid_next_tokens = p.get_possible_continuations(logical_tokens_mapping)
+                    # valid_vector = np.zeros(n_logical_tokens)
+                    # for tok in logical_tokens:
+                    #    if tok in valid_next_tokens:
+                    #        valid_vector[logical_tokens_ids[tok]] = 1
+                    #    else:
+                    #        valid_vector[logical_tokens_ids[tok]] = -np.inf
+                    # valid_probs = np.multiply(current_probs, valid_vector)
+                    # p.add_token(logical_tokens_ids[golden_parsing[i]])
+                    # if logical_tokens_ids[golden_parsing[i]] == np.argmax(valid_probs):
+                    #   # need to take care of lambda case
+                    #    correct += 1
+                    #    continue
 
                     #get one-hot representation of the golden token
 
@@ -549,7 +578,10 @@ def run_supervised_training(sess):
             gradBuffer[var] = gradBuffer[var]*0
 
     beam_parsings.close()
-
+    # params = sess.run(theta)
+    # fd = open('ws.p', 'wb')
+    # pickle.dump(params, fd)
+    saver.save(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
 
 if __name__ == '__main__':
     with tf.Session() as sess:
