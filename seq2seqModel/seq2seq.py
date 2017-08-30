@@ -340,7 +340,7 @@ def run_unsupervised_training(sess):
 
             #print("beam size = {0}, {1} programs compiled, {2} correct".format(len(beam), compiled, correct))
 
-            print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
+            #print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
             total_correct += 1 if correct else 0 # if some program in beam got a reward
 
             if not rewarded_programs:
@@ -403,10 +403,10 @@ def run_supervised_training(sess):
     batch_grad = build_batchGrad()
     update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
 
-    init = tf.global_variables_initializer()
-    sess.run(init)
+    #init = tf.global_variables_initializer()
+    #sess.run(init)
     saver = tf.train.Saver()
-    #saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
+    saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
     gradList = sess.run(theta) # just to get dimensions
     gradBuffer = {}
 
@@ -423,7 +423,7 @@ def run_supervised_training(sess):
     correct, correct_valid, total = 0, 0, 0
     epoch_number = -1
     validation_beam_sucess = []
-    while train.epochs_completed < 4:
+    while train.epochs_completed < 10:
         if train.epochs_completed != epoch_number:
             epoch_number+=1
             # print(validation_beam_sucess)
