@@ -9,8 +9,7 @@ from seq2seqModel.utils import execute
 from handle_data import *
 
 
-
-LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
+LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping')
 PARSED_FORMS_PATH = 'temp_sents.txt'
 
 colors = ['yellow', 'blue', 'black']
@@ -81,7 +80,6 @@ def check_generated_forms(forms_doctionary, samples):
             curr_samples = random.sample(samples, 5)
             generated_forms = generate_eng_log_pairs(engsent, logsent, 5)
             for gen_sent, gen_log in generated_forms:
-
                 for sample in curr_samples:
                     r = execute(gen_log.split(), sample.structured_rep, logical_tokens_mapping)
                     if r is None:
@@ -203,8 +201,16 @@ def sents_maker(path = r'temp_sents.txt'):
 
 
 if __name__ == '__main__':
-    parsed_forms = load_forms(PARSED_FORMS_PATH)
-    file = open('sents_for_pretain_2', 'rb')
-    pairs = pickle.load(file)
-    file.close()
-    print("")
+    pass
+    # parsed_forms = load_forms(PARSED_FORMS_PATH)
+    # file = open('sents_for_pretain_2', 'rb')
+    # pairs = pickle.load(file)
+    # file.close()
+    # n = len(pairs)
+    # np.random.shuffle(pairs)
+    # pairs_train = pairs[: int( 0.75 * n)]
+    # pairs_validation = pairs[int( 0.75 * n): ]
+    # pickle.dump(pairs_train, open('pairs_train', 'wb') )
+    # pickle.dump(pairs_validation, open('pairs_validation', 'wb'))
+    #
+    # print("")

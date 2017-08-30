@@ -120,17 +120,17 @@ ALL_ITEMS 	0	set<Item>
 
 ALL_BOXES	0	set<set<Item>>	: box	tower
 
-Color.BLUE	0	Color	:	blue
+Color.BLUE	0	set<Color>	:	blue
 
-Color.BLACK	0	Color	:	black
+Color.BLACK	0	set<Color>	:	black
 
-Color.YELLOW	0	Color	:	yellow
+Color.YELLOW	0	set<Color>	:	yellow
 
-Shape.TRIANGLE	0	Shape	:	triangle
+Shape.TRIANGLE	0	set<Shape>	:	triangle
 
-Shape.SQUARE	0	Shape	:	square
+Shape.SQUARE	0	set<Shape>	:	square
 
-Shape.CIRCLE	0	Shape	:	circle
+Shape.CIRCLE	0	set<Shape>	:	circle
 
 Side.RIGHT	0	Side	:	right
 

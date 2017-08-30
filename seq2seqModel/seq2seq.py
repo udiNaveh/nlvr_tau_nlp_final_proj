@@ -12,7 +12,7 @@ import time
 
 LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
 LOGICAL_TOKENS_EMBEDDINGS_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_embeddings')
-WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'word_embeddings')
+WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
 
 ####
@@ -20,7 +20,7 @@ PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pars
 ####
 
 #dimensions
-words_embedding_size = 8
+words_embedding_size = 12
 logical_tokens_embedding_size = 12
 decoder_hidden_layer_size = 50
 lstm_hidden_layer_size = 30
@@ -31,11 +31,12 @@ history_embedding_size = history_length * logical_tokens_embedding_size
 #other hyper parameters
 learning_rate = 0.001
 beta = 0.5
-epsilon = 0.5
+epsilon_for_e_greedy = 0.5
 num_of_steps = 10000
 max_decoding_length = 20
 beam_size = 50
 batch_size = 8
+batch_size_supervised = 10
 
 
 
@@ -126,7 +127,6 @@ def build_batchGrad():
 
 
 def sample_valid_decodings(next_token_probs_getter, n_decodings):
-
     decodings = []
     while len(decodings)<n_decodings:
         partial_program = PartialProgram()
@@ -143,8 +143,8 @@ def sample_valid_decodings(next_token_probs_getter, n_decodings):
             partial_program.add_token(next_token, np.log(p), logical_tokens_mapping)
     return decodings
 
-def sample_decoding_prefixes(next_token_probs_getter, n_decodings, length):
 
+def sample_decoding_prefixes(next_token_probs_getter, n_decodings, length):
     decodings = []
     while len(decodings)<n_decodings:
         partial_program = PartialProgram()
@@ -174,16 +174,16 @@ def create_partial_program(next_token_probs_getter, token_seq):
     return partial_program
 
 
-def beam_search(next_token_probs_getter):
+def beam_search(next_token_probs_getter, epsilon = epsilon_for_e_greedy):
 
 
     beam = [PartialProgram()]
     # create a beam of possible programs for sentence, the iteration continues while there are unfinished programs in beam and t < max_beam_steps
 
     for t in range(max_decoding_length):
-        if t>1 :
-            sampled_prefixes = sample_decoding_prefixes(next_token_probs_getter, 5, t)
-            beam.extend(sampled_prefixes)
+        # if t>1 :
+        #     sampled_prefixes = sample_decoding_prefixes(next_token_probs_getter, 5, t)
+        #     beam.extend(sampled_prefixes)
         continuations = {}
 
         for partial_program in beam:
@@ -279,6 +279,8 @@ def run_unsupervised_training(sess):
 
     # load data
     train = CNLVRDataSet(definitions.TRAIN_JSON)
+    train.sort_sentences_by_complexity(5)
+    train.choose_levels_for_curriculum_learning([0])
 
     #initialize gradients
     for var, grad in enumerate(gradList):
@@ -325,8 +327,7 @@ def run_unsupervised_training(sess):
                                      for sample in related_samples])
                 actual_labels = np.array([sample.label for sample in related_samples])
                 compiled+= sum(res is not None for res in execution_results)
-                #reward = 1 if all(execution_results==actual_labels) else 0
-                reward=1
+                reward = 1 if all(execution_results==actual_labels) else 0
                 correct+=reward
                 if reward>0:
                     rewarded_programs.append(prog)
@@ -376,12 +377,13 @@ def run_supervised_training(sess):
     history_embedding, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
     # a one-hot vector represents the action taken at each step
     chosen_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens], name="chosen_action_token")
-
+    token_prob_dist_tensor = tf.nn.softmax(token_unnormalized_dist, dim=0)
     #chosen_logical_tokens_reshaped = np.reshape(chosen_logical_tokens,[n_logical_tokens,1])
-    token_unnormalized_dist = tf.transpose(token_unnormalized_dist)
+    token_unnormalized_distt = tf.transpose(token_unnormalized_dist)
+
 
     # cross-entropy loss per single token in a single sentence
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=chosen_logical_tokens, logits=token_unnormalized_dist))
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=chosen_logical_tokens, logits=token_unnormalized_distt))
     theta = tf.trainable_variables()
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     compute_program_grads = optimizer.compute_gradients(cross_entropy)
@@ -391,30 +393,42 @@ def run_supervised_training(sess):
     init = tf.global_variables_initializer()
 
     sess.run(init)
-    step=1
     gradList = sess.run(theta) # just to get dimensions
     gradBuffer = {}
 
     # load data
     train = SupervisedParsing(definitions.SUPERVISED_TRAIN_PICKLE)
+    validation = SupervisedParsing(definitions.SUPERVISED_VALIDATION_PICKLE)
 
+    beam_parsings = open('beam examples.txt', 'w')
     #initialize gradients
     for var, grad in enumerate(gradList):
         gradBuffer[var] = grad*0
 
-    steps_num = 0
-
+    batch_num = 0
+    correct, correct_valid, total = 0, 0, 0
+    epoch_number = -1
+    validation_beam_sucess = []
     while train.epochs_completed < 10:
-        print("epoch %d, step %d" % (train.epochs_completed, steps_num))
-        #print("train.epochs_completed= {}".format(train.epochs_completed))
-        steps_num += batch_size
+        if train.epochs_completed != epoch_number:
+            epoch_number+=1
+            # print(validation_beam_sucess)
+            # validation_beam_sucess= []
+            # sentences, labels = zip(*validation.next_batch(validation.num_examples))
+            # is_validation = True
 
-        sentences, labels = zip(*train.next_batch(batch_size))
+
+        is_validation = False
+        sentences, labels = zip(*train.next_batch(batch_size_supervised))
+        batch_num += 1
+
+        batch_size = len(sentences)
+
         embedded_sentences = sentences_to_embeddings(sentences, embeddings_dict)
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
         logical_tokens_embeddings_dict = \
             {token : current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens}
-        correct, total = 0, 0
+
         for step in range(batch_size):
             s = sentences[step]
             x = embedded_sentences[step]
@@ -426,79 +440,115 @@ def run_supervised_training(sess):
             golden_parsing = labels[step].split()
             #golden_parsing.append('<EOS>')
 
-            output = []
-            one_hot_reshaped = []
-            histories =[]
+            if not is_validation:
+                output = []
+                one_hot_reshaped = []
+                histories =[]
+                batch_losses = []
+                p = PartialProgram()
+                for i in range(len(golden_parsing)):
 
-            p = PartialProgram()
-            for i in range(len(golden_parsing)):
+                    # embed golden history
 
-                # embed golden history
+                    history_tokens = ['<s>' for _ in range(history_length - i)] + \
+                                     golden_parsing[:i][-history_length:]
+                    history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens]
+                    history_embs = np.reshape(np.concatenate(history_embs), [1, history_embedding_size])
+                    histories.append(history_embs)
 
-                history_tokens = ['<s>' for _ in range(history_length - i)] + \
-                                 golden_parsing[:i][-history_length:]
-                history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens]
-                history_embs = np.reshape(np.concatenate(history_embs), [1, history_embedding_size])
-                histories.append(history_embs)
+                    # run forward pass
 
-                # run forward pass
+                    current_probs = np.squeeze(sess.run(token_unnormalized_distt, feed_dict={e_m: sentence_e_m,
+                                                                                            h: sentence_h,
+                                                                                            history_embedding: history_embs}))
+                    total += 1
 
-                current_probs = np.squeeze(sess.run(token_unnormalized_dist, feed_dict={e_m: sentence_e_m,
-                                                                                        h: sentence_h,
-                                                                                        history_embedding: history_embs}))
+                    valid_next_tokens = p.get_possible_continuations(logical_tokens_mapping)
+                    valid_next_tokens_probs = [current_probs[logical_tokens_ids[tok]] for tok in valid_next_tokens]
+                    next_token_predicted = valid_next_tokens[np.argmax(valid_next_tokens_probs)]
 
-                total += 1
+                    if golden_parsing[i] not in valid_next_tokens:
+                        print("{0} : {1} : {2} \n".format(golden_parsing, i, golden_parsing[i]))
 
-                # ignore invalid continuation tokens
-                #valid_next_tokens = p.get_possible_continuations(logical_tokens_mapping)
-                #valid_vector = np.zeros(n_logical_tokens)
-                #for tok in logical_tokens:
-                #    if tok in valid_next_tokens:
-                #        valid_vector[logical_tokens_ids[tok]] = 1
-                #    else:
-                #        valid_vector[logical_tokens_ids[tok]] = -np.inf
-                #valid_probs = np.multiply(current_probs, valid_vector)
-                #p.add_token(logical_tokens_ids[golden_parsing[i]])
-                #if logical_tokens_ids[golden_parsing[i]] == np.argmax(valid_probs):
-                #   # need to take care of lambda case
-                #    correct += 1
-                #    continue
+                    p.add_token(golden_parsing[i], -1, logical_tokens_mapping) # ignore logprob
 
+                    #get one-hot representation of the golden token
 
-                # get one-hot representation of the golden token
-                one_hot_vec = np.zeros(n_logical_tokens)
-                if golden_parsing[i] == 'and':
-                    golden_parsing[i] = 'AND'
-                one_hot_vec[logical_tokens_ids[golden_parsing[i]]] = 1
-                one_hot_reshaped.append(one_hot_vec)
+                    one_hot_vec = one_hot(n_logical_tokens, logical_tokens_ids[golden_parsing[i]])
+                    one_hot_reshaped.append(one_hot_vec)
 
-                #if train.epochs_completed == 4:
-                output.append(logical_tokens[np.argmax(current_probs)])
+                    #if train.epochs_completed == 4:
+                    output.append(logical_tokens[np.argmax(current_probs)])
 
-                if logical_tokens_ids[golden_parsing[i]] == np.argmax(current_probs):
-                    correct += 1
+                    correct += logical_tokens_ids[golden_parsing[i]] == np.argmax(current_probs)
+                    correct_valid += golden_parsing[i] == next_token_predicted
+
+                    # sentence_logical_tokens_mapping = {k: v for k, v in logical_tokens_mapping.items() if
+                    #                                    not v.necessity or any(w in s for w in v.necessity)}
+                    #
 
 
-            one_hot_stacked = np.stack(one_hot_reshaped)
-            histories_stacked = np.squeeze(np.stack(histories), axis=1)
+                one_hot_stacked = np.stack(one_hot_reshaped)
+                histories_stacked = np.squeeze(np.stack(histories), axis=1)
 
-            # calculate gradient
-            token_grad = sess.run(compute_program_grads, feed_dict={sentence_placeholder: sentence_embedding,
-                                                                    sent_lengths_placeholder: length,
-                                                                    history_embedding: histories_stacked,
-                                                                    chosen_logical_tokens: one_hot_stacked})
+                # calculate gradient
+                token_grad, loss = sess.run([compute_program_grads, cross_entropy], feed_dict={sentence_placeholder: sentence_embedding,
+                                                                        sent_lengths_placeholder: length,
+                                                                        history_embedding: histories_stacked,
+                                                                        chosen_logical_tokens: one_hot_stacked})
 
-            for var,grad in enumerate(token_grad):
-               gradBuffer[var] += grad[0]
-            #if train.epochs_completed == 4:
-            #print("outputted: %s" % " ".join(output))
+
+                batch_losses.append(loss)
+
+                for var, grad in enumerate(token_grad):
+                    gradBuffer[var] += grad[0]
+                    # if train.epochs_completed == 4:
+                    # print("outputted: %s" % " ".join(output))
+
+            if step%10 == 0 and batch_num>100 and (batch_num%5==0 or is_validation):
+                # once in a while do a beam search on a sentence
+                sentence_logical_tokens_mapping = {k: v for k, v in logical_tokens_mapping.items()
+                                                   if not v.necessity
+                                                   or len ([w for w in s.split() if w in v.necessity])>0}
+                next_token_probs_getter = lambda pp: get_next_token_probs(pp, logical_tokens_embeddings_dict,
+                                                                          {e_m: sentence_e_m, h: sentence_h},
+                                                                          history_embedding,
+                                                                          token_prob_dist_tensor,
+                                                                          sentence_logical_tokens_mapping)
+
+                beam = beam_search(next_token_probs_getter, epsilon=0.1)
+                valid_beam = [prog for prog in beam if prog.token_seq[-1] == '<EOS>']  # otherwise won't compile and therefore no reward
+
+
+                valid_beam = sorted(valid_beam, key = lambda pp : - pp.logprob)
+                golden_str = " ".join(golden_parsing)
+                is_golden_ib_beam = any([" ".join(p[:-1]) == golden_str for p in beam])
+                if is_validation:
+                    validation_beam_sucess.append(is_golden_ib_beam)
+                beam_parsings.write(s +'\n')
+                beam_parsings.write("golden = " + golden_str+'\n')
+                for pp in valid_beam[:5]:
+                    beam_parsings.write(" ".join(pp.token_seq[:-1])+'\n')
+
+
+
 
         sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
-        acc = correct / total * 100
-        print("accuracy: %.2f" % str(acc))
+
+        if batch_num % 10 == 0:
+            print("epoch {0}, batch number {1}".format(train.epochs_completed, batch_num))
+            acc = correct / total
+            acc_valid =  correct_valid / total
+            mean_loss = np.mean(batch_losses)
+            correct, correct_valid ,total = 0, 0, 0
+            batch_losses = []
+            print("mean loss: {0:.3f}, accuracy: {1:.3f}, accuracy valid: {2:.3f}".format(mean_loss, acc, acc_valid))
+
 
         for var, grad in enumerate(gradBuffer):
             gradBuffer[var] = gradBuffer[var]*0
+
+    beam_parsings.close()
 
 
 if __name__ == '__main__':
