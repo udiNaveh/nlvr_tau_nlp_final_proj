@@ -131,7 +131,7 @@ class CNLVRDataSet:
         class_size = len(self.processed_sentences) // n_classes
         for i in range(n_classes):
             self.__ids_by_complexity.append(ids_sorted_by_sentence_length[
-                                            class_size*i : max(class_size*i + class_size, len(self.processed_sentences))])
+                                            class_size*i : min(class_size*i + class_size, len(self.processed_sentences))])
         return
 
     def choose_levels_for_curriculum_learning(self, levels):
