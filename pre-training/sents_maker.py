@@ -7,6 +7,7 @@ import definitions
 from seq2seqModel.logical_forms_generator import load_functions
 from seq2seqModel.utils import execute
 from handle_data import *
+from preprocessing import *
 
 
 LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping')
@@ -29,6 +30,28 @@ replacements_dic = {'T_SHAPE' : [('square', ['square']),('triangle', ['triangle'
              }
 
 logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
+
+formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
+formalization_file_2 = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'more_replacements.txt')
+
+def get_sentences_formalized(sentences):
+    dict = load_dict_from_txt(formalization_file)
+    for i in range(2,10):
+        dict[str(i)] = 'T_INT'
+    dict["1"] = 'T_ONE'
+    dict["one"] = 'T_ONE'
+    formalized_sentences =  replace_words_by_dictionary(sentences, dict)
+    return formalized_sentences
+
+
+def print_unique_sents_with_counts(sentences):
+    unique = {}
+    for s in sentences.values():
+        increment_count(unique, s)
+    for s, count in sorted(unique.items(), key= lambda kvp : kvp[1], reverse=True):
+        print(s,count)
+
+
 
 def load_forms(path):
     result = {}
@@ -105,16 +128,13 @@ def generate_pairs(forms_doctionary):
     return pairs
 
 
-
-
-
-
-
-
-
-
-
-
+def extract_all_sentences_in_given_patterns(sentences, patterns):
+    formalized = get_sentences_formalized(sentences)
+    result = {}
+    for k, s in formalized.items():
+        if s in patterns:
+            result[k] = sentences[k]
+    return result
 
 
 def sents_maker(path = r'temp_sents.txt'):
