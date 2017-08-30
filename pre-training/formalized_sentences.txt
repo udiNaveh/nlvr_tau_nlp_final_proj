@@ -217,11 +217,17 @@ there is a T_COLOR_1 item T_COLOR_2 a T_COLOR_3 item 10
 @ there is a tower with T_INT item 9
 ~ exist filter ALL_BOXES lambda_x_: equal_int T_INT count x
 
+@ there are T_QUANTITY_COMPARE T_INT T_SHAPE touch the edge 9
+~ T_QUANTITY_COMPARE T_INT count filter ALL_ITEMS lambda_x_: AND is_T_SHAPE x is_touching_wall x Side.ANY
+~ T_QUANTITY_COMPARE T_INT count filter filter ALL_ITEMS lambda_x_: is_T_SHAPE x lambda_y_: is_touching_wall y Side.ANY
+
 there is a T_COLOR T_SHAPE touch the corner 9
 there is no T_COLOR item closely touch the T_LOC of a box 9
-there are T_QUANTITY_COMPARE T_INT T_SHAPE touch the edge 9
 there is a box with T_INT item of T_INT different color 8
-there is a box with a T_COLOR T_SHAPE and T_INT T_COLOR T_SHAPE 8
+
+@ there is a box with a T_COLOR1 T_SHAPE1 and T_INT T_COLOR2 T_SHAPE2 8
+~ exist filter ALL_BOXES lambda_x_: AND exist filter x  lambda_y_: AND is_T_COLOR1 y is_T_SHAPE1 y ge T_INT count filter x lambda_z_: AND is_T_COLOR2 z is_T_SHAPE2 z
+
 there are T_QUANTITY_COMPARE T_INT T_COLOR item as the T_LOC of a tower 8
 each box have T_QUANTITY_COMPARE T_ONE T_COLOR item 8
 there is a T_SHAPE closely touch a corner 8

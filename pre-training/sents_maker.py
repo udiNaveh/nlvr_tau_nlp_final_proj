@@ -7,8 +7,6 @@ import definitions
 from seq2seqModel.logical_forms_generator import load_functions
 from seq2seqModel.utils import execute
 from handle_data import *
-from display_images import *
-
 
 
 LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping')
@@ -23,7 +21,7 @@ ones = ['1']
 
 replacements_dic = {'T_SHAPE' : [('square', ['square']),('triangle', ['triangle']),('circle', ['circle'])],
              'T_COLOR' : [('yellow', ['yellow']),('blue', ['blue']),('black', ['black'])],
-             'T_LOC' :  [('top', ['top']),('bottom', ['bottom']),('bottom', ['base'])],
+             'T_LOC' :  [('top', ['top']),('bottom', ['bottom'])],
              'T_ONE' : [('1', ['1', 'one', 'a'])],
              'T_INT' : [(str(i), [str(i)]) for i in range (2,8)],
              'T_QUANTITY_COMPARE' : [('equal_int', ['exactly']),('le', ['at least']),('ge', ['at most']),
