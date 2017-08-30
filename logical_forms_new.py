@@ -345,7 +345,7 @@ def select_integers(k, min, max):
 def __is_type_or_set_of_type(x, t : type):
     return isinstance(x, t) or (isinstance(x, Iterable) and all([isinstance(a, t) for a in x]))
 
-def select(_set, k):
+def select(k, _set):
     l = list(_set)
     return [[l[i] for i in idx] for idx in select_integers(k, 0, len(l))]
 
