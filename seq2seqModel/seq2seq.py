@@ -7,6 +7,7 @@ import pickle
 import numpy as np
 import time
 import os
+import definitions
 
 #paths
 
@@ -275,6 +276,7 @@ def run_unsupervised_training(sess):
     # init = tf.global_variables_initializer()
     saver = tf.train.Saver()
     saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
+    #saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables_unsupervised.ckpt'))
 
     # sess.run(init)
     step=1
@@ -285,12 +287,15 @@ def run_unsupervised_training(sess):
     train = CNLVRDataSet(definitions.TRAIN_JSON)
     train.sort_sentences_by_complexity(5)
     train.choose_levels_for_curriculum_learning([0])
+    supervised_training_file = SupervisedParsing(definitions.SUPERVISED_TRAIN_PICKLE)
+    supervised_sentences, _ = zip(*supervised_training_file.next_batch(len(supervised_training_file.examples)))
 
     #initialize gradients
     for var, grad in enumerate(gradList):
         gradBuffer[var] = grad*0
     batch_num = 0
     total_correct = 0
+    check_correct, check_total = 0, 0
     while train.epochs_completed < 5:
         print("train.epochs_completed= {}".format(train.epochs_completed))
 
@@ -300,7 +305,12 @@ def run_unsupervised_training(sess):
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
         logical_tokens_embeddings_dict = \
             {token : current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens}
+        check = 0
         for step in range (batch_size):
+            check = 0
+            if sentences[step] in supervised_sentences:
+                check = 1
+
             s = (sentences[step]).split()
             x = embedded_sentences[step]
             related_samples = samples[step]
@@ -342,6 +352,9 @@ def run_unsupervised_training(sess):
 
             #print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
             total_correct += 1 if correct else 0 # if some program in beam got a reward
+            if check:
+                check_correct += 1 if correct else 0
+                check_total += 1
 
             if not rewarded_programs:
                 continue
@@ -369,7 +382,10 @@ def run_unsupervised_training(sess):
 
         if batch_num % 10 == 0:
             print("accuracy: %.2f" % (total_correct / (batch_size * 10)))
+            print("accuracy for %d supervised examples: %.2f" % (check_total, check_correct / (check_total + 0.00001) ))
             total_correct = 0
+            check_correct = 0
+            check_total = 0
         batch_num += 1
 
         sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
@@ -585,4 +601,4 @@ def run_supervised_training(sess):
 
 if __name__ == '__main__':
     with tf.Session() as sess:
-        run_supervised_training(sess)
+        run_unsupervised_training(sess)
