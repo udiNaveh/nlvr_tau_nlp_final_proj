@@ -66,7 +66,7 @@ def build_data(data, preprocessing_type = None, use_unk = True):
 
 class CNLVRDataSet:
 
-    def __init__(self, path):
+    def __init__(self, path, ignore_all_true = True):
         self.original_sentences = {}
         self.processed_sentences = {}
         self.samples = {}
@@ -75,7 +75,15 @@ class CNLVRDataSet:
         self.epochs_completed = 0
         self.__num_examples = 0
         self.__ids_by_complexity = []
+        self.ignore_all_true_sentences = ignore_all_true
         self.get_data(path)
+
+
+
+    def get_samples_by_sentence_id(self, sentence_id):
+        samples_ids = ["{0}-{1}".format(sentence_id, i) for i in range(4)]
+        return [self.samples[sample_id] for sample_id in samples_ids if sample_id in self.samples]
+
 
     def get_data(self, path):
         data = read_data(path)
@@ -94,12 +102,23 @@ class CNLVRDataSet:
             s_index = int(str.split(s.identifier, "-")[0])
             s.sentence = self.processed_sentences[s_index]
 
+
+
+        if self.ignore_all_true_sentences:
+            new_keys = []
+            for k in self.original_sentences.keys():
+                s_samples = self.get_samples_by_sentence_id(k)
+                if all([s.label for s in s_samples]):
+                    pass#print(s_samples[0].sentence)
+                else:
+                    new_keys.append(k)
+
+            self.original_sentences = {k: self.original_sentences[k] for k in new_keys}
+            self.processed_sentences = {k: self.processed_sentences[k] for k in new_keys}
+
         self.__ids = [k for k in self.original_sentences.keys()]
         self.__num_examples = len(self.__ids)
 
-    def get_samples_by_sentence_id(self, sentence_id):
-        samples_ids = ["{0}-{1}".format(sentence_id, i) for i in range(4)]
-        return [self.samples[sample_id] for sample_id in samples_ids if sample_id in self.samples]
 
 
     def sort_sentences_by_complexity(self, n_classes):
@@ -160,12 +179,12 @@ class SupervisedParsing:
         self.examples = []
         self._index_in_epoch = 0
         self.epochs_completed = 0
-        self.__num_examples = 0
+        self.num_examples = 0
         self.get_supervised_data(path)
 
     def get_supervised_data(self, path):
         sents = pickle.load(open(path,'rb'))
-        self.__num_examples = len(sents)
+        self.num_examples = len(sents)
         self.__ids = [x for x in range(len(sents))]
         self.examples = sents
 
@@ -175,7 +194,7 @@ class SupervisedParsing:
             np.random.shuffle(self.__ids)  # shuffle index
 
         # go to the next batch
-        elif start + batch_size > self.__num_examples:
+        elif start + batch_size > self.num_examples:
             self.epochs_completed += 1
             self._index_in_epoch=0
             return  self.next_batch(batch_size)

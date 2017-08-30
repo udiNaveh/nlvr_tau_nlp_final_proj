@@ -64,7 +64,7 @@ def load_functions(filename):
             token, return_type, args_types = entry[0], entry[-1], entry[2:-1]
             functions_dict[token] = TokenTypes(return_type=return_type, args_types=args_types, necessity= necessary_words)
         functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one'])
-        functions_dict.update({str(i): TokenTypes(return_type='int', args_types=[], necessity=[i]) for i in range(2, 10)})
+        functions_dict.update({str(i): TokenTypes(return_type='int', args_types=[], necessity=[str(i)]) for i in range(2, 10)})
 
     return functions_dict
 
