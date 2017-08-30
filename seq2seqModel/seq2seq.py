@@ -284,11 +284,16 @@ def run_unsupervised_training(sess):
     gradBuffer = {}
 
     # load data
-    train = CNLVRDataSet(definitions.TRAIN_JSON)
-    train.sort_sentences_by_complexity(5)
-    train.choose_levels_for_curriculum_learning([0])
+    #train = CNLVRDataSet(definitions.TRAIN_JSON)
+    #train.sort_sentences_by_complexity(5)
+    #train.choose_levels_for_curriculum_learning([0])
     supervised_training_file = SupervisedParsing(definitions.SUPERVISED_TRAIN_PICKLE)
     supervised_sentences, _ = zip(*supervised_training_file.next_batch(len(supervised_training_file.examples)))
+    train = CNLVRDataSet(definitions.TRAIN_JSON)
+    file = open(definitions.SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
+    sentences_in_pattern = pickle.load(file)
+    file.close()
+    train.use_subset_by_sentnce_condition(lambda s: s in sentences_in_pattern.values())
 
     #initialize gradients
     for var, grad in enumerate(gradList):
