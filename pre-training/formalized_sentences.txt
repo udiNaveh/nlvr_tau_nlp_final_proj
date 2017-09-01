@@ -229,7 +229,9 @@ there is a box with T_INT item of T_INT different color 8
 ~ exist filter ALL_BOXES lambda_x_: AND exist filter x  lambda_y_: AND is_T_COLOR1 y is_T_SHAPE1 y ge T_INT count filter x lambda_z_: AND is_T_COLOR2 z is_T_SHAPE2 z
 
 there are T_QUANTITY_COMPARE T_INT T_COLOR item as the T_LOC of a tower 8
-each box have T_QUANTITY_COMPARE T_ONE T_COLOR item 8
+@ each box have T_QUANTITY_COMPARE T_ONE T_COLOR item 8
+~ All ALL_BOXES lambda_x_: T_QUANTITY_COMPARE 1 count filter x lambda_y_: is_T_COLOR y
+
 there is a T_SHAPE closely touch a corner 8
 there are T_QUANTITY_COMPARE T_INT T_COLOR item 8
 there is a tower with only T_ONE T_COLOR item 8
