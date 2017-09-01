@@ -423,7 +423,6 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
         sentences, labels = zip(*current_data_set.next_batch(batch_size_supervised))
         batch_num += 1
         batch_size = len(sentences)
-        batch_losses=[]
 
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
         logical_tokens_embeddings_dict = \
@@ -458,77 +457,17 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
                                               if i not in no_real_choice_indices)/ len(golden_parsing))
 
 
-
-
-            # one_hot_reshaped = []
-            # invalid_reshaped = []
-            # histories =[]
-
-            # p = PartialProgram(logical_tokens_mapping)
-            # for i in range(len(golden_parsing)):
-            #     valid_next_tokens = p.get_possible_continuations()
-            #     if golden_parsing[i] not in valid_next_tokens:
-            #         print("{0} : {1} : {2} \n".format(golden_parsing, i, golden_parsing[i]))
-            #     p.add_token(golden_parsing[i],  -1)  # ignore logprob
-
-                # if len(valid_next_tokens) == 1 and not automatic_tokens_in_grad:
-                #     continue
-                # history_tokens = ['<s>' for _ in range(history_length - i)] + \
-                #                  golden_parsing[:i][-history_length:]
-                #
-                # BOW_history = [sparse_vector_from_indices(n_logical_tokens,
-                #                                           [logical_tokens_ids[tok] for tok in golden_parsing[:i]])] \
-                #     if use_bow_history else []
-                # history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens] + BOW_history
-                # history_embs = np.reshape(np.concatenate(history_embs), [1, history_embedding_size])
-                # histories.append(history_embs)
-                # # run forward pass
-                # current_probs = np.squeeze(sess.run(token_prob_dist_tensor, feed_dict={e_m: sentence_e_m,
-                #                                                                         h: sentence_h,
-                #                                                                        history_embedding_placeholder: history_embs}))
-                #
-                # valid_next_tokens_probs = [current_probs[logical_tokens_ids[tok]] for tok in valid_next_tokens]
-                # next_token_predicted = valid_next_tokens[np.argmax(valid_next_tokens_probs)]
-                # valid_sparse = (sparse_vector_from_indices(n_logical_tokens,
-                #                            [logical_tokens_ids[tok] for tok in valid_next_tokens]) - 1)
-                #
-                # one_hot_vec = one_hot(n_logical_tokens, logical_tokens_ids[golden_parsing[i]])
-                # one_hot_reshaped.append(one_hot_vec)
-                # invalid_reshaped.append(valid_sparse)
-                #
-                # if len(valid_next_tokens) > 1:
-                #     correct.append(logical_tokens_ids[golden_parsing[i]] == np.argmax(current_probs))
-                #     correct_valid.append(golden_parsing[i] == next_token_predicted)
-
-            # one_hot_stacked = np.stack(one_hot_reshaped)
-            #
-            # invalid_stacked = np.stack(invalid_reshaped) * (0.0 if irrelevant_tokens_in_grad else 10000.0)
-            # histories_stacked = np.squeeze(np.stack(histories), axis=1)
-
             # calculate gradient
             program_grad, loss = sess.run([compute_program_grads, cross_entropy],
                                         feed_dict= union_dicts(encoder_feed_dict, program_dependent_feed_dict))
             epoch_losses.append(loss)
-            batch_losses.append(loss)
+
 
             for var, grad in enumerate(program_grad):
                 gradBuffer[var] += grad[0]
         if current_data_set is train:
             sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
 
-        if batch_num % 50 == 0:
-            print("epoch {0}, batch number {1}".format(train.epochs_completed, batch_num))
-
-            # acc_valid =  correct_valid / total
-            mean_loss = np.mean(batch_losses)
-            mean_accuracy = np.mean(accuracy[-50 * batch_size:])
-            mean_accuracy_no_automatic = np.mean(accuracy_chosen_tokens[-50 * batch_size:])
-            # correct, correct_valid ,total = 0, 0, 0
-            batch_losses = []
-
-
-            print("mean loss: {0:.3f}, accuracy: {1:.3f}, accuracy where there's choice: {2:.3f}".format(
-                mean_loss, mean_accuracy, mean_accuracy_no_automatic))
 
         for var, grad in enumerate(gradBuffer):
             gradBuffer[var] = gradBuffer[var]*0
@@ -536,48 +475,6 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 
     if save_params_path:
         saver.save(sess, save_params_path)
-
-     # run beam search on validation sentences:
-
-    sentences, labels = zip(*validation.next_batch(validation.num_examples))
-    batch_num += 1
-    batch_size = len(sentences)
-    embedded_sentences = sentences_to_embeddings(sentences, word_embeddings_dict)
-    current_logical_tokens_embeddings = sess.run(W_logical_tokens)
-    logical_tokens_embeddings_dict = \
-        {token: current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens_ids}
-
-    for step in range(batch_size):
-        sentence = sentences[step]
-        x = embedded_sentences[step]
-        sentence_embedding = np.reshape(x, [1, len(x), words_embedding_size])
-        length = [len(sentence.split())]
-        golden_parsing = labels[step].split()
-
-        encoder_feed_dict = {sentence_placeholder: sentence_embedding, sent_lengths_placeholder: length}
-        sentence_h, sentence_e_m = sess.run((h, e_m), feed_dict=encoder_feed_dict)
-        decoder_feed_dict = {e_m: sentence_e_m, h: sentence_h}
-        sentence_logical_tokens_mapping = {k: v for k, v in logical_tokens_mapping.items() if
-                                           (not v.necessity) or any([True if w in sentence else False for w in v.necessity])}
-
-        for kt, mapping in enumerate((logical_tokens_mapping, sentence_logical_tokens_mapping)):
-            next_token_probs_getter = lambda pp: get_next_token_probs(pp, logical_tokens_embeddings_dict, decoder_feed_dict,
-                                                                      history_embedding_placeholder,
-                                                                      token_prob_dist_tensor)
-
-            golden_program, _ = program_from_token_sequence(next_token_probs_getter, golden_parsing, mapping)
-            print("##################")
-            print("sentence:")
-            print(sentence)
-            print(("without sentence limitations", "with sentence limitations")[kt])
-            print("golden program:")
-            print(golden_program.logprob, " ".join(golden_program.token_seq))
-            print("beam top programs:")
-
-            beam = e_greedy_randomized_beam_search(next_token_probs_getter, mapping)
-
-            for prog in beam[:10]:
-                print(prog.logprob, " ".join(prog.token_seq))
 
 
 
