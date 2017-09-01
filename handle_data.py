@@ -226,17 +226,4 @@ class SupervisedParsing:
 
 
 
-if __name__ == '__main__':
-    #data = read_data(train)
-    #samples, sentences = build_data(data, preprocessing_type='deep') # check different processig types
-    train = CNLVRDataSet(definitions.TRAIN_JSON)
-    for i in range(3):
-        batch = train.next_batch(8)
-    train.sort_sentences_by_complexity(5)
-    train.choose_levels_for_curriculum_learning([0])
-    for i in range(3):
-        batch = train.next_batch(8)
-    train.choose_levels_for_curriculum_learning((3,4))
-    for i in range(3):
-        batch = train.next_batch(12)
-    print("")
+

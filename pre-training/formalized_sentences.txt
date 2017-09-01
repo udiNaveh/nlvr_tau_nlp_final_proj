@@ -228,13 +228,22 @@ there is a box with T_INT item of T_INT different color 8
 @ there is a box with a T_COLOR1 T_SHAPE1 and T_INT T_COLOR2 T_SHAPE2 8
 ~ exist filter ALL_BOXES lambda_x_: AND exist filter x  lambda_y_: AND is_T_COLOR1 y is_T_SHAPE1 y ge T_INT count filter x lambda_z_: AND is_T_COLOR2 z is_T_SHAPE2 z
 
-there are T_QUANTITY_COMPARE T_INT T_COLOR item as the T_LOC of a tower 8
-each box have T_QUANTITY_COMPARE T_ONE T_COLOR item 8
-there is a T_SHAPE closely touch a corner 8
-there are T_QUANTITY_COMPARE T_INT T_COLOR item 8
-there is a tower with only T_ONE T_COLOR item 8
-there are T_QUANTITY_COMPARE T_INT T_COLOR item not touch a edge 8
-there is no T_COLOR item as the T_LOC of a tower 8
+@ there is a T_SHAPE closely touch a corner  $ 8
+~ exist filter ALL_ITEMS lambda_x_: AND is_T_SHAPE x is_touching_corner x Side.ANY
+
+@there are T_QUANTITY_COMPARE T_INT T_COLOR item $ 8
+~ T_QUANTITY_COMPARE T_INT count filter ALL_ITEMS lambda_x_: is_T_COLOR x
+
+@there is a tower with only T_ONE T_COLOR item  $ 8
+~ exist filter ALL_BOXES lambda_x_: equal_int 1 count filter x lambda_y_: is_T_COLOR y
+
+@there are T_QUANTITY_COMPARE T_INT T_COLOR item not touch a edge $ 8
+~ T_QUANTITY_COMPARE T_INT count filter ALL_ITEMS lambda_x_: AND is_T_COLOR x NOT is_touching_wall x Side.ANY
+
+@there is no T_COLOR item as the T_LOC of a tower 8
+~ NOT exist filter ALL_ITEMS lambda_x_: AND is_T_COLOR x is_T_LOC x
+
+
 there is T_ONE tower with T_QUANTITY_COMPARE T_INT item 8
 there is T_QUANTITY_COMPARE T_ONE T_COLOR T_SHAPE closely touch the T_LOC of a box 8
 there is T_QUANTITY_COMPARE T_ONE tower with T_INT item 8

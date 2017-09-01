@@ -3,8 +3,7 @@ from nltk.stem import WordNetLemmatizer
 import nltk.tag
 
 from definitions import *
-from general_utils import increment_count, call_api
-
+from general_utils import increment_count
 
 color_words = ["blue", "yellow", "black"]
 shape_words = ["circle", "triangle", "square"]
