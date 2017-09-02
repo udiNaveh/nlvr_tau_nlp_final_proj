@@ -55,7 +55,7 @@ is_second	1	Item	bool	:	second	middle
 
 is_third	1	Item	bool	: third
 
-is_touching_wall	2	Item	Side	bool	: edge
+is_touching_wall	2	Item	Side	bool	: edge touch
 
 is_touching_corner	2	Item	Side	bool	: corner
 
@@ -68,11 +68,11 @@ query_shape	1	Item|set<Item>	set<Shape>	: shape	square	circle	triangle
 
 le	2	int int	bool
 
-ge	2	int int	bool
+ge	2	int int	bool	: most
 
-lt	2	int int	bool
+lt	2	int int	bool	: more
 
-gt	2	int int	bool
+gt	2	int int	bool	: less
 
 equal_int	2	int int	bool
 
