@@ -18,6 +18,7 @@ WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embedding
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
 TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables.ckpt')
 TRAINED_WEIGHTS2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables2.ckpt')
+TRAINED_WEIGHTS3 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables3.ckpt')
 SENTENCES_IN_PRETRAIN_PATTERNS = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'sentences_in_pattern')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 
@@ -26,23 +27,23 @@ LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logi
 ####
 
 #dimensions
-words_embedding_size = 12
-logical_tokens_embedding_size = 12
-decoder_hidden_layer_size = 50
-lstm_hidden_layer_size = 30
-sent_embedding_size = 2 * lstm_hidden_layer_size
-history_length = 4
+WORD_EMB_SIZE = 12
+LOG_TOKEN_EMB_SIZE = 12
+DECODER_HIDDEN_SIZE = 50
+LSTM_HIDDEN_SIZE = 30
+SENT_EMB_SIZE = 2 * LSTM_HIDDEN_SIZE
+HISTORY_LENGTH = 4
 
 #other hyper parameters
-learning_rate = 0.001
-beta = 0.5
+LEARNING_RATE = 0.001
+BETA = 1
 
-batch_size_unsupervised = 8
-batch_size_supervised = 10
-use_bow_history = False
-irrelevant_tokens_in_grad = True
-automatic_tokens_in_grad = False
-history_embedding_size = history_length * logical_tokens_embedding_size
+BATCH_SIZE_UNSUPERVISED = 8
+BATCH_SIZE_SUPERVISED = 10
+USE_BOW_HISTORY = False
+IRRELEVANT_TOKENS_IN_GRAD = True
+AUTOMATIC_TOKENS_IN_GRAD = False
+HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
 
 
 def load_meta_data():
@@ -51,7 +52,7 @@ def load_meta_data():
     embeddings_file = open(WORD_EMBEDDINGS_PATH,'rb')
     embeddings_dict = pickle.load(embeddings_file)
     embeddings_file.close()
-    assert words_embedding_size == np.size(embeddings_dict['blue'])
+    assert WORD_EMB_SIZE == np.size(embeddings_dict['blue'])
 
     # load logical tokens inventory
     logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
@@ -67,20 +68,20 @@ def load_meta_data():
 logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict = load_meta_data()
 n_logical_tokens = len(logical_tokens_ids)
 
-if use_bow_history:
-    history_embedding_size += n_logical_tokens
+if USE_BOW_HISTORY:
+    HISTORY_EMB_SIZE += n_logical_tokens
 
 
 def build_sentence_encoder():
 
     # placeholders for sentence and it's length
-    sentence_placeholder = tf.placeholder(shape = [None, None,words_embedding_size],dtype = tf.float32,name = "sentence_placeholder")
+    sentence_placeholder = tf.placeholder(shape = [None, None, WORD_EMB_SIZE], dtype = tf.float32, name ="sentence_placeholder")
     sent_lengths = tf.placeholder(dtype = tf.int32,name = "sent_length_placeholder")
 
     # Forward cell
-    lstm_fw_cell = BasicLSTMCell (lstm_hidden_layer_size, forget_bias=1.0)
+    lstm_fw_cell = BasicLSTMCell (LSTM_HIDDEN_SIZE, forget_bias=1.0)
     # Backward cell
-    lstm_bw_cell = BasicLSTMCell(lstm_hidden_layer_size, forget_bias=1.0)
+    lstm_bw_cell = BasicLSTMCell(LSTM_HIDDEN_SIZE, forget_bias=1.0)
     # stack cells together in RNN
     outputs, _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell, lstm_bw_cell, sentence_placeholder,sent_lengths,dtype=tf.float32)
     #    outputs: A tuple (output_fw, output_bw) containing the forward and the backward rnn output `Tensor`.
@@ -97,22 +98,22 @@ def build_sentence_encoder():
 
 
 def build_decoder(lstm_outputs, final_utterance_embedding):
-    history_embedding = tf.placeholder(shape=[None, history_embedding_size], dtype=tf.float32, name="history_embedding")
+    history_embedding = tf.placeholder(shape=[None, HISTORY_EMB_SIZE], dtype=tf.float32, name="history_embedding")
     num_rows = tf.shape(history_embedding)[0]
     e_m_tiled = tf.tile(final_utterance_embedding, ([num_rows, 1]))
     decoder_input = tf.concat([e_m_tiled, history_embedding], axis=1)
-    W_q = tf.get_variable("W_q", shape=[decoder_hidden_layer_size, sent_embedding_size + history_embedding_size],
+    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE + HISTORY_EMB_SIZE],
                           initializer=tf.contrib.layers.xavier_initializer())  # (d1,100)
     q_t = tf.nn.relu(tf.matmul(W_q, tf.transpose(decoder_input)))  # dim [d1,1]
-    W_a = tf.get_variable("W_a", shape=[decoder_hidden_layer_size, sent_embedding_size],
+    W_a = tf.get_variable("W_a", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE],
                           initializer=tf.contrib.layers.xavier_initializer())  # dim [d1*60]
     alpha = tf.nn.softmax(tf.matmul(tf.matmul(tf.transpose(q_t), W_a), tf.transpose(lstm_outputs)))  # dim [1,25]
     c_t = tf.matmul(alpha, lstm_outputs)  # attention vector, dim [1,60]
-    W_s = tf.get_variable("W_s", shape=[logical_tokens_embedding_size, decoder_hidden_layer_size + sent_embedding_size],
+    W_s = tf.get_variable("W_s", shape=[LOG_TOKEN_EMB_SIZE, DECODER_HIDDEN_SIZE + SENT_EMB_SIZE],
                           initializer=tf.contrib.layers.xavier_initializer())
     W_logical_tokens = tf.get_variable("W_logical_tokens", dtype= tf.float32,
-                    shape=[n_logical_tokens, logical_tokens_embedding_size],
-                          initializer=tf.contrib.layers.xavier_initializer())
+                                       shape=[n_logical_tokens, LOG_TOKEN_EMB_SIZE],
+                                       initializer=tf.contrib.layers.xavier_initializer())
     token_unnormalized_dist = tf.matmul(W_logical_tokens, tf.matmul(W_s, tf.concat([q_t, tf.transpose(c_t)], 0)))
 
     return history_embedding, token_unnormalized_dist, W_logical_tokens
@@ -136,18 +137,22 @@ def build_batchGrad():
 
 def get_next_token_probs(partial_program, logical_tokens_embeddings_dict, decoder_feed_dict, history_embedding_tensor,
                          token_prob_dist):
-    history_tokens = ['<s>' for _ in range(history_length - len(partial_program))] + \
-                     partial_program[-history_length:]
+    history_tokens = ['<s>' for _ in range(HISTORY_LENGTH - len(partial_program))] + \
+                     partial_program[-HISTORY_LENGTH:]
 
     BOW_history = [sparse_vector_from_indices(n_logical_tokens, [logical_tokens_ids[tok] for tok in partial_program])] \
-        if use_bow_history else []
+        if USE_BOW_HISTORY else []
 
     history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens] + BOW_history
-    history_embs = np.reshape(np.concatenate(history_embs), [1, history_embedding_size])
+    history_embs = np.reshape(np.concatenate(history_embs), [1, HISTORY_EMB_SIZE])
 
     # run forward pass
     decoder_feed_dict[history_embedding_tensor] = history_embs
     current_probs = np.squeeze(sess.run(token_prob_dist, feed_dict=decoder_feed_dict))
+    current_probs = np.where(current_probs>0, current_probs, 1e-30)
+    if (np.count_nonzero(current_probs) != len(current_probs)):
+        print("zero prob")
+
 
     valid_next_tokens = partial_program.get_possible_continuations()
     probs_given_valid = [1.0] if len(valid_next_tokens) == 1 else \
@@ -160,7 +165,7 @@ def get_gradient_weights_for_beam(beam_rewarded_programs):
 
     beam_log_probs = np.array([prog.logprob for prog in beam_rewarded_programs])
     q_mml = softmax(beam_log_probs)
-    return np.power(q_mml,beta) / np.sum(np.power(q_mml,beta))
+    return np.power(q_mml, BETA) / np.sum(np.power(q_mml, BETA))
 
 
 def sentences_to_embeddings(sentences, embeddings_dict):
@@ -170,7 +175,7 @@ def sentences_to_embeddings(sentences, embeddings_dict):
 def get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, encoder_output_tensors):
 
     sentence_embedding = np.reshape([word_embeddings_dict.get(w, word_embeddings_dict['<UNK>']) for w in sentence.split()],
-                                    [1, len(sentence.split()), words_embedding_size])
+                                    [1, len(sentence.split()), WORD_EMB_SIZE])
     length = [len(sentence.split())]
     encoder_feed_dict = {sentence_placeholder: sentence_embedding, sent_lengths_placeholder: length}
     sentence_encoder_outputs = sess.run(encoder_output_tensors, feed_dict= encoder_feed_dict)
@@ -186,14 +191,14 @@ def get_feed_dicts_from_program(program, logical_tokens_embeddings_dict, program
     for i in range(len(program)):
         if i in skipped_indices:
             continue
-        history_tokens = ['<s>' for _ in range(history_length - i)] + \
-                         program[max(0, i-history_length): i]
+        history_tokens = ['<s>' for _ in range(HISTORY_LENGTH - i)] + \
+                         program[max(0, i - HISTORY_LENGTH): i]
 
         BOW_history = [sparse_vector_from_indices(n_logical_tokens,
                                                   [logical_tokens_ids[tok] for tok in program])] \
-            if use_bow_history else []
+            if USE_BOW_HISTORY else []
         history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens] + BOW_history
-        history_embs = np.reshape(np.concatenate(history_embs), [1, history_embedding_size])
+        history_embs = np.reshape(np.concatenate(history_embs), [1, HISTORY_EMB_SIZE])
         histories.append(history_embs)
         tokens_one_hot.append(one_hot(n_logical_tokens, logical_tokens_ids[program[i]]))
 
@@ -230,12 +235,18 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                                       chosen_logical_tokens,
                                       invalid_logical_tokens_mask)
 
+    logits = tf.transpose(token_unnormalized_dist) # + invalid_logical_tokens_mask
+
+    # cross-entropy loss per single token in a single sentence
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+        labels=chosen_logical_tokens, logits=logits))
+
 
     # the log-probability according to the model of a program given an input sentnce.
-    program_log_prob = tf.reduce_sum(tf.log(token_prob_dist_tensor) * tf.transpose(chosen_logical_tokens))
+    #program_log_prob = tf.reduce_sum(tf.log(token_prob_dist_tensor) * tf.transpose(chosen_logical_tokens))
     theta = tf.trainable_variables()
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-    compute_program_grads = optimizer.compute_gradients(program_log_prob)
+    optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
+    compute_program_grads = optimizer.compute_gradients(cross_entropy)
     batch_grad = build_batchGrad()
     update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
 
@@ -261,19 +272,22 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     batch_num = 1
     total_correct = 0
     correct_beam_parses = open("correct beams 8.txt ", 'w')
-    num_correct_per_sentence =[]
+    num_consistent_per_sentence =[]
+    beam_final_sizes = []
     accuracy_by_prog_rank = {}
+    n_images = 0
     iter = 0
 
     while train.epochs_completed < 1:
         iter+=1
-        sentences, samples = zip(*train.next_batch(batch_size_unsupervised))
+        sentences, samples = zip(*train.next_batch(BATCH_SIZE_UNSUPERVISED))
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
         logical_tokens_embeddings_dict = \
             {token : current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens_ids}
         for step in range (len(sentences)):
             sentence = (sentences[step])
             related_samples = samples[step]
+            n_images+= len(related_samples)
 
             encoder_feed_dict, decoder_feed_dict = \
                 get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, (h, e_m))
@@ -290,18 +304,18 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
             compiled = 0
             correct = 0
+            actual_labels = np.array([sample.label for sample in related_samples])
             for prog_rank, prog in enumerate(beam):
                 # execute program and get reward is result is same as the label
                 execution_results = np.array([execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
                                      for sample in related_samples])
-                actual_labels = np.array([sample.label for sample in related_samples])
+
                 compiled+= sum(res is not None for res in execution_results)
                 for i in range(len(execution_results)):
                     if execution_results[i] is None:
                         execution_results[i] = True
                 reward = 1 if all(execution_results==actual_labels) else 0
-                for _ in range (sum(execution_results==actual_labels)):
-                    increment_count(accuracy_by_prog_rank, prog_rank)
+                increment_count(accuracy_by_prog_rank, prog_rank, sum(execution_results==actual_labels))
                 correct+=reward
 
                 if reward>0:
@@ -312,13 +326,18 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
             #print("beam size = {0}, {1} programs compiled, {2} correct".format(len(beam), compiled, correct))
 
             #print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
-            num_correct_per_sentence.append(correct)
+
+            if not beam:
+                # if bean is empty predict True for each image
+
+                for k in accuracy_by_prog_rank.keys():
+                    increment_count(accuracy_by_prog_rank, k, np.count_nonzero(actual_labels))
 
 
-            total_correct += 1 if correct else 0 # if some program in beam got a reward
-            if check:
-                check_correct += 1 if correct else 0
-                check_total += 1
+            num_consistent_per_sentence.append(correct)
+            beam_final_sizes.append(len(beam))
+
+
 
             if not rewarded_programs:
                 continue
@@ -332,19 +351,29 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                 program_grad = sess.run(compute_program_grads, feed_dict =
                                         union_dicts(encoder_feed_dict, program_dependent_feed_dict))
 
+
+
                 for var,grad in enumerate(program_grad):
-                   gradBuffer[var] -=  programs_gradient_weights[idx] * grad[0]
+                    if (np.isnan(grad)).any():
+                        print("nan gradient")
+                    gradBuffer[var] +=  programs_gradient_weights[idx] * grad[0]
 
         if batch_num % 10 == 0:
             #print("accuracy: %.2f" % (total_correct / (batch_size_unsupervised * 10)))
-            mean_corect = np.mean(num_correct_per_sentence)
-            n_non_zero = np.count_nonzero(num_correct_per_sentence)
-            print("{0} out of {1} sentences had correct programs in beam".format(n_non_zero, len(num_correct_per_sentence)))
-            print("mean correct parses for sentence = {0:.3f}".format(mean_corect))
-            num_correct_per_sentence = []
+            mean_corect = np.mean(num_consistent_per_sentence)
+            mean_beam_size = np.mean(beam_final_sizes)
+            n_non_zero = np.count_nonzero(num_consistent_per_sentence)
+            print("{0} out of {1} sentences had consistent programs in beam".format(n_non_zero, len(num_consistent_per_sentence)))
+            print("mean correct parses for sentence = {0:.2f}, mean beam size for sentence = {1:.2f}".format(
+                mean_corect, mean_beam_size))
+
+            num_consistent_per_sentence = []
+            beam_final_sizes = []
             for k,v in sorted(accuracy_by_prog_rank.items(), key= lambda kvp : kvp[1], reverse=True)[:5]:
-                print ('programs ranked {0} in beam had so far {1} correct answers'.format(k,v))
+                print ('programs ranked {0} in beam had so far {1} correct answers out of {2} samples'.format(k,v, n_images))
         batch_num += 1
+        for i, g in enumerate(gradBuffer):
+            gradBuffer[i] = gradBuffer[i]/len(sentences)
 
         sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
         for var, grad in enumerate(gradBuffer):
@@ -385,7 +414,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
         labels=chosen_logical_tokens, logits=logits))
 
     theta = tf.trainable_variables()
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
     compute_program_grads = optimizer.compute_gradients(cross_entropy)
     batch_grad = build_batchGrad()
     update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
@@ -407,7 +436,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
     for var, grad in enumerate(gradList):
         gradBuffer[var] = grad*0
 
-    accuracy, accuracy_chosen_tokens, epoch_losses = [] , [], []
+    accuracy, accuracy_chosen_tokens, epoch_losses, epoch_log_prob = [] , [], [], []
     batch_num , epoch_num = 0, 0
     current_data_set = train
     statistics = {train : [], validation : []}
@@ -415,16 +444,18 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
     while epoch_num < 8:
         if current_data_set.epochs_completed != epoch_num:
             statistics[current_data_set].append((np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens)))
-            print("epoch number {0}: mean loss = {1:.3f}, mean accuracy = {2:.3f}, mean accuracy ignore automatic = {3:.3f}".
-                    format(epoch_num, np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens)))
-            accuracy, accuracy_chosen_tokens, epoch_losses = [], [], []
+            print("epoch number {0}: mean loss = {1:.3f}, mean accuracy = {2:.3f}, mean accuracy ignore automatic = {3:.3f},"
+                  "epoch mean log probability = {4:.4f}".
+                    format(epoch_num, np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens),
+                           np.mean(epoch_log_prob)))
+            accuracy, accuracy_chosen_tokens, epoch_losses, epoch_log_prob = [], [], [], []
             if current_data_set == train:
                 current_data_set = validation
             else:
                 current_data_set = train
                 epoch_num+= 1
 
-        sentences, labels = zip(*current_data_set.next_batch(batch_size_supervised))
+        sentences, labels = zip(*current_data_set.next_batch(BATCH_SIZE_SUPERVISED))
         batch_num += 1
         batch_size = len(sentences)
 
@@ -445,8 +476,9 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
             golden_parsing = labels[step].split()
             golden_program, (valid_tokens_history, greedy_choices) = \
                 program_from_token_sequence(next_token_probs_getter, golden_parsing, logical_tokens_mapping)
+            epoch_log_prob.append(golden_program.logprob)
             no_real_choice_indices = [i for i in range(len(golden_parsing))if len(valid_tokens_history[i])==1]
-            skipped = [] if automatic_tokens_in_grad else no_real_choice_indices
+            skipped = [] if AUTOMATIC_TOKENS_IN_GRAD else no_real_choice_indices
 
 
 
@@ -458,7 +490,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
             correct_greedy_choices = [golden_parsing[i] == greedy_choices[i] for i in range(len(golden_parsing))]
             accuracy.append(sum(correct_greedy_choices)/ len(golden_parsing))
             accuracy_chosen_tokens.append(sum(correct_greedy_choices[i] for i in range(len(golden_parsing))
-                                              if i not in no_real_choice_indices)/ len(golden_parsing))
+                                              if i not in no_real_choice_indices)/ (len(golden_parsing)- len(no_real_choice_indices)))
 
 
             # calculate gradient
@@ -485,5 +517,5 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 
 if __name__ == '__main__':
     with tf.Session() as sess:
-        run_supervised_training(sess, load_params_path=  TRAINED_WEIGHTS2, save_params_path=  TRAINED_WEIGHTS2)
+        run_unsupervised_training(sess, load_params_path=  TRAINED_WEIGHTS3)
     print("done")

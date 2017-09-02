@@ -1,7 +1,7 @@
 import requests
 from requests.auth import HTTPDigestAuth
 
-def increment_count(count_dict, key):
+def increment_count(count_dict, key, n=1):
     """
         Puts the key in the dictionary if does not exist or adds one if it does.
         Args:
@@ -9,9 +9,9 @@ def increment_count(count_dict, key):
             key: a string
     """
     if key in count_dict:
-        count_dict[key] += 1
+        count_dict[key] += n
     else:
-        count_dict[key] = 1
+        count_dict[key] = n
 
 
 def call_api(word):
