@@ -260,11 +260,11 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     gradBuffer = {}
 
     # load data
-    train = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true = True)
-    file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
-    sentences_in_pattern = pickle.load(file)
-    file.close()
-    train.use_subset_by_sentnce_condition(lambda s: s in sentences_in_pattern.values())
+    train = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true = False)
+    # file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
+    # sentences_in_pattern = pickle.load(file)
+    # file.close()
+    # train.use_subset_by_sentnce_condition(lambda s: s in sentences_in_pattern.values())
 
     #initialize gradients
     for var, grad in enumerate(gradList):
@@ -272,8 +272,10 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     batch_num = 1
     total_correct = 0
     correct_beam_parses = open("correct beams 8.txt ", 'w')
-    num_correct_per_sentence =[]
+    num_consistent_per_sentence =[]
+    beam_final_sizes = []
     accuracy_by_prog_rank = {}
+    n_images = 0
     iter = 0
 
     while train.epochs_completed < 1:
@@ -285,6 +287,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
         for step in range (len(sentences)):
             sentence = (sentences[step])
             related_samples = samples[step]
+            n_images+= len(related_samples)
 
             encoder_feed_dict, decoder_feed_dict = \
                 get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, (h, e_m))
@@ -296,24 +299,23 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
             beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
                                                    original_sentence= sentence)
-            print(len(beam))
 
             rewarded_programs = []
 
             compiled = 0
             correct = 0
+            actual_labels = np.array([sample.label for sample in related_samples])
             for prog_rank, prog in enumerate(beam):
                 # execute program and get reward is result is same as the label
                 execution_results = np.array([execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
                                      for sample in related_samples])
-                actual_labels = np.array([sample.label for sample in related_samples])
+
                 compiled+= sum(res is not None for res in execution_results)
                 for i in range(len(execution_results)):
                     if execution_results[i] is None:
                         execution_results[i] = True
                 reward = 1 if all(execution_results==actual_labels) else 0
-                for _ in range (sum(execution_results==actual_labels)):
-                    increment_count(accuracy_by_prog_rank, prog_rank)
+                increment_count(accuracy_by_prog_rank, prog_rank, sum(execution_results==actual_labels))
                 correct+=reward
 
                 if reward>0:
@@ -324,7 +326,16 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
             #print("beam size = {0}, {1} programs compiled, {2} correct".format(len(beam), compiled, correct))
 
             #print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
-            num_correct_per_sentence.append(correct)
+
+            if not beam:
+                # if bean is empty predict True for each image
+
+                for k in accuracy_by_prog_rank.keys():
+                    increment_count(accuracy_by_prog_rank, k, np.count_nonzero(actual_labels))
+
+
+            num_consistent_per_sentence.append(correct)
+            beam_final_sizes.append(len(beam))
 
 
 
@@ -349,13 +360,17 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
         if batch_num % 10 == 0:
             #print("accuracy: %.2f" % (total_correct / (batch_size_unsupervised * 10)))
-            mean_corect = np.mean(num_correct_per_sentence)
-            n_non_zero = np.count_nonzero(num_correct_per_sentence)
-            print("{0} out of {1} sentences had correct programs in beam".format(n_non_zero, len(num_correct_per_sentence)))
-            print("mean correct parses for sentence = {0:.3f}".format(mean_corect))
-            num_correct_per_sentence = []
+            mean_corect = np.mean(num_consistent_per_sentence)
+            mean_beam_size = np.mean(beam_final_sizes)
+            n_non_zero = np.count_nonzero(num_consistent_per_sentence)
+            print("{0} out of {1} sentences had consistent programs in beam".format(n_non_zero, len(num_consistent_per_sentence)))
+            print("mean correct parses for sentence = {0:.2f}, mean beam size for sentence = {1:.2f}".format(
+                mean_corect, mean_beam_size))
+
+            num_consistent_per_sentence = []
+            beam_final_sizes = []
             for k,v in sorted(accuracy_by_prog_rank.items(), key= lambda kvp : kvp[1], reverse=True)[:5]:
-                print ('programs ranked {0} in beam had so far {1} correct answers'.format(k,v))
+                print ('programs ranked {0} in beam had so far {1} correct answers out of {2} samples'.format(k,v, n_images))
         batch_num += 1
         for i, g in enumerate(gradBuffer):
             gradBuffer[i] = gradBuffer[i]/len(sentences)
