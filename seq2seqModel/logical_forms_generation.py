@@ -270,3 +270,29 @@ class PartialProgram:
 
         self.logprob += logprob
 
+
+def get_formalized_sentence(sentence):
+    '''
+    same as the one below but only for a sentence
+    :param sentence: 
+    :return: 
+    '''
+    # TODO OMER
+
+def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
+    suggested_programs=[]
+    # TODO OMER
+
+    return suggested_programs
+
+def get_formlized_sentence_and_docding(sentence, program):
+    '''
+    #todo figure out what to do when 'formal' tokens do not map to 'formal' words or vice versa 
+    :param sentence: 
+    :param program: 
+    :return: 
+    '''
+    #TODO: OMER!
+    formalized_sentence, formalized_decoding = [], []
+
+    return formalized_sentence, formalized_decoding

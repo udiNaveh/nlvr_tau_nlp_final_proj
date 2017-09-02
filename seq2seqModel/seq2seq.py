@@ -19,6 +19,7 @@ PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pars
 TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables.ckpt')
 TRAINED_WEIGHTS2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables2.ckpt')
 TRAINED_WEIGHTS3 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables3.ckpt')
+TRAINED_UNS_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsUns','trained_variables3.ckpt')
 SENTENCES_IN_PRETRAIN_PATTERNS = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'sentences_in_pattern')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 
@@ -131,9 +132,6 @@ def build_batchGrad():
     batchGrad = [lstm_fw_weights_grad, lstm_fw_bias_grad, lstm_bw_weights_grad, lstm_bw_bias_grad,
                  wq_grad, wa_grad, ws_grad, logical_tokens_grad]
     return batchGrad
-
-
-
 
 def get_next_token_probs(partial_program, logical_tokens_embeddings_dict, decoder_feed_dict, history_embedding_tensor,
                          token_prob_dist):
@@ -261,6 +259,8 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
     # load data
     train = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true = False)
+    train.sort_sentences_by_complexity(4)
+    train.choose_levels_for_curriculum_learning([0])
     # file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
     # sentences_in_pattern = pickle.load(file)
     # file.close()
@@ -517,5 +517,5 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 
 if __name__ == '__main__':
     with tf.Session() as sess:
-        run_unsupervised_training(sess, load_params_path=  TRAINED_WEIGHTS3)
+        run_unsupervised_training(sess, load_params_path= TRAINED_WEIGHTS3, save_model_path= TRAINED_UNS_WEIGHTS)
     print("done")
