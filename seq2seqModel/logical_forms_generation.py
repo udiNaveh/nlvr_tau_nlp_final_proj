@@ -63,7 +63,7 @@ def load_functions(filename):
                 continue
             token, return_type, args_types = entry[0], entry[-1], entry[2:-1]
             functions_dict[token] = TokenTypes(return_type=return_type, args_types=args_types, necessity= necessary_words)
-        functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one'])
+        functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one', 'a', 'is'])
         functions_dict.update({str(i): TokenTypes(return_type='int', args_types=[], necessity=[str(i)]) for i in range(2, 10)})
 
     return functions_dict
@@ -120,6 +120,10 @@ def disambiguate(typed, nontyped):
         return None
 
 
+
+
+
+
 def get_ngram_probs(token_history, p_dict, possible_continuations):
     """
     return a probability vector over the next tokens given an ngram 'language model' of the
@@ -146,24 +150,15 @@ class PartialProgram:
     (I think, not sure about that... @TODO)
     """
 
-    def __init__(self, other=None):
+    def __init__(self, lt_mapping=None):
 
-        if other is None:
-            self.vars = [c for c in "xyzwuv"]
-            self.stack = ["bool"]
-            self.token_seq = []
-            self.vars_in_use = {}
-            self.logprob = 0
+        self.vars = [c for c in "xyzwuv"]
+        self.stack = ["bool"]
+        self.token_seq = []
+        self.vars_in_use = {}
+        self.logprob = 0
+        self.logical_tokens_mapping = lt_mapping
 
-        elif isinstance(other, PartialProgram):
-            self.vars = other.vars.copy()
-            self.stack = other.stack.copy()
-            self.token_seq = other.token_seq.copy()
-            self.vars_in_use = other.vars_in_use.copy()
-            self.logprob = other.logprob
-
-        else:
-            raise ValueError
 
     def __repr__(self):
         return "Partial program:(log p : {0:.2f}, sequence : {1})".format(self.logprob, " ".join(self.token_seq))
@@ -181,7 +176,17 @@ class PartialProgram:
     def __contains__(self, item):
         return item in self.token_seq
 
-    def get_possible_continuations(self, function_dict):
+    def copy(self):
+        pp_copy = PartialProgram(self.logical_tokens_mapping)
+        pp_copy.vars = self.vars
+        pp_copy.vars = self.vars.copy()
+        pp_copy.stack = self.stack.copy()
+        pp_copy.token_seq = self.token_seq.copy()
+        pp_copy.vars_in_use = self.vars_in_use.copy()
+        pp_copy.logprob = self.logprob
+        return pp_copy
+
+    def get_possible_continuations(self):
 
         if len(self.stack) == 0:
             return ["<EOS>"]  # end of decoding
@@ -211,26 +216,26 @@ class PartialProgram:
 
         else:
 
-            possible_continuations = [t for t, v in function_dict.items()
+            possible_continuations = [t for t, v in self.logical_tokens_mapping.items()
                                       if check_types(next_type, v.return_type)]
             possible_continuations.extend([var for var, (type_of_var, idx) in  self.vars_in_use.items()
                                            if check_types(next_type, type_of_var.return_type)])
 
             impossible_continuations = []
-            if self.token_seq and self.token_seq[-1] in function_dict:
+            if self.token_seq and self.token_seq[-1] in self.logical_tokens_mapping:
                 last = self.token_seq[-1]
                 if str.isdigit(last):
                     impossible_continuations.extend([str(i) for i in range(10)])
-                last_return_type, last_args_types, _ = function_dict[last]
+                last_return_type, last_args_types, _ = self.logical_tokens_mapping[last]
                 if len(last_args_types)==1 and last_args_types[0].startswith('set'):
-                    impossible_continuations.extend([t for t, v in function_dict.items()
+                    impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                      if not v[1]])
 
 
             return [c for c in possible_continuations if c not in impossible_continuations]
 
 
-    def add_token(self, token, logprob, function_dict):
+    def add_token(self, token, logprob):
         if len(self.stack)==0:
             if token == '<EOS>':
                 self.token_seq.append(token)
@@ -242,8 +247,8 @@ class PartialProgram:
             self.token_seq.append(token)
             self.stack.append('bool')
         else:
-            if token in function_dict:
-                token_return_type,  token_args_types, token_necessity = function_dict[token]
+            if token in self.logical_tokens_mapping:
+                token_return_type,  token_args_types, token_necessity = self.logical_tokens_mapping[token]
             elif token in self.vars_in_use:
                 token_return_type, token_args_types, _ = self.vars_in_use[token][0]
             else:
@@ -264,119 +269,4 @@ class PartialProgram:
             self.stack.extend(args_to_stack)
 
         self.logprob += logprob
-
-    # def choose_next_token(self, probabilities, function_dict):
-    #
-    #     '''
-    #     don't use this!
-    #
-    #     '''
-    #     if len(self.stack) == 0:
-    #         return "<EOS>"  # end of decoding
-    #
-    #     if len(self.vars)==0 or len(self.token_seq)>MAX_LENGTH:
-    #         raise RuntimeError("decoding passed the allowed length - doesn't seem to go anywhere good")
-    #
-    #
-    #     next_type = self.stack.pop()
-    #     # the next token must have a return type that matches next_type or to be itself an instance of next_type
-    #     # for example, if next_type is 'int' than the next token can be an integer literal, like '2', or the name
-    #     # of a functions that has return type int, like 'count'.
-    #
-    #     for var, idx in [kvp for kvp in self.vars_in_use.items()]:
-    #         # after popping the stack, check whether one of the added variables is no longer in scope.
-    #         if len(self.stack) < idx:
-    #             del self.vars_in_use[var]
-    #             del function_dict[var]
-    #
-    #     if next_type.startswith("bool_func"):
-    #         # in that case there is no choice - the only valid token is 'lambda'
-    #         var = self.vars.pop(0)  # get a new letter to represent the var
-    #         self.vars_in_use[var] = len(self.stack)  # save the current size of stack -
-    #         # the scope of the var dependes on it.
-    #         next_token = 'lambda_{0}_:'.format(var)
-    #         type_of_var = next_type[10:-1]
-    #         if type_of_var == '?':
-    #             raise TypeError("var in lambda function must be typed")
-    #         function_dict[var] = TokenTypes(return_type=type_of_var, args_types=[])
-    #         self.token_seq.append(next_token)
-    #         self.stack.append('bool')
-    #         return next_token
-    #
-    #     else:
-    #         # get the probability vector for the possible next tokens, given the current state of the the
-    #         # decoder (and maybe other things)
-    #
-    #         possible_continuations = [t for t, v in function_dict.items()
-    #                                   if check_types(next_type, v.return_type)]
-    #         if len(possible_continuations)==0:
-    #             raise RuntimeError("decoder for stuck with no possible continuations")
-    #         probs = self.get_probs_from_ngram_language_model(p_dict, possible_continuations)
-    #         next_token = np.random.choice(possible_continuations, p=probs)
-    #         t = disambiguate(next_type, function_dict[next_token].return_type)
-    #         s = disambiguate(function_dict[next_token].return_type, next_type)
-    #         if s is not None:
-    #             # update jokers in stack:
-    #             for i in range(len(self.stack) - 1, -1, -1):
-    #                 if '?' in self.stack[i]:
-    #                     self.stack[i] = self.stack[i].replace('?', s)
-    #                 else:
-    #                     break
-    #
-    #         self.token_seq.append(next_token)
-    #         args_to_stack = [arg if t is None else arg.replace('?', t) for arg in
-    #                          function_dict[next_token].args_types[::-1]]
-    #         self.stack.extend(args_to_stack)
-    #         return next_token
-
-        
-    def get_probs_from_ngram_language_model(self, p_dict, possible_continuations):
-        """
-        return a probability vector over the next tokens given an ngram 'language model' of the
-        the logical fforms. this is just a POC for generating plausible logical forms.
-        the probability vector is the real model will come of course from the parameters of the
-        decoder network.
-        """
-        probs = []
-        prevprev_token = self.token_seq[-1] if len(self.token_seq) > 0 else "<s>"
-        prev_token = self.token_seq[-2] if len(self.token_seq) > 1 else "<s>"
-        token_counts = p_dict[0]
-        bigram_counts = p_dict[1]
-        trigram_counts = p_dict[2]
-        for token in possible_continuations:
-            probs.append(max(token_counts.get(token, 0) + 10 * bigram_counts.get((prev_token, token), 0) + \
-                             9 * trigram_counts.get((prevprev_token, prev_token, token), 0), 1))
-        return np.array(probs) / np.sum(probs)
-
-    def generate_decoding(self):
-        while True:
-            next_token = self.choose_next_token(p_dict)
-            if next_token == '<EOS>':
-                break
-        return self.token_seq
-
-def generate_logical_forms(n):
-
-    for _ in range(n):
-        dec = PartialProgram()
-        try:
-            s = dec.generate_decoding()
-            print(s) # prints as a token sequence, but you can convert it to normal form using process_token_sequence
-
-        except RuntimeError as err:
-            print (err)
-
-def generate_mock_embeddings_file():
-    # todo delete
-    token_mapping = load_functions(TOKEN_MAPPING)
-    d = {t : np.random.rand(12) for t in token_mapping.keys()}
-
-
-
-
-
-if __name__ == "__main__":
-    p_dict = get_probs_from_file(PARSED_EXAMPLES_T)
-    token_mapping = load_functions(TOKEN_MAPPING)
-    generate_logical_forms(10)
 

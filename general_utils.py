@@ -22,3 +22,6 @@ def call_api(word):
     if myResponse.status_code != 200:
         return None
     return myResponse.json()
+
+def union_dicts(dict1, dict2):
+    return dict(list(dict1.items()) + list(dict2.items()))

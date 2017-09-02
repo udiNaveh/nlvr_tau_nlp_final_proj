@@ -4,7 +4,7 @@ from logical_forms_new import *
 import  random
 import os
 import definitions
-from seq2seqModel.logical_forms_generator import load_functions
+from seq2seqModel.logical_forms_generation import load_functions
 from seq2seqModel.utils import execute
 from handle_data import *
 from preprocessing import *
@@ -14,7 +14,7 @@ LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms'
 PARSED_FORMS_PATH = 'temp_sents.txt'
 
 colors = ['yellow', 'blue', 'black']
-locs = [('top', 'top'), ('bottom', 'bottom'), ('base', 'bottom')]
+locs = [('top', 'top'), ('bottom', 'bottom')]
 ints = ['2', '3', '4', '5', '6', '7']
 shapes = ['triangle', 'circle', 'square', ]
 quants = [('exactly', 'equal_int'), ('at least', 'ge'), ('at most', 'le')]
@@ -23,7 +23,7 @@ ones = ['1']
 replacements_dic = {'T_SHAPE' : [('square', ['square']),('triangle', ['triangle']),('circle', ['circle'])],
              'T_COLOR' : [('yellow', ['yellow']),('blue', ['blue']),('black', ['black'])],
              'T_LOC' :  [('top', ['top']),('bottom', ['bottom'])],
-             'T_ONE' : [('1', ['1', 'one', 'a'])],
+             'T_ONE' : [('1', ['1', 'one'])],
              'T_INT' : [(str(i), [str(i)]) for i in range (2,8)],
              'T_QUANTITY_COMPARE' : [('equal_int', ['exactly']),('le', ['at least']),('ge', ['at most']),
                                      ('lt', ['more than']),('gt', ['less than'])]
@@ -74,7 +74,7 @@ def generate_eng_log_pairs(engsent, logsent, n_pairs):
     eng_words = engsent.split()
     forms = set([w for w in eng_words if w == w.upper() and not w.isdigit()])
     result = []
-    for _ in range(n_pairs):
+    while len(result) <n_pairs:
         eng_words = engsent.split()
         log_tokens = logsent.split()
         current_replacements = {}
@@ -92,7 +92,21 @@ def generate_eng_log_pairs(engsent, logsent, n_pairs):
                     newtok = str.upper(logtoken) if '.' in tok else logtoken
                     log_tokens[i] = tok.replace(form, newtok)
 
-        result.append((" ".join(eng_words), " ".join(log_tokens)))
+        # check sentence is good:
+        eng_sent = " ".join(eng_words)
+        log_sent = " ".join(log_tokens)
+        if 'gt 1' in log_sent or 'ge 1' in log_sent:
+            continue
+        for j in (3,4,5,6,7):
+            if np.random.rand() < 0.10 * j:
+                continue
+            if '{} tower'.format(j) in eng_sent or '{} box'.format(j) in eng_sent\
+                    or '{} ALL_BOXES'.format(j) in log_sent:
+                continue
+
+
+
+        result.append((eng_sent, log_sent))
     return result
 
 
@@ -116,7 +130,7 @@ def generate_pairs(forms_doctionary):
     parsing_dict = {}
     for engsent, (form_count, logsents) in sorted(forms_doctionary.items(), key=lambda k: - k[1][0]):
         for logsent in logsents:
-            num = 10 *form_count // len(logsents)
+            num = 12 *form_count // len(logsents)
             all_pairs.extend(generate_eng_log_pairs(engsent, logsent, num))
 
 
@@ -125,8 +139,29 @@ def generate_pairs(forms_doctionary):
 
     pairs = [(k,v) for k,v in parsing_dict.items()]
 
-    return pairs
+    n = len(pairs)
+    np.random.shuffle(pairs)
+    pairs_train = pairs[: int( 0.75 * n)]
+    pairs_validation = pairs[int( 0.75 * n): ]
 
+    return pairs_train, pairs_validation
+
+def generate_pairs_woth_train_val_separation(forms_doctionary):
+
+    pairs_train = []
+    pairs_validation = []
+    for engsent, (form_count, logsents) in sorted(forms_doctionary.items(), key=lambda k: - k[1][0]):
+        if np.random.rand() <0.25:
+            pairs = pairs_validation
+        else:
+            pairs = pairs_train
+
+        for logsent in logsents:
+            num = 10 *form_count // len(logsents)
+            pairs.extend(generate_eng_log_pairs(engsent, logsent, num))
+
+
+    return pairs_train, pairs_validation
 
 def extract_all_sentences_in_given_patterns(sentences, patterns):
     formalized = get_sentences_formalized(sentences)
@@ -221,16 +256,27 @@ def sents_maker(path = r'temp_sents.txt'):
 
 
 if __name__ == '__main__':
-    pass
-    # parsed_forms = load_forms(PARSED_FORMS_PATH)
-    # file = open('sents_for_pretain_2', 'rb')
-    # pairs = pickle.load(file)
-    # file.close()
-    # n = len(pairs)
-    # np.random.shuffle(pairs)
-    # pairs_train = pairs[: int( 0.75 * n)]
-    # pairs_validation = pairs[int( 0.75 * n): ]
-    # pickle.dump(pairs_train, open('pairs_train', 'wb') )
-    # pickle.dump(pairs_validation, open('pairs_validation', 'wb'))
-    #
-    # print("")
+    parsed_forms = load_forms(PARSED_FORMS_PATH)
+    train, validation = generate_pairs(parsed_forms)
+    # train = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train'), 'rb')
+    # train = pickle.load(train)
+    # validation = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation'), 'rb')
+    # validation = pickle.load(validation)
+    # train_sep, validation_sep = generate_pairs_woth_train_val_separation(parsed_forms)
+    # train_sep = list(set(train_sep))
+    # validation_sep = list(set(validation_sep))
+    # np.random.shuffle(train_sep)
+    # np.random.shuffle(validation_sep)
+    # train_sep = train_sep[:len(train)]
+    # validation_sep = validation_sep[:len(train)]
+
+
+    # train_sep = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train_sep'), 'rb')
+    # train_sep = pickle.load(train_sep)
+    # validation_sep = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation_sep'), 'rb')
+    # validation_sep = pickle.load(validation_sep)
+    # pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation2'), 'wb'))
+    pickle.dump(train, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train2'), 'wb'))
+    pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation2'), 'wb'))
+
+    print("")

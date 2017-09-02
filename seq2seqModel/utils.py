@@ -63,6 +63,13 @@ def one_hot(dim, index):
     v[index] = 1.0
     return v
 
+def sparse_vector_from_indices(dim, indices):
+    assert (max(indices) < dim and min(indices)>=0 if indices else True)
+    v = np.zeros(dim)
+    for index in indices:
+        v[index] = 1.0
+    return v
+
 
 
 def softmax(x, axis=0):
@@ -94,24 +101,23 @@ def softmax(x, axis=0):
     assert x.shape == orig_shape
     return x
 
-# History embedding
-def get_history_embedding(history, history_length, STACK=0):
-    if STACK:
-        # TODO
-        raise NotImplementedError
-    else:
-        # TOKEN implementation : concat #history_length last tokens.
-        # if the current history is shorter than #history_length, pad with zero vectors
-        if len(history) < history_length:
-            result = []
-            diff = history_length - len(history)
-            for i in range(history_length):
-                if i < diff:
-                    result = np.concatenate([result, np.zeros([12])], 0)
-            if len(history) != 0:
-                result = np.concatenate([result, history], 0)
-            return result
-        result = []
-        for i in range(1, history_length+1):
-            result = np.concatenate([result,history[-i]], 0)
-        return result
+
+
+
+def get_probs_from_ngram_language_model(self, p_dict, possible_continuations):
+    """
+    return a probability vector over the next tokens given an ngram 'language model' of the
+    the logical fforms. this is just a POC for generating plausible logical forms.
+    the probability vector is the real model will come of course from the parameters of the
+    decoder network.
+    """
+    probs = []
+    prevprev_token = self.token_seq[-1] if len(self.token_seq) > 0 else "<s>"
+    prev_token = self.token_seq[-2] if len(self.token_seq) > 1 else "<s>"
+    token_counts = p_dict[0]
+    bigram_counts = p_dict[1]
+    trigram_counts = p_dict[2]
+    for token in possible_continuations:
+        probs.append(max(token_counts.get(token, 0) + 10 * bigram_counts.get((prev_token, token), 0) + \
+                         9 * trigram_counts.get((prevprev_token, prev_token, token), 0), 1))
+    return np.array(probs) / np.sum(probs)
