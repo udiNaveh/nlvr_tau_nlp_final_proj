@@ -1,0 +1,2 @@
+model_checkpoint_path: "C:\\Users\\veronica\\PycharmProjects\\nlvr_tau_nlp_final_proj\\seq2seqModel\\trained_variables_unsupervised.ckpt"
+all_model_checkpoint_paths: "C:\\Users\\veronica\\PycharmProjects\\nlvr_tau_nlp_final_proj\\seq2seqModel\\trained_variables_unsupervised.ckpt"

@@ -9,6 +9,7 @@ from seq2seqModel.logical_forms_generation import *
 from handle_data import CNLVRDataSet, SupervisedParsing
 from seq2seqModel.beam import *
 from general_utils import increment_count, union_dicts
+import definitions
 
 #paths
 
@@ -315,6 +316,9 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
 
             total_correct += 1 if correct else 0 # if some program in beam got a reward
+            if check:
+                check_correct += 1 if correct else 0
+                check_total += 1
 
             if not rewarded_programs:
                 continue
@@ -342,7 +346,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                 print ('programs ranked {0} in beam had so far {1} correct answers'.format(k,v))
         batch_num += 1
 
-        #sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
+        sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
         for var, grad in enumerate(gradBuffer):
             gradBuffer[var] = gradBuffer[var]*0
 
