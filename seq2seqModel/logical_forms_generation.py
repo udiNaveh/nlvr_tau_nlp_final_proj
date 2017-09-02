@@ -11,6 +11,8 @@ import re
 from preprocessing import get_ngrams_counts
 import definitions
 from logical_forms_new import process_token_sequence
+from preprocessing import *
+from general_utils import *
 
 TOKEN_MAPPING = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
@@ -118,10 +120,6 @@ def disambiguate(typed, nontyped):
         return typed[8:-2]
     else:
         return None
-
-
-
-
 
 
 def get_ngram_probs(token_history, p_dict, possible_continuations):
@@ -274,18 +272,64 @@ class PartialProgram:
 def get_formalized_sentence(sentence):
     '''
     same as the one below but only for a sentence
-    :param sentence: 
-    :return: 
+    :param sentence: 'there is a yellow item'
+    :return: 'there is a T_COLOR item'
     '''
-    # TODO OMER
+    formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
+    dict = load_dict_from_txt(formalization_file)
+    for i in range(2,10):
+        dict[str(i)] = 'T_INT'
+    dict["1"] = 'T_ONE'
+    dict["one"] = 'T_ONE'
+    manualy_chosen_replacements = sorted(dict.items(), key = lambda kvp : len(kvp[0].split()), reverse=True)
+    # manualy_chosen_replacements = [("{}".format(entry[0]), "{}".format(entry[1])) for entry in manualy_chosen_replacements]
+    manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
+    formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
+    # used_replacements = {}
+    # words = sentence.split()
+    # for word in words:
+    #     if word in manualy_chosen_replacements:
+    #         increment_count(used_replacements, manualy_chosen_replacements[word])
+    # for i, word in enumerate(words):
+    #     if word not in used_replacements:
+    #         continue
+    #     elif used_replacements[manualy_chosen_replacements[word]] == 1:
+    #         words[i] = manualy_chosen_replacements[word]
+    #     else:
+
+    for exp, replacement in manualy_chosen_replacements:
+        formalized_sentence = formalized_sentence.replace(exp, replacement)
+    formalized_sentence = formalized_sentence.strip()
+
+    return formalized_sentence
 
 def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
-    suggested_programs=[]
-    # TODO OMER
+    '''
+    :param sentence: english sentence, str
+    :param patterns_dict: dict of english formalized sents and formalized logical forms, {str: str}
+    :return: a *string* that is a suggested program based on the dict
+    '''
+    words = sentence.split()
+    formalized_sent = get_formalized_sentence(sentence)
+    formalized_words = formalized_sent.split()
 
-    return suggested_programs
+    if formalized_sent not in patterns_dict:
+        return None
+    token_str = patterns_dict[formalized_sent]
+    token_seq = token_str.split()
 
-def get_formlized_sentence_and_docding(sentence, program):
+    for i in range(len(words)):
+        if words[i] == formalized_words[i]:
+            continue
+        for j, token in enumerate(token_seq):
+            if formalized_words[i] in token:
+                token_seq[j] = words[i]
+
+    token_str = ' '.join(token_seq)
+    return token_str
+    # return suggested_programs
+
+def get_formlized_sentence_and_docding(sentence, program, patterns_dict):
     '''
     #todo figure out what to do when 'formal' tokens do not map to 'formal' words or vice versa 
     :param sentence: 
