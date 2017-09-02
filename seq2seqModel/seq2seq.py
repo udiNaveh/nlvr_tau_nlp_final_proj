@@ -10,6 +10,7 @@ from handle_data import CNLVRDataSet, SupervisedParsing
 from seq2seqModel.beam import *
 from general_utils import increment_count, union_dicts
 import definitions
+import time
 
 #paths
 
@@ -278,7 +279,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     n_images = 0
     iter = 0
 
-    while train.epochs_completed < 1:
+    while train.epochs_completed < 30:
         iter+=1
         sentences, samples = zip(*train.next_batch(BATCH_SIZE_UNSUPERVISED))
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
@@ -512,10 +513,104 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
     if save_params_path:
         saver.save(sess, save_params_path)
 
+def run_inference(sess, data, load_params):
+    # build the computaional graph:
+    # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
+    # and returns the lstm outputs.
+    sentence_placeholder, sent_lengths_placeholder, h, e_m = build_sentence_encoder()
+    # ff decoder - given the outputs of the encoder, and an embedding of the decoding history,
+    # computes a probability distribution over the tokens.
+    history_embedding_placeholder, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
+    valid_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
+                                          name="valid_logical_tokens")
+    token_prob_dist_tensor = tf.nn.softmax(token_unnormalized_dist, dim=0)
+    chosen_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
+                                           name="chosen_logical_tokens")  # a one-hot vector represents the action taken at each step
+    invalid_logical_tokens_mask = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
+                                                 name="invalid_logical_tokens_mask")
+
+    program_dependent_placeholders = (history_embedding_placeholder,
+                                      chosen_logical_tokens,
+                                      invalid_logical_tokens_mask)
+
+    logits = tf.transpose(token_unnormalized_dist) # + invalid_logical_tokens_mask
 
 
+    # the log-probability according to the model of a program given an input sentnce.
+    #program_log_prob = tf.reduce_sum(tf.log(token_prob_dist_tensor) * tf.transpose(chosen_logical_tokens))
+    theta = tf.trainable_variables()
+    init = tf.global_variables_initializer()
+    sess.run(init)
 
+    if load_params:
+        tf.train.Saver(theta).restore(sess, load_params)
+
+    total = 0
+    samples_num = len(data.samples.values())
+    correct_avg, correct_first, empty_beam = 0, 0, 0
+
+    current_logical_tokens_embeddings = sess.run(W_logical_tokens)
+    logical_tokens_embeddings_dict = \
+        {token: current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens_ids}
+
+    for sample in data.samples.values():
+        if total % 10 == 0:
+            print("sample %d out of %d" % (total,samples_num))
+
+        sentences = [sample.sentence]
+        label = sample.label
+
+        for step in range (len(sentences)):
+            sentence = (sentences[step])
+
+            encoder_feed_dict, decoder_feed_dict = \
+                get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, (h, e_m))
+
+            next_token_probs_getter = lambda pp :  get_next_token_probs(pp, logical_tokens_embeddings_dict,
+                                                                        decoder_feed_dict,
+                                                                        history_embedding_placeholder,
+                                                                        token_prob_dist_tensor)
+
+            beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
+                                                   original_sentence= sentence)
+
+            execution_results = []
+
+            for prog_rank, prog in enumerate(beam):
+                # execute program and get reward is result is same as the label
+                exe = execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
+                if exe is None:
+                    exe = True
+                    empty_beam += 1
+                execution_results.append(exe)
+
+            if not beam:
+                execution_results.append(True)
+                empty_beam += 1
+
+            avg = np.array(execution_results).mean()
+            avg = 1 if avg >= 0.5 else 0
+            correct_avg += 1 if (avg == label) else 0
+            correct_first += 1 if execution_results[0] == label else 0
+            total += 1
+
+        if total % 50 == 0:
+            print("accuracy for average of beam: %.2f" % (correct_avg / total))
+            print("accuracy for largest p in beam: %.2f" % (correct_first / total))
+            print("empty beam and None cases proportion: %.2f" % (empty_beam / total))
+    print("total accuracy for average of beam: %.2f" % (correct_avg / total))
+    print("total accuracy for largest p in beam: %.2f" % (correct_first / total))
+    print("total empty beam cases proportion: %.2f" % (empty_beam / total))
+
+    return
+
+TRAINED_WEIGHTS_SUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables2.ckpt')
 if __name__ == '__main__':
     with tf.Session() as sess:
-        run_unsupervised_training(sess, load_params_path= TRAINED_WEIGHTS3, save_model_path= TRAINED_UNS_WEIGHTS)
+        start = time.time()
+        run_unsupervised_training(sess, load_params_path= TRAINED_UNS_WEIGHTS, save_model_path= TRAINED_UNS_WEIGHTS)
+        finish = time.time()
+        print("elapsed time for 30 ephocs: %s" % (time.strftime("%H%M%S", time.localtime(finish - start))))
+        data = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true=False)
+        run_inference(sess, data, load_params=TRAINED_UNS_WEIGHTS )
     print("done")
