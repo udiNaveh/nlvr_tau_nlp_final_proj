@@ -3,7 +3,7 @@ from seq2seqModel.logical_forms_generation import *
 from seq2seqModel.utils import epsilon_greedy_sample
 
 
-max_decoding_length = 25
+max_decoding_length = 20
 epsilon_greedy_p = 0.1
 beam_size = 50
 
