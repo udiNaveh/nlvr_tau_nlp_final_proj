@@ -244,6 +244,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     # the log-probability according to the model of a program given an input sentnce.
     #program_log_prob = tf.reduce_sum(tf.log(token_prob_dist_tensor) * tf.transpose(chosen_logical_tokens))
     theta = tf.trainable_variables()
+
     optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
     compute_program_grads = optimizer.compute_gradients(cross_entropy)
     batch_grad = build_batchGrad()
@@ -251,9 +252,12 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
     init = tf.global_variables_initializer()
     sess.run(init)
+    print(np.array(sess.run(theta)).shape)
 
     if load_params_path:
-        tf.train.Saver(theta).restore(sess, load_params_path)
+        tf.train.Saver().restore(sess, load_params_path)
+    if save_model_path:
+        saver2 = tf.train.Saver(max_to_keep=2, keep_checkpoint_every_n_hours=1)
 
     gradList = sess.run(theta) # just to get dimensions right
     gradBuffer = {}
@@ -261,7 +265,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     # load data
     train = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true = False)
     train.sort_sentences_by_complexity(4)
-    train.choose_levels_for_curriculum_learning([0,1,2,3])
+    #train.choose_levels_for_curriculum_learning([0,1,2,3])
     # file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
     # sentences_in_pattern = pickle.load(file)
     # file.close()
@@ -278,6 +282,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     n_images = 0
     iter = 0
     start = time.time()
+    prev_epoch = 0
     while train.epochs_completed < 30:
 
         sentences, samples = zip(*train.next_batch(BATCH_SIZE_UNSUPERVISED))
@@ -299,7 +304,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                                                                         history_embedding_placeholder,
                                                                         token_prob_dist_tensor)
 
-            beam = e_greedy_randomized_beam_search_udi(next_token_probs_getter, logical_tokens_mapping,
+            beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
                                                    original_sentence= sentence)
 
             rewarded_programs = []
@@ -392,8 +397,10 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
         for var, grad in enumerate(gradBuffer):
             gradBuffer[var] = gradBuffer[var]*0
 
-    if save_model_path:
-        tf.train.Saver().save(sess, save_model_path)
+        if save_model_path and train.epochs_completed % 5 == 0 and prev_epoch != train.epochs_completed:
+            saver2.save(sess, save_model_path, global_step=5,write_meta_graph=False)
+            prev_epoch = train.epochs_completed
+            print("saved epoch %d" % train.epochs_completed)
     return
 
 
@@ -434,6 +441,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 
     init = tf.global_variables_initializer()
     sess.run(init)
+    print(np.array(sess.run(theta)).shape)
     saver = tf.train.Saver(theta)
     if load_params_path:
         saver.restore(sess,load_params_path)
@@ -454,7 +462,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
     current_data_set = train
     statistics = {train : [], validation : []}
 
-    while epoch_num < 8:
+    while epoch_num < 13:
         if current_data_set.epochs_completed != epoch_num:
             statistics[current_data_set].append((np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens)))
             print("epoch number {0}: mean loss = {1:.3f}, mean accuracy = {2:.3f}, mean accuracy ignore automatic = {3:.3f},"
@@ -593,7 +601,6 @@ def run_inference(sess, data, load_params):
                 exe = execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
                 if exe is None:
                     exe = True
-                    empty_beam += 1
                 execution_results.append(exe)
 
             if not beam:
@@ -616,13 +623,17 @@ def run_inference(sess, data, load_params):
 
     return
 
-TRAINED_WEIGHTS_SUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables2.ckpt')
+TRAINED_WEIGHTS_SUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup.ckpt')
+TRAINED_WEIGHTS_UNS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_unsup.ckpt')
 if __name__ == '__main__':
+    #tf.reset_default_graph()
     with tf.Session() as sess:
+
+        #run_supervised_training(sess,load_params_path=TRAINED_WEIGHTS_SUPERVISED,save_params_path=TRAINED_WEIGHTS_SUPERVISED)
         start = time.time()
-        run_unsupervised_training(sess, load_params_path= TRAINED_WEIGHTS3, save_model_path= TRAINED_UNS_WEIGHTS)
+        run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS_SUPERVISED, save_model_path= TRAINED_WEIGHTS_UNS)
         finish = time.time()
-        print("elapsed time for 30 ephocs: %s" % (time.strftime("%H%M%S", time.localtime(finish - start))))
-        data = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true=False)
-        run_inference(sess, data, load_params=TRAINED_UNS_WEIGHTS )
+        print("elapsed time for 30 epochs: %f" % ((finish - start) / 60 / 60))
+        #data = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true=False)
+        #run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS )
     print("done")
