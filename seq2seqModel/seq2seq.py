@@ -261,7 +261,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     # load data
     train = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true = False)
     train.sort_sentences_by_complexity(4)
-    train.choose_levels_for_curriculum_learning([0])
+    train.choose_levels_for_curriculum_learning([0,1,2,3])
     # file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
     # sentences_in_pattern = pickle.load(file)
     # file.close()
@@ -273,19 +273,20 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     batch_num = 1
     total_correct = 0
     correct_beam_parses = open("correct beams 8.txt ", 'w')
-    num_consistent_per_sentence =[]
-    beam_final_sizes = []
-    accuracy_by_prog_rank = {}
+    num_consistent_per_sentence, beam_final_sizes, mean_program_lengths = [], [], []
+    accuracy_by_prog_rank , num_consistent_by_prog_rank = {} , {}
     n_images = 0
     iter = 0
-
+    start = time.time()
     while train.epochs_completed < 30:
-        iter+=1
+
         sentences, samples = zip(*train.next_batch(BATCH_SIZE_UNSUPERVISED))
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
         logical_tokens_embeddings_dict = \
             {token : current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens_ids}
+
         for step in range (len(sentences)):
+            iter += 1
             sentence = (sentences[step])
             related_samples = samples[step]
             n_images+= len(related_samples)
@@ -298,7 +299,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                                                                         history_embedding_placeholder,
                                                                         token_prob_dist_tensor)
 
-            beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
+            beam = e_greedy_randomized_beam_search_udi(next_token_probs_getter, logical_tokens_mapping,
                                                    original_sentence= sentence)
 
             rewarded_programs = []
@@ -317,9 +318,11 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                         execution_results[i] = True
                 reward = 1 if all(execution_results==actual_labels) else 0
                 increment_count(accuracy_by_prog_rank, prog_rank, sum(execution_results==actual_labels))
+
                 correct+=reward
 
                 if reward>0:
+                    increment_count(num_consistent_by_prog_rank, prog_rank)
                     correct_beam_parses.write(sentence +"\n")
                     correct_beam_parses.write(" ".join(prog.token_seq)+"\n")
                     rewarded_programs.append(prog)
@@ -328,17 +331,17 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
             #print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
 
-            if not beam:
-                # if bean is empty predict True for each image
+            if beam:
+                mean_program_lengths.append(np.mean([len(pp) for pp in beam]))
 
+            else:
+                # if bean is empty predict True for each image
                 for k in accuracy_by_prog_rank.keys():
                     increment_count(accuracy_by_prog_rank, k, np.count_nonzero(actual_labels))
 
 
             num_consistent_per_sentence.append(correct)
             beam_final_sizes.append(len(beam))
-
-
 
             if not rewarded_programs:
                 continue
@@ -359,19 +362,28 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                         print("nan gradient")
                     gradBuffer[var] +=  programs_gradient_weights[idx] * grad[0]
 
+        stop = time.time()
+        print("time for mini batch = {0:.2f} seconds".format(stop - start))
+        start = time.time()
         if batch_num % 10 == 0:
             #print("accuracy: %.2f" % (total_correct / (batch_size_unsupervised * 10)))
             mean_corect = np.mean(num_consistent_per_sentence)
             mean_beam_size = np.mean(beam_final_sizes)
             n_non_zero = np.count_nonzero(num_consistent_per_sentence)
             print("{0} out of {1} sentences had consistent programs in beam".format(n_non_zero, len(num_consistent_per_sentence)))
-            print("mean correct parses for sentence = {0:.2f}, mean beam size for sentence = {1:.2f}".format(
-                mean_corect, mean_beam_size))
+            print("mean consistent parses for sentence = {0:.2f}, mean beam size for sentence = {1:.2f}"\
+                  ", mean prog length = {2:.2f}".format(
+                mean_corect, mean_beam_size, np.mean(mean_program_lengths)))
 
-            num_consistent_per_sentence = []
-            beam_final_sizes = []
-            for k,v in sorted(accuracy_by_prog_rank.items(), key= lambda kvp : kvp[1], reverse=True)[:5]:
+            num_consistent_per_sentence, beam_final_sizes, mean_program_lengths = [], [], []
+
+            for k,v in sorted(accuracy_by_prog_rank.items(), key= lambda kvp : kvp[1], reverse=True)[:1]:
                 print ('programs ranked {0} in beam had so far {1} correct answers out of {2} samples'.format(k,v, n_images))
+            for k,v in sorted(num_consistent_by_prog_rank.items(), key= lambda kvp : kvp[1], reverse=True)[:1]:
+                print ('programs ranked {0} in beam had so far {1} consistent parses out of {2} sentences'.format(k,v, iter))
+
+
+
         batch_num += 1
         for i, g in enumerate(gradBuffer):
             gradBuffer[i] = gradBuffer[i]/len(sentences)
@@ -608,7 +620,7 @@ TRAINED_WEIGHTS_SUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,
 if __name__ == '__main__':
     with tf.Session() as sess:
         start = time.time()
-        run_unsupervised_training(sess, load_params_path= TRAINED_UNS_WEIGHTS, save_model_path= TRAINED_UNS_WEIGHTS)
+        run_unsupervised_training(sess, load_params_path= TRAINED_WEIGHTS3, save_model_path= TRAINED_UNS_WEIGHTS)
         finish = time.time()
         print("elapsed time for 30 ephocs: %s" % (time.strftime("%H%M%S", time.localtime(finish - start))))
         data = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true=False)
