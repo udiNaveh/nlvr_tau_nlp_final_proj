@@ -253,9 +253,10 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     init = tf.global_variables_initializer()
     sess.run(init)
     print(np.array(sess.run(theta)).shape)
+    var_list=[i for i in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)[:8]]
 
     if load_params_path:
-        tf.train.Saver().restore(sess, load_params_path)
+        tf.train.Saver(var_list=var_list).restore(sess, load_params_path)
     if save_model_path:
         saver2 = tf.train.Saver(max_to_keep=2, keep_checkpoint_every_n_hours=1)
 
