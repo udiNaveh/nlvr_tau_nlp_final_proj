@@ -179,6 +179,9 @@ def create_partial_program(next_token_probs_getter, token_seq):
 
 def get_next_token_probs(sess, partial_program, logical_tokens_embeddings_dict, decoder_feed_dict, history_embedding_tensor,
                          token_prob_dist):
+    valid_next_tokens = partial_program.get_possible_continuations()
+    if len(valid_next_tokens) == 1:
+        return valid_next_tokens, [1.0]
     history_tokens = ['<s>' for _ in range(HISTORY_LENGTH - len(partial_program))] + \
                      partial_program[-HISTORY_LENGTH:]
 
@@ -195,10 +198,8 @@ def get_next_token_probs(sess, partial_program, logical_tokens_embeddings_dict, 
     if (np.count_nonzero(current_probs) != len(current_probs)):
         print("zero prob")
 
+    probs_given_valid = [current_probs[logical_tokens_ids[next_tok]] for next_tok in valid_next_tokens]
 
-    valid_next_tokens = partial_program.get_possible_continuations()
-    probs_given_valid = [1.0] if len(valid_next_tokens) == 1 else \
-        [current_probs[logical_tokens_ids[next_tok]] for next_tok in valid_next_tokens]
     probs_given_valid = probs_given_valid / np.sum(probs_given_valid)
     return valid_next_tokens, probs_given_valid
 

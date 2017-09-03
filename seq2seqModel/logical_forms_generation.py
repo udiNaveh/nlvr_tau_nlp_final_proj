@@ -187,6 +187,8 @@ class PartialProgram:
     def get_possible_continuations(self):
 
         if len(self.stack) == 0:
+            if self.token_seq[-1] == '<EOS>':
+                return []
             return ["<EOS>"]  # end of decoding
 
         next_type = self.stack[-1]
