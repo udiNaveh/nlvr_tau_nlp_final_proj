@@ -11,6 +11,7 @@ from seq2seqModel.beam import *
 from general_utils import increment_count, union_dicts
 import definitions
 import time
+import pandas as pd
 
 #paths
 
@@ -534,7 +535,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
     if save_params_path:
         saver.save(sess, save_params_path)
 
-def run_inference(sess, data, load_params):
+def run_inference(sess, data, load_params, clf=None):
     # build the computaional graph:
     # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
     # and returns the lstm outputs.
@@ -574,6 +575,8 @@ def run_inference(sess, data, load_params):
     logical_tokens_embeddings_dict = \
         {token: current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens_ids}
 
+    beam_training_set = pd.DataFrame(columns=[col for col in range(len(features_vec)+1)]) ### TODO create dataframe
+
     for sample in data.samples.values():
         if total % 10 == 0:
             print("sample %d out of %d" % (total,samples_num))
@@ -600,6 +603,15 @@ def run_inference(sess, data, load_params):
             for prog_rank, prog in enumerate(beam):
                 # execute program and get reward is result is same as the label
                 exe = execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
+
+                if not clf:
+                    # TODO get feature vector and append label to it
+                    beam_label = 1 if exe is True else 0
+                    row = feature_vec.append(beam_label)
+                    beam_training_set.append(row,axis=0)
+
+
+
                 if exe is None:
                     exe = True
                 execution_results.append(exe)
@@ -622,7 +634,13 @@ def run_inference(sess, data, load_params):
     print("total accuracy for largest p in beam: %.2f" % (correct_first / total))
     print("total empty beam cases proportion: %.2f" % (empty_beam / total))
 
-    return
+    return beam_training_set
+
+
+def run_beam_classifier(beam_training_set):
+    # TODO
+
+
 
 TRAINED_WEIGHTS_SUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup.ckpt')
 TRAINED_WEIGHTS_UNS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_unsup.ckpt')
@@ -636,5 +654,7 @@ if __name__ == '__main__':
         finish = time.time()
         print("elapsed time for 30 epochs: %f" % ((finish - start) / 60 / 60))
         #data = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true=False)
-        #run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS )
+        #beam_training_set = run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS )
+        #clf = run_beam_classifier(beam_training_set) #TODO
+        #run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS, clf)
     print("done")
