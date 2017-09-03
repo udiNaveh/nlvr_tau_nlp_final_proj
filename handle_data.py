@@ -174,7 +174,7 @@ class CNLVRDataSet:
         self._index_in_epoch += batch_size
         end = self._index_in_epoch
         indices = self.__ids[start : end]
-        return [(self.processed_sentences[k], self.get_samples_by_sentence_id(k)) for k in indices]
+        return {k: (self.processed_sentences[k], self.get_samples_by_sentence_id(k)) for k in indices}
 
 
 def generate_new_samples(dataset, sentence_id):

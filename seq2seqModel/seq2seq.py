@@ -46,6 +46,7 @@ USE_BOW_HISTORY = False
 IRRELEVANT_TOKENS_IN_GRAD = True
 AUTOMATIC_TOKENS_IN_GRAD = False
 HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
+USE_CACHED_PROGRAMS = False
 
 
 def load_meta_data():
@@ -260,27 +261,31 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
     # load data
     train = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true = False)
-    train.sort_sentences_by_complexity(4)
-    train.choose_levels_for_curriculum_learning([0,1,2,3])
-    # file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
-    # sentences_in_pattern = pickle.load(file)
-    # file.close()
-    # train.use_subset_by_sentnce_condition(lambda s: s in sentences_in_pattern.values())
+    #train.sort_sentences_by_complexity(4)
+    #train.choose_levels_for_curriculum_learning([0,1,2,3])
+    file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
+    sentences_in_pattern = pickle.load(file)
+    file.close()
+    train.use_subset_by_sentnce_condition(lambda s: s in sentences_in_pattern.values())
 
     #initialize gradients
     for var, grad in enumerate(gradList):
         gradBuffer[var] = grad*0
     batch_num = 1
     total_correct = 0
-    correct_beam_parses = open("correct beams 8.txt ", 'w')
+    correct_beam_parses = open("correct beams 9.txt ", 'w')
     num_consistent_per_sentence, beam_final_sizes, mean_program_lengths = [], [], []
     accuracy_by_prog_rank , num_consistent_by_prog_rank = {} , {}
+    incorrect_parses = {}
     n_images = 0
     iter = 0
     start = time.time()
-    while train.epochs_completed < 30:
+    while train.epochs_completed < 1:
 
-        sentences, samples = zip(*train.next_batch(BATCH_SIZE_UNSUPERVISED))
+        batch = train.next_batch(BATCH_SIZE_UNSUPERVISED)
+        ids = [key for key in batch.keys()]
+
+        sentences, samples = zip(*[batch[k] for k in ids])
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
         logical_tokens_embeddings_dict = \
             {token : current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens_ids}
@@ -288,6 +293,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
         for step in range (len(sentences)):
             iter += 1
             sentence = (sentences[step])
+            sentence_id = ids[step]
             related_samples = samples[step]
             n_images+= len(related_samples)
 
@@ -307,8 +313,10 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
             compiled = 0
             correct = 0
             actual_labels = np.array([sample.label for sample in related_samples])
+            print ("{0} : {1}".format(sentence_id, sentence))
             for prog_rank, prog in enumerate(beam):
                 # execute program and get reward is result is same as the label
+
                 execution_results = np.array([execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
                                      for sample in related_samples])
 
@@ -317,6 +325,11 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                     if execution_results[i] is None:
                         execution_results[i] = True
                 reward = 1 if all(execution_results==actual_labels) else 0
+                if prog_rank<5:
+                    #print(prog_rank, prog, 'correct' if reward else 'incorrect')
+                    if prog_rank==0 and not reward:
+                        incorrect_parses[sentence_id] = (sentence, prog)
+
                 increment_count(accuracy_by_prog_rank, prog_rank, sum(execution_results==actual_labels))
 
                 correct+=reward
@@ -351,11 +364,8 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
             for idx, program in enumerate(rewarded_programs):
                 program_dependent_feed_dict = \
                     get_feed_dicts_from_program(program, logical_tokens_embeddings_dict, program_dependent_placeholders)
-
                 program_grad = sess.run(compute_program_grads, feed_dict =
                                         union_dicts(encoder_feed_dict, program_dependent_feed_dict))
-
-
 
                 for var,grad in enumerate(program_grad):
                     if (np.isnan(grad)).any():
@@ -381,7 +391,6 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                 print ('programs ranked {0} in beam had so far {1} correct answers out of {2} samples'.format(k,v, n_images))
             for k,v in sorted(num_consistent_by_prog_rank.items(), key= lambda kvp : kvp[1], reverse=True)[:1]:
                 print ('programs ranked {0} in beam had so far {1} consistent parses out of {2} sentences'.format(k,v, iter))
-
 
 
         batch_num += 1
