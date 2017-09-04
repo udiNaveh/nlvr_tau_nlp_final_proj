@@ -285,8 +285,8 @@ def get_formalized_sentence(sentence):
         dict[str(i)] = 'T_INT'
     dict["1"] = 'T_ONE'
     dict["one"] = 'T_ONE'
-    manualy_chosen_replacements = sorted(dict.items(), key = lambda kvp : len(kvp[0].split()), reverse=True)
-    manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
+    manualy_chosen_replacements = sorted(dict.items(), key = lambda x : sentence.find(x[0]))
+    manualy_chosen_replacements = [(" {} ".format(entry[0]), " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
 
     formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
     used_reps = []
@@ -295,9 +295,14 @@ def get_formalized_sentence(sentence):
         if replacement not in used_reps and exp in formalized_sentence:
             formalized_sentence = formalized_sentence.replace(exp, replacement)
             used_reps.append(replacement)
-        else:
+        elif replacement in used_reps and exp in formalized_sentence and (replacement.rstrip() + '_1 ') not in used_reps:
             replacement = replacement.rstrip() + '_1 '
             formalized_sentence = formalized_sentence.replace(exp, replacement)
+            used_reps.append(replacement)
+        else:
+            replacement = replacement.rstrip() + '_2 '
+            formalized_sentence = formalized_sentence.replace(exp, replacement)
+
     formalized_sentence = formalized_sentence.strip()
 
     return formalized_sentence
@@ -314,24 +319,54 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
 
     if formalized_sent not in patterns_dict:
         return None
-    token_str = patterns_dict[formalized_sent]
-    token_seq = token_str.split()
 
-    for i in range(len(words)):
-        if words[i] == formalized_words[i]:
-            continue
-        for j, token in enumerate(token_seq):
-            if formalized_words[i] in token and numbers_contained(formalized_words[i]) == numbers_contained(token):
-                token_seq[j] = words[i]
+    for i, word in enumerate(words):
+        if word == 'at' and (words[i+1] == 'most' or words[i+1] == 'least'):
+            words[i:i+2] = [' '.join(words[i:i+2])]
 
-    # return token_seq
-    token_str = ' '.join(token_seq)
-    return token_str
-    # return suggested_programs
+    log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
+                'exactly': 'equal_int', 'at least': 'ge', 'at most': 'le', 'triangle': 'triangle',
+                'circle': 'circle', 'square': 'square', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
+                '7': '7', '1': '1', 'one': '1'}
+
+
+    prog_dict = {}
+    for prog in patterns_dict[formalized_sent]:
+        token_str = prog
+        token_seq = token_str.split()
+
+        for i, _ in enumerate(words):
+            if words[i] == formalized_words[i]:
+                continue
+            for j, token in enumerate(token_seq):
+                if formalized_words[i] in token and numbers_contained(formalized_words[i]) == numbers_contained(token):
+                    if token_seq[j].startswith('is'):
+                        token_seq[j] = 'is_' + log_dict[words[i]]
+                    else:
+                        token_seq[j] = log_dict[words[i]]
+
+        # return token_seq
+        token_str = ' '.join(token_seq)
+        prog_dict[token_str] = None
+    return prog_dict
+
+    # token_str = patterns_dict[formalized_sent]
+    # token_seq = token_str.split()
+    #
+    # for i in range(len(words)):
+    #     if words[i] == formalized_words[i]:
+    #         continue
+    #     for j, token in enumerate(token_seq):
+    #         if formalized_words[i] in token and numbers_contained(formalized_words[i]) == numbers_contained(token):
+    #             token_seq[j] = words[i]
+    #
+    # # return token_seq
+    # token_str = ' '.join(token_seq)
+    # return token_str
+    # # return suggested_programs
 
 def get_formlized_sentence_and_decoding(sentence, program, patterns_dict):
     '''
-    #todo figure out what to do when 'formal' tokens do not map to 'formal' words or vice versa
     :param sentence: 'there is a yellow item'
     :param program: exist filter ALL_ITEMS lambda_x_: is_yellow x
     :return:
@@ -349,40 +384,27 @@ def get_formlized_sentence_and_decoding(sentence, program, patterns_dict):
         dict[str(i)] = 'T_INT'
     dict["1"] = 'T_ONE'
     dict["one"] = 'T_ONE'
-    manualy_chosen_replacements = sorted(dict.items(), key = lambda kvp : len(kvp[0].split()), reverse=True)
+    manualy_chosen_replacements = sorted(dict.items(), key = lambda x : sentence.find(x[0]))
     manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
     formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
     formalized_program = " {} ".format(program)  # pad with whitespaces
 
-    words = sentence.split()
-    tokens = program.split()
-
-    # # building a temporary dictionary, per sentence
-    # temp_dict = {}
-    # for word in words:
-    #     if word in dict and word not in temp_dict:
-    #         temp_dict[word] = dict[word]
-    #     elif word in dict and word in temp_dict:
-    #         temp_dict[word] = dict[word] + '_1'
-    # for i, _ in enumerate(words):
-    #     if words[i] in temp_dict:
-
-    # reminder: exp = yellow, replacement = T_COLOR
     temp_dict = {}
     for exp, replacement in manualy_chosen_replacements:
-        if exp in formalized_sentence and exp not in temp_dict:
+        if exp in formalized_sentence and replacement not in temp_dict.values():
             temp_dict[exp] = replacement
-        elif exp in formalized_sentence and replacement in temp_dict.values():
-            temp_dict[exp] = replacement.rstrip() + '_1 '
-        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_1 ') in temp_dict.values():
+        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') not in temp_dict.values():
+            temp_dict[exp] = replacement.rstrip() + '_$ '
+        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') in temp_dict.values():
             temp_dict[exp] = replacement.rstrip() + '_2 '
     temp_dict = [(k, temp_dict[k]) for k in temp_dict]
 
     for exp, replacement in temp_dict:
         formalized_sentence = formalized_sentence.replace(exp, replacement)
     formalized_sentence = formalized_sentence.strip()
+    formalized_sentence = formalized_sentence.replace('$', '1')
 
-    log_dict = {' yellow ': 'yellow', ' blue ': 'blue', ' black ': 'black', ' top ': ' top ', ' bottom ': 'bottom',
+    log_dict = {' yellow ': 'yellow', ' blue ': 'blue', ' black ': 'black', ' top ': 'top', ' bottom ': 'bottom',
                 ' exactly ': 'equal_int', ' at least ': 'ge', ' at most ': 'le', ' triangle ': 'triangle',
                 ' circle ': 'circle', ' square ': 'square', ' 2 ': '2', ' 3 ': '3', ' 4 ': '4', ' 5 ': '5', ' 6 ': '6',
                 ' 7 ': '7', ' 1 ': '1', ' one ': '1'}
@@ -390,10 +412,13 @@ def get_formlized_sentence_and_decoding(sentence, program, patterns_dict):
     for exp, replacement in temp_dict:
         formalized_program = formalized_program.replace(log_dict[exp], replacement.strip())
     formalized_program = formalized_program.strip()
+    formalized_program = formalized_program.replace('$', '1')
 
-    patterns_dict[formalized_sentence] = formalized_program
+    if formalized_sentence not in patterns_dict:
+        patterns_dict[formalized_sentence] = {}
+    patterns_dict[formalized_sentence][formalized_program] = None
 
-    return formalized_sentence, formalized_program
+    return formalized_sentence, {formalized_program: None}
 
 def numbers_contained(string):
 
