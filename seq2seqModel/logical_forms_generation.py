@@ -367,12 +367,12 @@ def get_formlized_sentence_and_decoding(sentence, program, patterns_dict):
     :param sentence: 'there is a yellow item'
     :param program: exist filter ALL_ITEMS lambda_x_: is_yellow x
     :return:
-            'there is a T_COLOR item', 'exist filter ALL_ITEMS lambda_x_: is_T_COLOR x'
+            'there is a T_COLOR item', {'exist filter ALL_ITEMS lambda_x_: is_T_COLOR x': None}
             and adding both to patterns_dict
     '''
 
     if get_formalized_sentence(sentence) in patterns_dict:
-        return patterns_dict[get_formalized_sentence(sentence)]
+        return get_formalized_sentence(sentence), patterns_dict[get_formalized_sentence(sentence)]
 
     # building replacements "dictionary" (it is actually a list of tuples)
     formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
