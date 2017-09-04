@@ -299,8 +299,14 @@ def get_formalized_sentence(sentence):
     #         words[i] = manualy_chosen_replacements[word]
     #     else:
 
+    used_reps = []
     for exp, replacement in manualy_chosen_replacements:
-        formalized_sentence = formalized_sentence.replace(exp, replacement)
+        if replacement not in used_reps and exp in formalized_sentence:
+            formalized_sentence = formalized_sentence.replace(exp, replacement)
+            used_reps.append(replacement)
+        else:
+            replacement = replacement.rstrip() + '_1 '
+            formalized_sentence = formalized_sentence.replace(exp, replacement)
     formalized_sentence = formalized_sentence.strip()
 
     return formalized_sentence
@@ -324,7 +330,7 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
         if words[i] == formalized_words[i]:
             continue
         for j, token in enumerate(token_seq):
-            if formalized_words[i] in token:
+            if formalized_words[i] in token and numbers_contained(formalized_words[i])==numbers_contained(token):
                 token_seq[j] = words[i]
 
     token_str = ' '.join(token_seq)
@@ -342,3 +348,11 @@ def get_formlized_sentence_and_docding(sentence, program, patterns_dict):
     formalized_sentence, formalized_decoding = [], []
 
     return formalized_sentence, formalized_decoding
+
+def numbers_contained(string):
+
+    nums = []
+    for char in string:
+        if char.isdigit():
+            nums.append(char)
+    return nums
