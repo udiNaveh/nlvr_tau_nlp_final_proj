@@ -13,14 +13,16 @@ import display_images
 from handle_data import *
 from logical_forms_new import *
 from preprocessing import clean_sentence
+from seq2seqModel.logical_forms_generation import load_functions
 
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 PARSING_EXAMPLES_PATH = os.path.join(definitions.DATA_DIR, "parsed sentences", "parses for check")
 PARSING_EXAMPLES_TOKENS_ONLY_PATH = os.path.join(definitions.DATA_DIR, "parsed sentences", "parses for check as tokens")
 TOKENS_INVENTORY = os.path.join(definitions.DATA_DIR, "logical forms","token mapping")
 KNOWN_MISTAKES = os.path.join(definitions.ROOT_DIR,'unittests', "wrong labels ids")
+INCORRECT_PARSES = os.path.join(definitions.DATA_DIR, 'incorrect_first_in_beam')
 
-TOKENS_ONLY = False # try both True and false
+TOKENS_ONLY = True # try both True and false
 
 
 
@@ -97,16 +99,16 @@ def load_known_mistakes(path):
 
 #load needed data
 
-tokens_dic = load_token_inventory(TOKENS_INVENTORY)
+tokens_dic = load_functions(TOKENS_INVENTORY)
 parsed_samples = load_parsed_examples(PARSING_EXAMPLES_PATH) if not TOKENS_ONLY else \
                                         load_parsed_examples(PARSING_EXAMPLES_TOKENS_ONLY_PATH)
 known_mistakes = load_known_mistakes(KNOWN_MISTAKES)
 
 
-
-def test_parsing_on_samples(sentence, samples, only_tokens = TOKENS_ONLY, show_mistakes = 'all', show_erros = True):
+def test_parsing_on_samples(sentence, samples, only_tokens=TOKENS_ONLY, show_mistakes='all', show_erros=True,
+                            parsing_dic = parsed_samples):
     '''
-    
+
     :param sentence: the sentence whose parsing you want to check 
     :param samples: samples related to this sentence
     :param only_tokens: when using pre-parsed forms, whether to use the token-only form or the final form
@@ -121,18 +123,23 @@ def test_parsing_on_samples(sentence, samples, only_tokens = TOKENS_ONLY, show_m
     n_errors = 0
     n_mistakes = 0
 
-    logical_forms = parse(sentence, parsed_samples)
-    n_logical_forms= len(logical_forms)
+    logical_forms = parse(sentence, parsing_dic)
+    n_logical_forms = len(logical_forms)
+
     for form in logical_forms:
+        next_sentence = False
+        if only_tokens:
+            form = process_token_sequence(form, tokens_dic)
         for sample in samples:
-            if only_tokens:
-                form = process_token_sequence(form.split(), tokens_dic)
+            if next_sentence:
+                continue
+
             try:
                 result = run_logical_form(form, sample.structured_rep)
 
             except (TypeError, SyntaxError, ValueError, AttributeError,
                     RuntimeError, RecursionError, Exception, NotImplementedError) as err:
-                n_errors+=1
+                n_errors += 1
                 if show_erros:
                     print("an error accured while executing logical form:")
                     print(form)
@@ -141,9 +148,9 @@ def test_parsing_on_samples(sentence, samples, only_tokens = TOKENS_ONLY, show_m
                     break
 
             if result != sample.label:
-                n_mistakes+=1
-                if show_mistakes=='all' or show_mistakes=='ignore_known_mistakes' \
-                     and sample.identifier not in known_mistakes:
+                n_mistakes += 1
+                if show_mistakes == 'all' or show_mistakes == 'ignore_known_mistakes' \
+                        and sample.identifier not in known_mistakes:
 
                     print("prediction doesn't match label on sample {}:".format(sample.identifier))
                     print("sentence: {}".format(sample.sentence))
@@ -151,35 +158,46 @@ def test_parsing_on_samples(sentence, samples, only_tokens = TOKENS_ONLY, show_m
                     print("predicted label: {}".format(result))
                     print("actual label: {}".format(sample.label))
                     print(sample.structured_rep.boxes)
+                    next_sentence = input("next sentence? (y/n)?\n") == 'y'
+                    if next_sentence:
+                        return True
+
                     show_image = input("show image (y/n)?\n") == 'y'
                     if show_image:
                         display_images.show_image(sample.identifier)
                     input("press any key to continue")
 
-    return n_logical_forms, n_errors, n_mistakes
+    return False
+
+def test_forms_from_beam():
+    file = open(INCORRECT_PARSES, 'rb')
+    d = pickle.load(file)
+    train = CNLVRDataSet(definitions.TRAIN_JSON)
+    parsing_dict = {s: (id_s, [prog.token_seq]) for id_s, (s, prog) in d.items()}
+    known_parsing_mistakes = open('known_parse_errors2.txt', 'w')
+    for id_s, (s, prog) in d.items():
+        if 'touch' in s:
+            samples = train.get_samples_by_sentence_id(id_s)
+            if test_parsing_on_samples(s, samples, only_tokens=TOKENS_ONLY, show_mistakes='all',  parsing_dic = parsing_dict):
+                known_parsing_mistakes.write(s + '\n')
 
 
-def test_parsed_forms():
-    total_logical_forms, total_errors, total_mistakes = 0,0,0
-    data, sentences = build_data(read_data(definitions.TRAIN_JSON), preprocessing_type='shallow')
-    has_parsing = [k for k,s in sentences.items() if s in parsed_samples]
+    known_parsing_mistakes.close()
 
-    for k in has_parsing:
-        s = (sentences[k])
-        samples = [sample for sample in data if sample.sentence == s]
-        n_logical_forms, n_errors, n_mistakes = test_parsing_on_samples(s, samples, show_mistakes='ignore_known_mistakes')
-        total_logical_forms +=n_logical_forms
-        total_errors += n_errors
-        total_mistakes += n_mistakes
-
-
-    print("finished test.")
-    print("for {0} sentences, ran total of {1} logical forms".format(len(has_parsing), total_logical_forms))
-    print("{0} logical forms raised errors".format(total_errors))
-    print("{0} samples had different label than predicted".format(total_mistakes))
-
-    return
-
+def test_almost_touching():
+    train = CNLVRDataSet(definitions.TRAIN_JSON)
+    while True:
+        batch = train.next_batch(100)
+        ids = [key for key in batch.keys()]
+        sentences, samples = zip(*[batch[k] for k in ids])
+        for i in range(len(sentences)):
+            if 'closely' in sentences[i]:
+                print(sentences[i])
+                samples = train.get_samples_by_sentence_id(ids[i])
+                for sample in samples:
+                    print(sample.label)
+                    if input("show image? (y/n)?\n") == 'y':
+                        display_images.show_image(sample.identifier)
 
 
 class TestLogicalForms(unittest.TestCase):
@@ -194,5 +212,5 @@ class TestLogicalForms(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    test_parsed_forms()
+    test_almost_touching()
     #unittest.main()
