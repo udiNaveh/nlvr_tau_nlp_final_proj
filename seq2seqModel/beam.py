@@ -136,9 +136,14 @@ def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens
 
         if injection:
             for prog in suggested_progs:
+                # TODO i'm not sure what to do here when the suggested program contains lambda.
+                # if 'lambda' in prog[t+1]:
+                #     spp, _ = program_from_token_sequence(next_token_probs_getter, prog[:t + 2], logical_tokens_mapping,
+                #                                      original_sentence=original_sentence)
+                # else:
                 spp, _ = program_from_token_sequence(next_token_probs_getter, prog[:t + 1], logical_tokens_mapping,
                                                      original_sentence=original_sentence)
-                if spp not in all_continuations_list:
+                if spp.token_seq not in [p.token_seq for p in all_continuations_list]:
                     all_continuations_list.append(spp)
 
         all_continuations_list.sort(key=lambda c: - c.logprob)
@@ -165,7 +170,8 @@ def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens
         for prog in suggested_progs:
             sp, _ = program_from_token_sequence(next_token_probs_getter, prog, logical_tokens_mapping,
                                                 original_sentence=original_sentence)
-            beam.append(sp)
+            if sp.token_seq not in [p.token_seq for p in beam]:
+                beam.append(sp)
 
     beam = sorted(beam, key=lambda prog: -prog.logprob)
     return beam
