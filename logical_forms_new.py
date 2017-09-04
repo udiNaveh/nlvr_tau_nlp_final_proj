@@ -21,6 +21,7 @@ class Relation(Enum):
     ABOVE = 'above'
     BELOW = 'below'
     TOUCH = 'touch'
+    CLOSELY_TOUCH = 'closely touch'
 
 class Side(Enum):
     RIGHT = 'right',
@@ -87,6 +88,7 @@ def is_third(x):
 
 # touching wall
 
+
 def is_touching_wall(x, side=None):
     if side == Side.ANY or side is None:
         return x.touching_wall()
@@ -98,6 +100,19 @@ def is_touching_wall(x, side=None):
         return x.touching_right()
     if side == Side.LEFT:
         return x.touching_left()
+
+
+def is_closely_touching_wall(x, side=None):
+    if side == Side.ANY or side is None:
+        return x.touching_wall(use_margin=True)
+    if side == Side.TOP:
+        return x.touching_top(use_margin=True)
+    if side == Side.BOTTOM:
+        return x.touching_bottom(use_margin=True)
+    if side == Side.RIGHT:
+        return x.touching_right(use_margin=True)
+    if side == Side.LEFT:
+        return x.touching_left(use_margin=True)
 
 def is_touching_corner(x, side = None):
     return x.touching_corner() and is_touching_wall(x, side)
@@ -231,6 +246,8 @@ def get_below(s):
 def get_touching(s):
     return union_all(__set_per_item_function(s, lambda x : relate(Relation.TOUCH, x)))
 
+def get_closely_touching(s):
+    return union_all(__set_per_item_function(s, lambda x : relate(Relation.CLOSELY_TOUCH, x)))
 
 def relate(rel:Relation, item):
     return set([x for x in get_box_exclusive(item) if __check_relation(x,item,rel)])
@@ -243,6 +260,8 @@ def __check_relation(x,item,rel):
         return __check_relation(item, x, Relation.ABOVE)
     if rel == Relation.TOUCH:
         return item.is_touching(x)
+    if rel == Relation.CLOSELY_TOUCH:
+        return item.is_touching(x, use_margin= True)
     raise TypeError("{} is not a relation".format(rel))
 
 

@@ -8,7 +8,17 @@ import pickle
 
 
 
-train = definitions.TRAIN_JSON
+
+class DataSet(Enum):
+    TRAIN = 1,
+    DEV = 2,
+    TEST = 3
+
+
+paths = {DataSet.TRAIN : definitions.TRAIN_JSON,
+ DataSet.DEV : definitions.DEV_JSON,
+DataSet.TEST : definitions.TEST_JSON}
+
 
 
 def read_data(filename):
@@ -31,7 +41,6 @@ def rewrite_data(filename, data, mapping):
             #output_file.writelines(data)
 
     return
-
 
 
 def build_data(data, preprocessing_type = None, use_unk = True):
@@ -66,24 +75,28 @@ def build_data(data, preprocessing_type = None, use_unk = True):
 
 class CNLVRDataSet:
 
-    def __init__(self, path, ignore_all_true = True):
+    def __init__(self, dataset):
+        self.__dataset = dataset
         self.original_sentences = {}
         self.processed_sentences = {}
         self.samples = {}
         self.__ids = []
         self._index_in_epoch = 0
         self.epochs_completed = 0
-        self.__num_examples = 0
         self.__ids_by_complexity = []
-        self.ignore_all_true_sentences = ignore_all_true
-        self.get_data(path)
+        self.get_data(paths[dataset])
 
 
+    @property
+    def num_examples(self):
+        return len(self.__ids)
 
     def get_samples_by_sentence_id(self, sentence_id):
         samples_ids = ["{0}-{1}".format(sentence_id, i) for i in range(4)]
         return [self.samples[sample_id] for sample_id in samples_ids if sample_id in self.samples]
 
+    def get_sentence_by_id(self, sentence_id):
+        return self.processed_sentences[sentence_id]
 
     def get_data(self, path):
         data = read_data(path)
@@ -95,29 +108,21 @@ class CNLVRDataSet:
                 sentences[s_index] = line["sentence"]
 
         self.original_sentences = preprocess_sentences(sentences, processing_type='shallow')
-        self.processed_sentences = \
-            replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='deep'))
+
+        if self.__dataset == DataSet.TRAIN:
+            self.processed_sentences = \
+                replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='deep'))
+
+        else:
+            self.processed_sentences = \
+                replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='deep'),
+                                            definitions.TOKEN_COUNTS_PROCESSED)
 
         for s in self.samples.values():
             s_index = int(str.split(s.identifier, "-")[0])
             s.sentence = self.processed_sentences[s_index]
 
-
-
-        if self.ignore_all_true_sentences:
-            new_keys = []
-            for k in self.original_sentences.keys():
-                s_samples = self.get_samples_by_sentence_id(k)
-                if all([s.label for s in s_samples]):
-                    pass#print(s_samples[0].sentence)
-                else:
-                    new_keys.append(k)
-
-            self.original_sentences = {k: self.original_sentences[k] for k in new_keys}
-            self.processed_sentences = {k: self.processed_sentences[k] for k in new_keys}
-
         self.__ids = [k for k in self.original_sentences.keys()]
-        self.__num_examples = len(self.__ids)
 
     def use_subset_by_sentnce_condition(self, f_s):
         ''' f_id is a boolean function on ids'''
@@ -128,7 +133,7 @@ class CNLVRDataSet:
         self.__ids = new_ids
 
     def use_subset_by_images_condition(self, f_im):
-        ''' f_id is a boolean function on a set of samples'''
+        ''' f_im is a boolean function on a set of samples'''
         new_ids = []
         for k, s in self.processed_sentences.items():
             related_samples = self.get_samples_by_sentence_id(k)
@@ -136,13 +141,17 @@ class CNLVRDataSet:
                 new_ids.append(k)
         self.__ids = new_ids
 
-    def sort_sentences_by_complexity(self, n_classes):
+    def ignore_all_true_samples(self):
+        all_true_filter = lambda s_samples : all([s.label==True for s in s_samples])
+        self.use_subset_by_images_condition(all_true_filter)
+
+    def sort_sentences_by_complexity(self, complexity_measure, n_classes):
         '''
         mock implementation : sort by length
         '''
         self.__ids_by_complexity = []
         ids_sorted_by_sentence_length = sorted(self.processed_sentences.keys(), key=
-                                                    lambda key : len(self.processed_sentences[key].split()))
+                                                    lambda key : complexity_measure(self.processed_sentences[key]))
         class_size = len(self.processed_sentences) // n_classes
         for i in range(n_classes):
             self.__ids_by_complexity.append(ids_sorted_by_sentence_length[
@@ -150,31 +159,31 @@ class CNLVRDataSet:
         return
 
     def choose_levels_for_curriculum_learning(self, levels):
-        if levels is None:
-            self.__ids = [k for k in self.original_sentences.keys()]
-
         self.__ids = [idx for idx in set(ind for level in levels for ind in self.__ids_by_complexity[level])]
-        self.__num_examples = len(self.__ids)
 
-
-
+    def restart(self):
+        self.__ids = [k for k in self.original_sentences.keys()]
 
     def next_batch(self,batch_size):
-        start = self._index_in_epoch
-        if start == 0:
+
+        if self._index_in_epoch  == 0:
             np.random.shuffle(self.__ids)  # shuffle index
 
+        start = self._index_in_epoch
         # go to the next batch
-        elif start + batch_size > self.__num_examples:
-            self.epochs_completed += 1
-            self._index_in_epoch=0
-            return  self.next_batch(batch_size)
-
+        if start + batch_size > self.num_examples:
+            batch_size = self.num_examples - start
 
         self._index_in_epoch += batch_size
         end = self._index_in_epoch
         indices = self.__ids[start : end]
-        return [(self.processed_sentences[k], self.get_samples_by_sentence_id(k)) for k in indices]
+        batch = {k: (self.processed_sentences[k], self.get_samples_by_sentence_id(k)) for k in indices}
+
+        if end == self.num_examples:
+            self.epochs_completed +=1
+            self._index_in_epoch = 0
+
+        return batch
 
 
 def generate_new_samples(dataset, sentence_id):
@@ -219,11 +228,5 @@ class SupervisedParsing:
         end = self._index_in_epoch
         indices = self.__ids[start : end]
         return [(self.examples[k][0], self.examples[k][1]) for k in indices]
-
-
-
-
-
-
 
 
