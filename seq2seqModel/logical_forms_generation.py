@@ -19,6 +19,8 @@ PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pars
 LOGICAL_TOKENS_EMBEDDINGS_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_embeddings')
 MAX_LENGTH = 35
 
+USE_PARAPHRASING = False
+
 TokenTypes = namedtuple('TokenTypes', ['return_type', 'args_types', 'necessity'])
 
 def get_probs_from_file(path):
@@ -154,6 +156,7 @@ class PartialProgram:
         self.vars_in_use = {}
         self.logprob = 0
         self.logical_tokens_mapping = lt_mapping
+        self.stack_history = []
 
 
     def __repr__(self):
@@ -180,6 +183,7 @@ class PartialProgram:
         pp_copy.token_seq = self.token_seq.copy()
         pp_copy.vars_in_use = self.vars_in_use.copy()
         pp_copy.logprob = self.logprob
+        pp_copy.stack_history = self.stack_history.copy()
         return pp_copy
 
     def get_possible_continuations(self):
@@ -189,15 +193,20 @@ class PartialProgram:
                 return []
             return ["<EOS>"]  # end of decoding
 
+
+        if len(self.token_seq) >= 3 and all(tok == self.token_seq[-1] for tok in self.token_seq[-3:]):
+            return []
+
+        if len(self.stack) >4:
+            return []
+
+
         next_type = self.stack[-1]
         # the next token must have a return type that matches next_type or to be itself an instance of next_type
         # for example, if next_type is 'int' than the next token can be an integer literal, like '2', or the name
         # of a functions that has return type int, like 'count'.
 
-        for var, (type_of_var, idx) in [kvp for kvp in self.vars_in_use.items()]:
-            # after popping the stack, check whether one of the added variables is no longer in scope.
-            if len(self.stack) <= idx:
-                del self.vars_in_use[var]
+
 
         if next_type.startswith("bool_func"):
             # in that case there is no choice - the only valid token is 'lambda'
@@ -219,25 +228,36 @@ class PartialProgram:
             possible_continuations.extend([var for var, (type_of_var, idx) in  self.vars_in_use.items()
                                            if check_types(next_type, type_of_var.return_type)])
 
-            impossible_continuations = []
-            if self.token_seq and self.token_seq[-1] in self.logical_tokens_mapping:
-                last = self.token_seq[-1]
-                if str.isdigit(last):
-                    impossible_continuations.extend([str(i) for i in range(10)])
-                last_return_type, last_args_types, _ = self.logical_tokens_mapping[last]
-                if len(last_args_types)==1 and last_args_types[0].startswith('set'):
-                    impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
-                     if not v[1]])
-
-
+            impossible_continuations = self.__get_impossible_continuations()
             return [c for c in possible_continuations if c not in impossible_continuations]
+
+
+
+    def __get_impossible_continuations(self):
+        impossible_continuations = []
+        if self.token_seq and self.token_seq[-1] in self.logical_tokens_mapping:
+            last = self.token_seq[-1]
+            # if str.isdigit(last):
+            # impossible_continuations.extend([str(i) for i in range(10)])
+            last_return_type, last_args_types, _ = self.logical_tokens_mapping[last]
+            if len(last_args_types) == 1 and last_args_types[0].startswith('set'):
+                impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
+                                                               if not v.args_types])
+            if not last_args_types:
+                impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
+                                                              if not v.args_types and v.return_type == last_return_type])
+            if len(self.stack)==3:
+                impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
+                                                if len(v.args_types)>1])
+
+        return impossible_continuations
 
 
     def add_token(self, token, logprob):
         if len(self.stack)==0:
             if token == '<EOS>':
                 self.token_seq.append(token)
-                return
+                return True
             else:
                 raise ValueError("cannot add token {} to program: stack is empty".format(token))
         next_type = self.stack.pop()
@@ -266,7 +286,19 @@ class PartialProgram:
                              token_args_types[::-1]]
             self.stack.extend(args_to_stack)
 
+        for var, (type_of_var, idx) in [kvp for kvp in self.vars_in_use.items()]:
+        # after popping the stack, check whether one of the added variables is no longer in scope.
+            if len(self.stack) <= idx:
+                if var in self.token_seq:
+                    del self.vars_in_use[var]
+                else:
+                    return False
+                break
+
+
         self.logprob += logprob
+        self.stack_history.append(tuple(self.stack))
+        return True
 
 def get_formalized_sentence(sentence):
     '''
@@ -424,3 +456,6 @@ def numbers_contained(string):
         if char.isdigit():
             nums.append(char)
     return nums
+
+def update_programs_cache(cached_programs, sentence, prog, reward):
+    pass

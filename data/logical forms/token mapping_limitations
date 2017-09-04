@@ -76,7 +76,7 @@ gt	2	int int	bool	: less
 
 equal_int	2	int int	bool
 
-equal	2	set<Color>|set<Shape> set<Color>|set<Shape> bool
+equal	2	? ?  bool
 
 get_box_inclusive	1	Item	set<Item>
 
