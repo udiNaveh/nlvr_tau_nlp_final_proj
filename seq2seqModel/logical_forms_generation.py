@@ -19,9 +19,7 @@ PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pars
 LOGICAL_TOKENS_EMBEDDINGS_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_embeddings')
 MAX_LENGTH = 35
 
-
 TokenTypes = namedtuple('TokenTypes', ['return_type', 'args_types', 'necessity'])
-
 
 def get_probs_from_file(path):
     token_seqs = []
@@ -269,7 +267,6 @@ class PartialProgram:
             self.stack.extend(args_to_stack)
 
         self.logprob += logprob
-
 
 def get_formalized_sentence(sentence):
     '''
