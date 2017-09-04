@@ -165,20 +165,24 @@ class CNLVRDataSet:
         self.__ids = [k for k in self.original_sentences.keys()]
 
     def next_batch(self,batch_size):
-        start = self._index_in_epoch
-        if start == 0:
+
+        if self._index_in_epoch  == 0:
             np.random.shuffle(self.__ids)  # shuffle index
 
+        start = self._index_in_epoch
         # go to the next batch
-        elif start + batch_size > self.num_examples:
-            self.epochs_completed += 1
-            self._index_in_epoch=0
-            return  self.next_batch(batch_size)
+        if start + batch_size > self.num_examples:
+            batch_size = self.num_examples - start
 
         self._index_in_epoch += batch_size
         end = self._index_in_epoch
         indices = self.__ids[start : end]
         batch = {k: (self.processed_sentences[k], self.get_samples_by_sentence_id(k)) for k in indices}
+
+        if end == self.num_examples:
+            self.epochs_completed +=1
+            self._index_in_epoch = 0
+
         return batch
 
 

@@ -19,6 +19,7 @@ PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pars
 LOGICAL_TOKENS_EMBEDDINGS_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_embeddings')
 MAX_LENGTH = 35
 
+USE_PARAPHRASING = False
 
 TokenTypes = namedtuple('TokenTypes', ['return_type', 'args_types', 'necessity'])
 
@@ -191,15 +192,15 @@ class PartialProgram:
                 return []
             return ["<EOS>"]  # end of decoding
 
+        if len(self.token_seq)>3 and all(tok ==  self.token_seq[-1] for tok in self.token_seq[-4:]):
+            return []
+
+
         next_type = self.stack[-1]
         # the next token must have a return type that matches next_type or to be itself an instance of next_type
         # for example, if next_type is 'int' than the next token can be an integer literal, like '2', or the name
         # of a functions that has return type int, like 'count'.
 
-        for var, (type_of_var, idx) in [kvp for kvp in self.vars_in_use.items()]:
-            # after popping the stack, check whether one of the added variables is no longer in scope.
-            if len(self.stack) <= idx:
-                del self.vars_in_use[var]
 
         if next_type.startswith("bool_func"):
             # in that case there is no choice - the only valid token is 'lambda'
@@ -221,25 +222,35 @@ class PartialProgram:
             possible_continuations.extend([var for var, (type_of_var, idx) in  self.vars_in_use.items()
                                            if check_types(next_type, type_of_var.return_type)])
 
-            impossible_continuations = []
-            if self.token_seq and self.token_seq[-1] in self.logical_tokens_mapping:
-                last = self.token_seq[-1]
-                if str.isdigit(last):
-                    impossible_continuations.extend([str(i) for i in range(10)])
-                last_return_type, last_args_types, _ = self.logical_tokens_mapping[last]
-                if len(last_args_types)==1 and last_args_types[0].startswith('set'):
-                    impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
-                     if not v[1]])
-
-
+            impossible_continuations = self.__get_impossible_continuations()
             return [c for c in possible_continuations if c not in impossible_continuations]
+
+
+
+    def __get_impossible_continuations(self):
+        impossible_continuations = []
+        if self.token_seq and self.token_seq[-1] in self.logical_tokens_mapping:
+            last = self.token_seq[-1]
+            # if str.isdigit(last):
+            #     impossible_continuations.extend([str(i) for i in range(10)])
+            last_return_type, last_args_types, _ = self.logical_tokens_mapping[last]
+            if len(last_args_types) == 1 and last_args_types[0].startswith('set'):
+                impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
+                                                 if not v.args_types])
+            if not last_args_types:
+                impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
+                                                 if not v.args_types and v.return_type==last_return_type])
+
+
+
+        return impossible_continuations
 
 
     def add_token(self, token, logprob):
         if len(self.stack)==0:
             if token == '<EOS>':
                 self.token_seq.append(token)
-                return
+                return True
             else:
                 raise ValueError("cannot add token {} to program: stack is empty".format(token))
         next_type = self.stack.pop()
@@ -268,7 +279,26 @@ class PartialProgram:
                              token_args_types[::-1]]
             self.stack.extend(args_to_stack)
 
+            for var, (type_of_var, idx) in [kvp for kvp in self.vars_in_use.items()]:
+                # after popping the stack, check whether one of the added variables is no longer in scope.
+                if len(self.stack) <= idx:
+                    if var in self.token_seq:
+                        del self.vars_in_use[var]
+                    else:
+                        return False
+                    break
+
         self.logprob += logprob
+        return True
+
+    ### paraphrasing methods
+
+    def var_used(self, var):
+        lambda_token = 'lambda_{0}_:'.format(var)
+        lambda_index = self.token_seq.index(lambda_token)
+        return var in self.token_seq
+
+
 
 
 def get_formalized_sentence(sentence):
@@ -342,3 +372,10 @@ def get_formlized_sentence_and_docding(sentence, program, patterns_dict):
     formalized_sentence, formalized_decoding = [], []
 
     return formalized_sentence, formalized_decoding
+
+
+def update_programs_cache(patterns_dict, sentence, program, reward):
+    # TODO: OMER!
+    pass
+
+
