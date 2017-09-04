@@ -382,13 +382,13 @@ def get_formlized_sentence_and_decoding(sentence, program, patterns_dict):
         formalized_sentence = formalized_sentence.replace(exp, replacement)
     formalized_sentence = formalized_sentence.strip()
 
-    log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
-                'exactly': 'equal_int', 'at least': 'ge', 'at most': 'le', 'triangle': 'triangle',
-                'circle': 'circle', 'square': 'square', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
-                '7': '7', '1': '1', 'one': '1'}
+    log_dict = {' yellow ': 'yellow', ' blue ': 'blue', ' black ': 'black', ' top ': ' top ', ' bottom ': 'bottom',
+                ' exactly ': 'equal_int', ' at least ': 'ge', ' at most ': 'le', ' triangle ': 'triangle',
+                ' circle ': 'circle', ' square ': 'square', ' 2 ': '2', ' 3 ': '3', ' 4 ': '4', ' 5 ': '5', ' 6 ': '6',
+                ' 7 ': '7', ' 1 ': '1', ' one ': '1'}
 
     for exp, replacement in temp_dict:
-        formalized_program = formalized_program.replace(log_dict[exp], replacement)
+        formalized_program = formalized_program.replace(log_dict[exp], replacement.strip())
     formalized_program = formalized_program.strip()
 
     patterns_dict[formalized_sentence] = formalized_program
