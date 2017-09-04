@@ -19,7 +19,6 @@ PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pars
 LOGICAL_TOKENS_EMBEDDINGS_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_embeddings')
 MAX_LENGTH = 35
 
-USE_PARAPHRASING = False
 
 TokenTypes = namedtuple('TokenTypes', ['return_type', 'args_types', 'necessity'])
 
@@ -192,15 +191,15 @@ class PartialProgram:
                 return []
             return ["<EOS>"]  # end of decoding
 
-        if len(self.token_seq)>3 and all(tok ==  self.token_seq[-1] for tok in self.token_seq[-4:]):
-            return []
-
-
         next_type = self.stack[-1]
         # the next token must have a return type that matches next_type or to be itself an instance of next_type
         # for example, if next_type is 'int' than the next token can be an integer literal, like '2', or the name
         # of a functions that has return type int, like 'count'.
 
+        for var, (type_of_var, idx) in [kvp for kvp in self.vars_in_use.items()]:
+            # after popping the stack, check whether one of the added variables is no longer in scope.
+            if len(self.stack) <= idx:
+                del self.vars_in_use[var]
 
         if next_type.startswith("bool_func"):
             # in that case there is no choice - the only valid token is 'lambda'
@@ -222,35 +221,25 @@ class PartialProgram:
             possible_continuations.extend([var for var, (type_of_var, idx) in  self.vars_in_use.items()
                                            if check_types(next_type, type_of_var.return_type)])
 
-            impossible_continuations = self.__get_impossible_continuations()
+            impossible_continuations = []
+            if self.token_seq and self.token_seq[-1] in self.logical_tokens_mapping:
+                last = self.token_seq[-1]
+                if str.isdigit(last):
+                    impossible_continuations.extend([str(i) for i in range(10)])
+                last_return_type, last_args_types, _ = self.logical_tokens_mapping[last]
+                if len(last_args_types)==1 and last_args_types[0].startswith('set'):
+                    impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
+                     if not v[1]])
+
+
             return [c for c in possible_continuations if c not in impossible_continuations]
-
-
-
-    def __get_impossible_continuations(self):
-        impossible_continuations = []
-        if self.token_seq and self.token_seq[-1] in self.logical_tokens_mapping:
-            last = self.token_seq[-1]
-            # if str.isdigit(last):
-            #     impossible_continuations.extend([str(i) for i in range(10)])
-            last_return_type, last_args_types, _ = self.logical_tokens_mapping[last]
-            if len(last_args_types) == 1 and last_args_types[0].startswith('set'):
-                impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
-                                                 if not v.args_types])
-            if not last_args_types:
-                impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
-                                                 if not v.args_types and v.return_type==last_return_type])
-
-
-
-        return impossible_continuations
 
 
     def add_token(self, token, logprob):
         if len(self.stack)==0:
             if token == '<EOS>':
                 self.token_seq.append(token)
-                return True
+                return
             else:
                 raise ValueError("cannot add token {} to program: stack is empty".format(token))
         next_type = self.stack.pop()
@@ -279,26 +268,7 @@ class PartialProgram:
                              token_args_types[::-1]]
             self.stack.extend(args_to_stack)
 
-            for var, (type_of_var, idx) in [kvp for kvp in self.vars_in_use.items()]:
-                # after popping the stack, check whether one of the added variables is no longer in scope.
-                if len(self.stack) <= idx:
-                    if var in self.token_seq:
-                        del self.vars_in_use[var]
-                    else:
-                        return False
-                    break
-
         self.logprob += logprob
-        return True
-
-    ### paraphrasing methods
-
-    def var_used(self, var):
-        lambda_token = 'lambda_{0}_:'.format(var)
-        lambda_index = self.token_seq.index(lambda_token)
-        return var in self.token_seq
-
-
 
 
 def get_formalized_sentence(sentence):
@@ -371,11 +341,66 @@ def get_formlized_sentence_and_docding(sentence, program, patterns_dict):
     #TODO: OMER!
     formalized_sentence, formalized_decoding = [], []
 
-    return formalized_sentence, formalized_decoding
+    if get_formalized_sentence(sentence) in patterns_dict:
+        return patterns_dict[get_formalized_sentence(sentence)]
 
+    # building replacements "dictionary" (it is actually a list of tuples)
+    formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
+    dict = load_dict_from_txt(formalization_file)
+    for i in range(2,10):
+        dict[str(i)] = 'T_INT'
+    dict["1"] = 'T_ONE'
+    dict["one"] = 'T_ONE'
+    manualy_chosen_replacements = sorted(dict.items(), key = lambda kvp : len(kvp[0].split()), reverse=True)
+    manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
+    formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
+    formalized_program = " {} ".format(program)  # pad with whitespaces
 
-def update_programs_cache(patterns_dict, sentence, program, reward):
-    # TODO: OMER!
-    pass
+    words = sentence.split()
+    tokens = program.split()
 
+    # # building a temporary dictionary, per sentence
+    # temp_dict = {}
+    # for word in words:
+    #     if word in dict and word not in temp_dict:
+    #         temp_dict[word] = dict[word]
+    #     elif word in dict and word in temp_dict:
+    #         temp_dict[word] = dict[word] + '_1'
+    # for i, _ in enumerate(words):
+    #     if words[i] in temp_dict:
 
+    # reminder: exp = yellow, replacement = T_COLOR
+    temp_dict = {}
+    for exp, replacement in manualy_chosen_replacements:
+        if exp in formalized_sentence and exp not in temp_dict:
+            temp_dict[exp] = replacement
+        elif exp in formalized_sentence and replacement in temp_dict.values():
+            temp_dict[exp] = replacement.rstrip() + '_1 '
+        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_1 ') in temp_dict.values():
+            temp_dict[exp] = replacement.rstrip() + '_2 '
+    temp_dict = [(k, temp_dict[k]) for k in temp_dict]
+
+    for exp, replacement in temp_dict:
+        formalized_sentence = formalized_sentence.replace(exp, replacement)
+    formalized_sentence = formalized_sentence.strip()
+
+    log_dict = {' yellow ': 'yellow', ' blue ': 'blue', ' black ': 'black', ' top ': ' top ', ' bottom ': 'bottom',
+                ' exactly ': 'equal_int', ' at least ': 'ge', ' at most ': 'le', ' triangle ': 'triangle',
+                ' circle ': 'circle', ' square ': 'square', ' 2 ': '2', ' 3 ': '3', ' 4 ': '4', ' 5 ': '5', ' 6 ': '6',
+                ' 7 ': '7', ' 1 ': '1', ' one ': '1'}
+
+    for exp, replacement in temp_dict:
+        formalized_program = formalized_program.replace(log_dict[exp], replacement.strip())
+    formalized_program = formalized_program.strip()
+
+    patterns_dict[formalized_sentence] = formalized_program
+
+    return formalized_sentence, formalized_program
+
+def numbers_contained(string):
+
+    nums = []
+    for char in string:
+        if char.isdigit():
+            nums.append(char)
+    return nums
