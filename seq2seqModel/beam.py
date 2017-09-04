@@ -97,12 +97,6 @@ def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens
     beam = [PartialProgram(logical_tokens_mapping)]
     # create a beam of possible programs for sentence, the iteration continues while there are unfinished programs in beam and t < max_beam_steps
 
-    suggested_partial_progs = []
-    for prog in suggested_progs:
-        spp, _ = program_from_token_sequence(next_token_probs_getter, prog, logical_tokens_mapping,
-                                             original_sentence=original_sentence)
-        suggested_partial_progs.append(spp)
-
     for t in range(max_decoding_steps):
         # t steps in the beam search
 
