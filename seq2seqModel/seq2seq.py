@@ -11,7 +11,7 @@ from seq2seqModel.beam import *
 from general_utils import increment_count, union_dicts
 import definitions
 import time
-import pandas as pd
+#import pandas as pd
 
 #paths
 
@@ -575,7 +575,7 @@ def run_inference(sess, data, load_params, clf=None):
     logical_tokens_embeddings_dict = \
         {token: current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens_ids}
 
-    beam_training_set = pd.DataFrame(columns=[col for col in range(len(features_vec)+1)]) ### TODO create dataframe
+    #beam_training_set = pd.DataFrame(columns=[col for col in range(len(features_vec)+1)]) ### TODO create dataframe
 
     for sample in data.samples.values():
         if total % 10 == 0:
@@ -604,11 +604,11 @@ def run_inference(sess, data, load_params, clf=None):
                 # execute program and get reward is result is same as the label
                 exe = execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
 
-                if not clf:
+                #if not clf:
                     # TODO get feature vector and append label to it
-                    beam_label = 1 if exe is True else 0
-                    row = feature_vec.append(beam_label)
-                    beam_training_set.append(row,axis=0)
+                    #beam_label = 1 if exe is True else 0
+                    #row = feature_vec.append(beam_label)
+                    #beam_training_set.append(row,axis=0)
 
 
 
@@ -634,10 +634,11 @@ def run_inference(sess, data, load_params, clf=None):
     print("total accuracy for largest p in beam: %.2f" % (correct_first / total))
     print("total empty beam cases proportion: %.2f" % (empty_beam / total))
 
-    return beam_training_set
+    #return beam_training_set
+    return
 
 
-def run_beam_classifier(beam_training_set):
+#def run_beam_classifier(beam_training_set):
     # TODO
 
 
@@ -649,12 +650,12 @@ if __name__ == '__main__':
     with tf.Session() as sess:
 
         #run_supervised_training(sess,load_params_path=TRAINED_WEIGHTS_SUPERVISED,save_params_path=TRAINED_WEIGHTS_SUPERVISED)
-        start = time.time()
-        run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS_SUPERVISED, save_model_path= TRAINED_WEIGHTS_UNS)
-        finish = time.time()
-        print("elapsed time for 30 epochs: %f" % ((finish - start) / 60 / 60))
-        #data = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true=False)
+        #start = time.time()
+        #run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS_SUPERVISED, save_model_path= TRAINED_WEIGHTS_UNS)
+        #finish = time.time()
+        #print("elapsed time for 30 epochs: %f" % ((finish - start) / 60 / 60))
+        data = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true=False)
         #beam_training_set = run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS )
         #clf = run_beam_classifier(beam_training_set) #TODO
-        #run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS, clf)
+        run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS)#clf
     print("done")
