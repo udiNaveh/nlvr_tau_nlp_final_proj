@@ -3,7 +3,7 @@ from nltk.stem import WordNetLemmatizer
 import nltk.tag
 
 from definitions import *
-from general_utils import increment_count
+from general_utils import increment_count, union_count_dicts
 
 color_words = ["blue", "yellow", "black"]
 shape_words = ["circle", "triangle", "square"]
@@ -144,9 +144,12 @@ def replace_words_by_dictionary(sentences, dic):
     return sentences_with_replacements
 
 
-def replace_rare_words_with_unk(sentences):
+def replace_rare_words_with_unk(sentences, tokens_file=None):
     sentences = {k: s.split() for k, s in sentences.items()} # tokenize
-    unigrams = get_ngrams_counts(sentences.values(), 1)[0]
+    if not tokens_file:
+        unigrams = get_ngrams_counts(sentences.values(), 1)[0]
+    else:
+        unigrams = load_ngrams(tokens_file, 1)
     for k, s in sentences.items():
         sentences[k] = " ".join([w  if unigrams.get(w,0)>=MIN_COUNT else '<UNK>' for w in s])
     return sentences
@@ -184,13 +187,14 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     for dig in range(10):
         vocab.add(str(dig))
 
+    unigrams_filtered = {token : count for token, count in unigrams.items() if token in vocab}
+    bigrams_filtered =  {bigram : count for bigram, count in bigrams.items() if
+                         bigram[0] in unigrams_filtered and bigram[1] in unigrams_filtered}
+
     if mode=='r':
-        unigrams_filtered = load_ngrams(TOKEN_COUNTS, 1)
-        bigrams_filtered = load_ngrams(BIGRAM_COUNTS, 2)
-    else:
-        unigrams_filtered = {token : count for token, count in unigrams.items() if token in vocab}
-        bigrams_filtered =  {bigram : count for bigram, count in bigrams.items() if
-                             bigram[0] in unigrams_filtered and bigram[1] in unigrams_filtered}
+        unigrams_filtered = union_count_dicts(unigrams_filtered, load_ngrams(TOKEN_COUNTS, 1))
+        bigrams_filtered = union_count_dicts(bigrams_filtered, load_ngrams(BIGRAM_COUNTS, 2))
+
 
     if mode == 'w':
         pass
@@ -237,8 +241,8 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
 
     if mode == 'w':
         unigrams_checked, bigrams_checked = get_ngrams_counts(spellproofed_sentences.values(), 2)
-        #write_ngrams("tokens_spellproofed.txt", unigrams_checked)
-        #write_ngrams("bigrams_spellproofed.txt", bigrams_checked)
+        write_ngrams(TOKEN_COUNTS, unigrams_checked)
+        write_ngrams(BIGRAM_COUNTS, bigrams_checked)
 
     if processing_type=='spellproof':
         return spellproofed_ss
@@ -265,8 +269,9 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     unigrams_lemmatized, bigrams_lemmatized = get_ngrams_counts(spellproofed_sentences.values(), 2)
 
     if mode == 'w':
-        write_ngrams("tokens_lemmatized.txt", unigrams_lemmatized)
-        write_ngrams("bigrams_lemmatized.txt", bigrams_lemmatized)
+        pass
+        # write_ngrams("tokens_lemmatized.txt", unigrams_lemmatized)
+        # write_ngrams("bigrams_lemmatized.txt", bigrams_lemmatized)
 
     lemmatized_sentences =  {k: " ".join(s) for k, s in spellproofed_sentences.items()}
     if processing_type == 'lemmatize':
@@ -281,7 +286,8 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     replacements_dic = load_dict_from_txt(SYNONYMS)
     lemmatized_sentences_with_replacements = replace_words_by_dictionary(lemmatized_sentences, replacements_dic)
 
-    return  lemmatized_sentences_with_replacements
+
+    return lemmatized_sentences_with_replacements
     # notice: to replace rare words with <unk> token, run the 'replace_rare_words_with_unk' methodsh
     # on the output if this method
 

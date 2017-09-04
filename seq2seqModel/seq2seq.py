@@ -6,7 +6,7 @@ import os
 import definitions
 from seq2seqModel.utils import *
 from seq2seqModel.logical_forms_generation import *
-from handle_data import CNLVRDataSet, SupervisedParsing
+from handle_data import CNLVRDataSet, SupervisedParsing, DataSet
 from seq2seqModel.beam import *
 from general_utils import increment_count, union_dicts
 import definitions
@@ -23,6 +23,7 @@ TRAINED_WEIGHTS3 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWe
 TRAINED_UNS_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsUns','trained_variables3.ckpt')
 SENTENCES_IN_PRETRAIN_PATTERNS = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'sentences_in_pattern')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
+CACHED_PROGRAMS = os.path.join(definitions.DATA_DIR, 'cacged programs', 'logical_tokens_list')
 
 ####
 ###hyperparameters
@@ -31,8 +32,8 @@ LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logi
 #dimensions
 WORD_EMB_SIZE = 12
 LOG_TOKEN_EMB_SIZE = 12
-DECODER_HIDDEN_SIZE = 50
-LSTM_HIDDEN_SIZE = 30
+DECODER_HIDDEN_SIZE = 30
+LSTM_HIDDEN_SIZE = 50
 SENT_EMB_SIZE = 2 * LSTM_HIDDEN_SIZE
 HISTORY_LENGTH = 4
 
@@ -46,8 +47,8 @@ USE_BOW_HISTORY = False
 IRRELEVANT_TOKENS_IN_GRAD = True
 AUTOMATIC_TOKENS_IN_GRAD = False
 HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
-USE_CACHED_PROGRAMS = False
-
+USE_N_CACHED_PROGRAMS = False
+LOAD_CACHED_PROGRAMS = False
 
 def load_meta_data():
 
@@ -161,7 +162,7 @@ def get_next_token_probs(partial_program, logical_tokens_embeddings_dict, decode
     return valid_next_tokens, probs_given_valid
 
 
-def get_gradient_weights_for_beam(beam_rewarded_programs):
+def get_gradient_weights_for_programs(beam_rewarded_programs):
 
     beam_log_probs = np.array([prog.logprob for prog in beam_rewarded_programs])
     q_mml = softmax(beam_log_probs)
@@ -260,13 +261,13 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     gradBuffer = {}
 
     # load data
-    train = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true = False)
+    train = CNLVRDataSet(DataSet.TRAIN)
     #train.sort_sentences_by_complexity(4)
     #train.choose_levels_for_curriculum_learning([0,1,2,3])
     file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
     sentences_in_pattern = pickle.load(file)
     file.close()
-    train.use_subset_by_sentnce_condition(lambda s: s in sentences_in_pattern.values())
+    #train.use_subset_by_sentnce_condition(lambda s: s in sentences_in_pattern.values())
 
     #initialize gradients
     for var, grad in enumerate(gradList):
@@ -277,6 +278,12 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     num_consistent_per_sentence, beam_final_sizes, mean_program_lengths = [], [], []
     accuracy_by_prog_rank , num_consistent_by_prog_rank = {} , {}
     incorrect_parses = {}
+    if LOAD_CACHED_PROGRAMS:
+        cpf = open(CACHED_PROGRAMS, 'rb')
+        cached_programs = pickle.load(cpf)
+    else:
+         cached_programs = {}
+
     n_images = 0
     iter = 0
     start = time.time()
@@ -284,6 +291,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
         batch = train.next_batch(BATCH_SIZE_UNSUPERVISED)
         ids = [key for key in batch.keys()]
+
 
         sentences, samples = zip(*[batch[k] for k in ids])
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
@@ -305,15 +313,29 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                                                                         history_embedding_placeholder,
                                                                         token_prob_dist_tensor)
 
-            beam = e_greedy_randomized_beam_search_udi(next_token_probs_getter, logical_tokens_mapping,
+            beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
                                                    original_sentence= sentence)
+
+            beam_decodings = [prog.token_seq for prog in beam]
+
+            if USE_N_CACHED_PROGRAMS:
+                sentence_formalized = get_formalized_sentence(sentence)
+                decodings_from_cache = get_programs_for_sentence_by_pattern(cached_programs, sentence_formalized)
+                decodings_from_cache = [token_seq for token_seq in decodings_from_cache
+                                        if token_seq not in beam_decodings][:USE_N_CACHED_PROGRAMS]
+                programs_from_cache = get_multiple_programs_from_token_sequences(next_token_probs_getter,
+                                                                                 decodings_from_cache,
+                                                                                 logical_tokens_mapping,
+                                                                                 original_sentence=sentence
+                                                                                 )
+                beam = sorted(beam + programs_from_cache, key = lambda prog: -prog.logprob)
+
 
             rewarded_programs = []
 
             compiled = 0
-            correct = 0
             actual_labels = np.array([sample.label for sample in related_samples])
-            print ("{0} : {1}".format(sentence_id, sentence))
+            #print ("{0} : {1}".format(sentence_id, sentence))
             for prog_rank, prog in enumerate(beam):
                 # execute program and get reward is result is same as the label
 
@@ -332,34 +354,31 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
                 increment_count(accuracy_by_prog_rank, prog_rank, sum(execution_results==actual_labels))
 
-                correct+=reward
-
                 if reward>0:
                     increment_count(num_consistent_by_prog_rank, prog_rank)
-                    correct_beam_parses.write(sentence +"\n")
-                    correct_beam_parses.write(" ".join(prog.token_seq)+"\n")
+                    #correct_beam_parses.write(sentence +"\n")
+                    #correct_beam_parses.write(" ".join(prog.token_seq)+"\n")
                     rewarded_programs.append(prog)
 
-            #print("beam size = {0}, {1} programs compiled, {2} correct".format(len(beam), compiled, correct))
-
-            #print("beam, compliled, correct = {0} /{1} /{2}".format(len(beam),compiled ,correct))
+                if USE_N_CACHED_PROGRAMS:
+                    update_programs_cache(cached_programs, sentence, prog, reward)
 
             if beam:
                 mean_program_lengths.append(np.mean([len(pp) for pp in beam]))
 
             else:
-                # if bean is empty predict True for each image
+                # if beam is empty predict True for each image
                 for k in accuracy_by_prog_rank.keys():
                     increment_count(accuracy_by_prog_rank, k, np.count_nonzero(actual_labels))
 
 
-            num_consistent_per_sentence.append(correct)
+            num_consistent_per_sentence.append(len(rewarded_programs))
             beam_final_sizes.append(len(beam))
 
             if not rewarded_programs:
                 continue
 
-            programs_gradient_weights = get_gradient_weights_for_beam(rewarded_programs)
+            programs_gradient_weights = get_gradient_weights_for_programs(rewarded_programs)
 
             for idx, program in enumerate(rewarded_programs):
                 program_dependent_feed_dict = \
@@ -425,9 +444,6 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
     program_dependent_placeholders = (history_embedding_placeholder,
                                       chosen_logical_tokens,
                                       invalid_logical_tokens_mask)
-
-
-
 
     logits = tf.transpose(token_unnormalized_dist) # + invalid_logical_tokens_mask
 
@@ -496,13 +512,15 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
                                                                         token_prob_dist_tensor)
 
             golden_parsing = labels[step].split()
-            golden_program, (valid_tokens_history, greedy_choices) = \
-                program_from_token_sequence(next_token_probs_getter, golden_parsing, logical_tokens_mapping)
+            try:
+                golden_program, (valid_tokens_history, greedy_choices) = \
+                    program_from_token_sequence(next_token_probs_getter, golden_parsing, logical_tokens_mapping)
+            except(ValueError) as ve:
+                continue
+
             epoch_log_prob.append(golden_program.logprob)
             no_real_choice_indices = [i for i in range(len(golden_parsing))if len(valid_tokens_history[i])==1]
             skipped = [] if AUTOMATIC_TOKENS_IN_GRAD else no_real_choice_indices
-
-
 
             program_dependent_feed_dict = get_feed_dicts_from_program(golden_program,
                                                                       logical_tokens_embeddings_dict,
@@ -628,10 +646,15 @@ def run_inference(sess, data, load_params):
 TRAINED_WEIGHTS_SUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables2.ckpt')
 if __name__ == '__main__':
     with tf.Session() as sess:
+        run_supervised_training(sess)
         start = time.time()
         run_unsupervised_training(sess, load_params_path= TRAINED_WEIGHTS3, save_model_path= TRAINED_UNS_WEIGHTS)
         finish = time.time()
         print("elapsed time for 30 ephocs: %s" % (time.strftime("%H%M%S", time.localtime(finish - start))))
-        data = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true=False)
-        run_inference(sess, data, load_params=TRAINED_UNS_WEIGHTS )
+        train = CNLVRDataSet(DataSet.TRAIN)
+        run_inference(sess, train, load_params=TRAINED_UNS_WEIGHTS )
+        dev = CNLVRDataSet(DataSet.DEV)
+        run_inference(sess, dev, load_params=TRAINED_UNS_WEIGHTS )
+        test = CNLVRDataSet(DataSet.TEST)
+        run_inference(sess, test, load_params=TRAINED_UNS_WEIGHTS )
     print("done")
