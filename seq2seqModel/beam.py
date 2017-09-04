@@ -32,7 +32,6 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
         #     beam.extend(sampled_prefixes)
         continuations = {}
 
-
         for partial_program in beam:
             BP= False
             while skip_autotokens:

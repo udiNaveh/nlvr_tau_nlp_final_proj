@@ -139,6 +139,11 @@ def build_batchGrad():
 
 def get_next_token_probs(partial_program, logical_tokens_embeddings_dict, decoder_feed_dict, history_embedding_tensor,
                          token_prob_dist):
+    valid_next_tokens = partial_program.get_possible_continuations()
+
+    if len(valid_next_tokens)==1:
+        return valid_next_tokens, [1.0]
+
     history_tokens = ['<s>' for _ in range(HISTORY_LENGTH - len(partial_program))] + \
                      partial_program[-HISTORY_LENGTH:]
 
@@ -155,8 +160,6 @@ def get_next_token_probs(partial_program, logical_tokens_embeddings_dict, decode
     if (np.count_nonzero(current_probs) != len(current_probs)):
         print("zero prob")
 
-
-    valid_next_tokens = partial_program.get_possible_continuations()
     probs_given_valid = [1.0] if len(valid_next_tokens) == 1 else \
         [current_probs[logical_tokens_ids[next_tok]] for next_tok in valid_next_tokens]
     probs_given_valid = probs_given_valid / np.sum(probs_given_valid)
@@ -267,8 +270,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     gradBuffer = {}
 
     # load data
-    train = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true = False)
-    train.sort_sentences_by_complexity(4)
+    train = CNLVRDataSet(DataSet.DEV)
     #train.choose_levels_for_curriculum_learning([0,1,2,3])
     # file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
     # sentences_in_pattern = pickle.load(file)
@@ -280,7 +282,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
         gradBuffer[var] = grad*0
     batch_num = 1
     total_correct = 0
-    #top_beam = open("top beam result test unlimited.txt ", 'w')
+    top_beam = open("top beam result train.txt ", 'w')
     num_consistent_per_sentence, beam_final_sizes, mean_program_lengths = [], [], []
     accuracy_by_prog_rank , num_consistent_by_prog_rank = {} , {}
     incorrect_parses = {}
@@ -295,6 +297,8 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     start = time.time()
 
     epochs_completed = 0
+    stack_max_lengths =[0]*10
+    stack_max_lengths_top_prob = [0] * 10
     while train.epochs_completed < 1:
 
         batch = train.next_batch(BATCH_SIZE_UNSUPERVISED)
@@ -349,7 +353,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
             compiled = 0
             actual_labels = np.array([sample.label for sample in related_samples])
-            #top_beam.write("{0} : {1}".format(sentence_id, sentence) +'\n')
+            top_beam.write("{0} : {1}".format(sentence_id, sentence) +'\n')
             for prog_rank, prog in enumerate(beam):
                 # execute program and get reward is result is same as the label
 
@@ -362,9 +366,12 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                         execution_results[i] = True
                 reward = 1 if all(execution_results==actual_labels) else 0
                 if prog_rank<5:
-                    #top_beam.write("{0} {1} {2} ".format(prog_rank, prog, 'correct' if reward else 'incorrect') + '\n')
-                    if prog_rank==0 and not reward:
-                        incorrect_parses[sentence_id] = (sentence, prog)
+                    top_beam.write("{0} {1} {2} ".format(prog_rank, prog, 'correct' if reward else 'incorrect') + '\n')
+                    if prog_rank==0 :
+                        if reward:
+                            stack_max_lengths_top_prob[max([len(stack) for stack in prog.stack_history])]+=1
+                        else:
+                            incorrect_parses[sentence_id] = (sentence, prog)
 
                 increment_count(accuracy_by_prog_rank, prog_rank, sum(execution_results==actual_labels))
 
@@ -373,6 +380,8 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                     #correct_beam_parses.write(sentence +"\n")
                     #correct_beam_parses.write(" ".join(prog.token_seq)+"\n")
                     rewarded_programs.append(prog)
+                    stack_max_lengths[max([len(stack) for stack in prog.stack_history])]+=1
+
 
                 if USE_N_CACHED_PROGRAMS:
                     update_programs_cache(cached_programs, sentence, prog, reward)
@@ -425,7 +434,9 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                 print ('programs ranked {0} in beam had so far {1} correct answers out of {2} samples'.format(k,v, n_images))
             for k,v in sorted(num_consistent_by_prog_rank.items(), key= lambda kvp : kvp[1], reverse=True)[:1]:
                 print ('programs ranked {0} in beam had so far {1} consistent parses out of {2} sentences'.format(k,v, iter))
-
+            print("len stack")
+            print(stack_max_lengths)
+            print(stack_max_lengths_top_prob)
         if epoch_finished:
             batch_num=0
         batch_num += 1
@@ -688,10 +699,10 @@ if __name__ == '__main__':
 
         #run_supervised_training(sess,load_params_path=TRAINED_WEIGHTS_SUPERVISED,save_params_path=TRAINED_WEIGHTS_SUPERVISED)
         #start = time.time()
-        #run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS_SUPERVISED, save_model_path= TRAINED_WEIGHTS_UNS)
+        run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS3)
         #finish = time.time()
         #print("elapsed time for 30 epochs: %f" % ((finish - start) / 60 / 60))
-        data = CNLVRDataSet(definitions.TRAIN_JSON, ignore_all_true=False)
+        data = CNLVRDataSet(DataSet.TRAIN)
         #beam_training_set = run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS )
         #clf = run_beam_classifier(beam_training_set) #TODO
         run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS)#clf
