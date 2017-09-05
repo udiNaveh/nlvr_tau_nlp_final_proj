@@ -490,7 +490,7 @@ def numbers_contained(string):
     return nums
 
 
-def update_programs_cache(cached_programs, sentence, prog, reward):
+def update_programs_cache(cached_programs, sentence, prog, n_correct, n_incorrect):
     '''
     :param sentence: 'there is a yellow item'
     :param program: exist filter ALL_ITEMS lambda_x_: is_yellow x
@@ -539,9 +539,15 @@ def update_programs_cache(cached_programs, sentence, prog, reward):
     formalized_program = formalized_program.replace('$', '1')
 
     if formalized_program not in matching_cached_patterns:
-        matching_cached_patterns[formalized_program] = 0
+        matching_cached_patterns[formalized_program] = [0,0]
 
-    matching_cached_patterns[formalized_program] += reward
+    matching_cached_patterns[formalized_program][0] + n_correct
+    matching_cached_patterns[formalized_program][1] + n_incorrect
+
+    if (matching_cached_patterns[formalized_program][0] + 1) / (matching_cached_patterns[formalized_program][1]
+                                                          +0.1) < 3:
+        del matching_cached_patterns [formalized_program]
+    return
 
 def get_ands(pp : PartialProgram):
     ind = -1

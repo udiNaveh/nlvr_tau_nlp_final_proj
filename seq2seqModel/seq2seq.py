@@ -40,7 +40,7 @@ HISTORY_LENGTH = 4
 
 #other hyper parameters
 LEARNING_RATE = 0.001
-BETA = 1
+BETA = 0.5
 
 BATCH_SIZE_UNSUPERVISED = 8
 BATCH_SIZE_SUPERVISED = 10
@@ -48,7 +48,7 @@ USE_BOW_HISTORY = False
 IRRELEVANT_TOKENS_IN_GRAD = True
 AUTOMATIC_TOKENS_IN_GRAD = False
 HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
-USE_N_CACHED_PROGRAMS = False
+USE_N_CACHED_PROGRAMS = 10
 LOAD_CACHED_PROGRAMS = False
 
 def load_meta_data():
@@ -271,6 +271,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
     # load data
     train = CNLVRDataSet(DataSet.TRAIN)
+    train.ignore_all_true_samples()
     #train.choose_levels_for_curriculum_learning([0,1,2,3])
     # file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
     # sentences_in_pattern = pickle.load(file)
@@ -283,7 +284,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
         gradBuffer[var] = grad*0
     batch_num = 1
     total_correct = 0
-    top_beam = open("top beam result train after uns prunning.txt ", 'w')
+    top_beam = open("top beam result train learning.txt ", 'w')
     num_consistent_per_sentence, beam_final_sizes, beam_final_sizes_before, mean_program_lengths = [], [], [], []
     accuracy_by_prog_rank , num_consistent_by_prog_rank = {} , {}
     incorrect_parses = {}
@@ -335,7 +336,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                                                                         token_prob_dist_tensor)
 
             beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
-                                                   original_sentence=sentence,  epsilon = 0)
+                                                   original_sentence=sentence,  epsilon = 0.5)
 
             beam_decodings = [" ".join(prog.token_seq) for prog in beam]
             beam_length_before = len(beam)
@@ -357,22 +358,21 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
             rewarded_programs = []
 
-            compiled = 0
+
             actual_labels = np.array([sample.label for sample in related_samples])
             top_beam.write("{0} : {1}".format(sentence_id, sentence) +'\n')
             for prog_rank, prog in enumerate(beam):
                 # execute program and get reward is result is same as the label
 
-
-
                 execution_results = np.array([execute(prog.token_seq,sample.structured_rep,logical_tokens_mapping)
                                      for sample in related_samples])
 
-                compiled+= sum(res is not None for res in execution_results)
+                compiled = all(res is not None for res in execution_results)
                 for i in range(len(execution_results)):
                     if execution_results[i] is None:
                         execution_results[i] = True
                 reward = 1 if all(execution_results==actual_labels) else 0
+                n_correct = sum(execution_results==actual_labels)
                 if prog_rank<5:
                     top_beam.write("{0} {1} {2} ".format(prog_rank, prog, 'correct' if reward else 'incorrect') + '\n')
                     if prog_rank==0 :
@@ -381,23 +381,20 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                         else:
                             incorrect_parses[sentence_id] = (sentence, prog)
 
-                increment_count(accuracy_by_prog_rank, prog_rank, sum(execution_results==actual_labels))
+                increment_count(accuracy_by_prog_rank, prog_rank, n_correct)
 
                 if reward>0:
                     increment_count(num_consistent_by_prog_rank, prog_rank)
                     #correct_beam_parses.write(sentence +"\n")
                     #correct_beam_parses.write(" ".join(prog.token_seq)+"\n")
                     rewarded_programs.append(prog)
-
-
-
                     stack_max_lengths[max([len(stack) for stack in prog.stack_history])]+=1
                     prog_str = " ".join(prog.token_seq)
                     increment_count(all_consistent_decodings[sentence_id], prog_str)
 
-
-                    if USE_N_CACHED_PROGRAMS:
-                        update_programs_cache(cached_programs, sentence, prog, reward)
+                if USE_N_CACHED_PROGRAMS:
+                    if (reward and compiled) or prog in programs_from_cache:
+                        update_programs_cache(cached_programs, sentence, prog, n_correct, len(actual_labels) - n_correct)
 
             if beam:
                 mean_program_lengths.append(np.mean([len(pp) for pp in beam]))
@@ -463,9 +460,8 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
         for var, grad in enumerate(gradBuffer):
             gradBuffer[var] = gradBuffer[var]*0
 
-        if save_model_path and train.epochs_completed % 4 == 3:
-            saver2.save(sess, save_model_path, global_step=4,write_meta_graph=False)
-            prev_epoch = train.epochs_completed
+        if save_model_path and epochs_completed:
+            saver2.save(sess, save_model_path, global_step=1,write_meta_graph=False)
             print("saved epoch %d" % train.epochs_completed)
 
     # with open("sentences decodings.txt ", 'w') as decs:
@@ -675,7 +671,7 @@ def run_inference(sess, data, load_params, clf=None):
                                                                         token_prob_dist_tensor)
 
             beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
-                                                   original_sentence= sentence)
+                                                   original_sentence= sentence, epsilon=0.0)
 
             execution_results = []
 
@@ -725,18 +721,21 @@ def run_inference(sess, data, load_params, clf=None):
 TRAINED_WEIGHTS_SUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup.ckpt')
 TRAINED_WEIGHTS_UNS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsUns','trained_variables_unsup.ckpt')
 TRAINED_WEIGHTS_UNSUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup.ckpt-4')
+TRAINED_WEIGHTS_UNSUPERVISED_2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_unsup_2.ckpt')
+TRAINED_WEIGHTS_SUP_CHECK = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check.ckpt')
+
 if __name__ == '__main__':
     #tf.reset_default_graph()
     with tf.Session() as sess:
 
         #run_supervised_training(sess,load_params_path=TRAINED_WEIGHTS_SUPERVISED,save_params_path=TRAINED_WEIGHTS_SUPERVISED)
         #start = time.time()
-        #run_supervised_training(sess)
-        run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS_UNSUPERVISED)
+        run_supervised_training(sess, save_model_path = TRAINED_WEIGHTS_SUP_CHECK)
+        #run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS_UNSUPERVISED, save_model_path=TRAINED_WEIGHTS_UNSUPERVISED_2)
         #finish = time.time()
         #print("elapsed time for 30 epochs: %f" % ((finish - start) / 60 / 60))
-        #data = CNLVRDataSet(DataSet.DEV)
+        data = CNLVRDataSet(DataSet.DEV)
         #beam_training_set = run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS )
         #clf = run_beam_classifier(beam_training_set) #TODO
-        #run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS)#clf
+        run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNSUPERVISED)#clf
     print("done")
