@@ -12,7 +12,7 @@ for line in i:
         continue
     elif line.startswith('~'):
         value = line[2:].rstrip()
-        dict[key][value] = None
+        dict[key][value] = 1
     else:
         continue
     # if key not in dict:
@@ -24,9 +24,9 @@ o.close()
 dict = pickle.load(open('patterns_dict', 'rb'))
 
 sent = 'there is 1 yellow item, 1 blue item and one black item'
-program = 'and and exist filter ALL_ITEMS lambda_x_: is_yellow x exist filter ALL_ITEMS lambda_y_: is_blue y exist filter ALL_ITEMS lambda_z_: is_black z'
+program = 'AND AND exist filter ALL_ITEMS lambda_x_: is_yellow x exist filter ALL_ITEMS lambda_y_: is_blue y exist filter ALL_ITEMS lambda_z_: is_black z'
 sent2 = 'each box have at least 1 blue item'
-print(get_formalized_sentence(sent))
+print(get_formalized_sentence(sent2))
 # print(get_formalized_sentence(sent2))
 print(get_programs_for_sentence_by_pattern(sent2, dict))
 print(len(dict))
