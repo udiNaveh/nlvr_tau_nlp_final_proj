@@ -23,6 +23,12 @@ USE_PARAPHRASING = False
 
 TokenTypes = namedtuple('TokenTypes', ['return_type', 'args_types', 'necessity'])
 
+log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
+            'exactly': 'equal_int', 'at least': 'ge', 'at most': 'le', 'triangle': 'triangle',
+            'circle': 'circle', 'square': 'square', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
+            '7': '7', '1': '1', 'one': '1'}
+
+
 def get_probs_from_file(path):
     token_seqs = []
     with open(path) as parsed_examples:
@@ -156,7 +162,7 @@ class PartialProgram:
         self.vars_in_use = {}
         self.logprob = 0
         self.logical_tokens_mapping = lt_mapping
-        self.stack_history = []
+        self.stack_history = [tuple(["bool"])]
 
 
     def __repr__(self):
@@ -194,11 +200,8 @@ class PartialProgram:
             return ["<EOS>"]  # end of decoding
 
 
-        if len(self.token_seq) >= 3 and all(tok == self.token_seq[-1] for tok in self.token_seq[-3:]):
-            return []
 
-        if len(self.stack) >4:
-            return []
+
 
 
         next_type = self.stack[-1]
@@ -243,12 +246,24 @@ class PartialProgram:
             if len(last_args_types) == 1 and last_args_types[0].startswith('set'):
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                                if not v.args_types])
+                if last!='count':
+                    impossible_continuations.extend([t for t, v in self.vars_in_use.items()])
+
             if not last_args_types:
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                               if not v.args_types and v.return_type == last_return_type])
             if len(self.stack)==3:
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                 if len(v.args_types)>1])
+
+            open_filter_scopes_begginnings = [start for start, end in self.filter_scopes() if not end]
+            impossible_continuations.extend(
+            [self.token_seq[t+1] for t in open_filter_scopes_begginnings if t<len(self.token_seq)-1])
+
+            if last == 'equal':
+                impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
+                                                if not ('Color' in v.return_type or 'Shape' in v.return_type)])
+
 
         return impossible_continuations
 
@@ -286,6 +301,8 @@ class PartialProgram:
                              token_args_types[::-1]]
             self.stack.extend(args_to_stack)
 
+        self.stack_history.append(tuple(self.stack))
+
         for var, (type_of_var, idx) in [kvp for kvp in self.vars_in_use.items()]:
         # after popping the stack, check whether one of the added variables is no longer in scope.
             if len(self.stack) <= idx:
@@ -294,11 +311,47 @@ class PartialProgram:
                 else:
                     return False
                 break
-
-
         self.logprob += logprob
-        self.stack_history.append(tuple(self.stack))
+
+        if len(self.token_seq) >= 3 and all(tok == self.token_seq[-1] for tok in self.token_seq[-3:]):
+            return False
+
+        if len(self.stack) >4:
+            return False
+
+        bool_scopes = [" ".join(self.token_seq[start : end]) for start, end in self.boolean_scopes() if end]
+        if len(set(bool_scopes)) < len(bool_scopes):
+            return False
+
+
+
+
         return True
+
+    def boolean_scopes(self):
+        scopes = []
+        for i in range(1, len(self.stack_history)):
+            if self.stack_history[i] and self.stack_history[i][-1] == 'bool':
+                end_of_exp = ([j for j in range (i +1 , len(self.stack_history)) if len(self.stack_history[j])
+                               < len(self.stack_history[i])])
+                if not end_of_exp:
+                    scopes.append((i, None))
+                else:
+                    scopes.append((i, min(end_of_exp)))
+        return scopes
+
+    def filter_scopes(self):
+        scopes = []
+        for i in range(len(self.token_seq)):
+            if self.token_seq[i]  == 'filter':
+                end_of_exp = ([j for j in range (i +1 , len(self.stack_history)) if len(self.stack_history[j])
+                               < len(self.stack_history[i])])
+                if not end_of_exp:
+                    scopes.append((i, None))
+                else:
+                    scopes.append((i, min(end_of_exp)))
+        return scopes
+
 
 def get_formalized_sentence(sentence):
     '''
@@ -336,6 +389,7 @@ def get_formalized_sentence(sentence):
 
     return formalized_sentence
 
+
 def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
     '''
     :param sentence: english sentence, str
@@ -346,53 +400,34 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
     formalized_sent = get_formalized_sentence(sentence)
     formalized_words = formalized_sent.split()
 
-    if formalized_sent not in patterns_dict:
-        return None
+    matching_patterns = patterns_dict.get(formalized_sent, {})
 
     for i, word in enumerate(words):
         if word == 'at' and (words[i+1] == 'most' or words[i+1] == 'least'):
             words[i:i+2] = [' '.join(words[i:i+2])]
 
-    log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
-                'exactly': 'equal_int', 'at least': 'ge', 'at most': 'le', 'triangle': 'triangle',
-                'circle': 'circle', 'square': 'square', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
-                '7': '7', '1': '1', 'one': '1'}
 
-
-    prog_dict = {}
-    for prog in patterns_dict[formalized_sent]:
-        token_str = prog
-        token_seq = token_str.split()
+    suggested_decodings = []
+    for prog, acc_reward in sorted(matching_patterns.items(), key = lambda item : item[1], reverse=True):
+        token_seq = prog.split()
 
         for i, _ in enumerate(words):
-            if words[i] == formalized_words[i]:
+            try:
+                if words[i] == formalized_words[i]:
+                    continue
+            except IndexError:
                 continue
+
             for j, token in enumerate(token_seq):
-                if formalized_words[i] in token and numbers_contained(formalized_words[i]) == numbers_contained(token):
-                    if token_seq[j].startswith('is'):
-                        token_seq[j] = 'is_' + log_dict[words[i]]
-                    else:
-                        token_seq[j] = log_dict[words[i]]
+                if formalized_words[i] in token and numbers_contained(formalized_words[i]) == numbers_contained(token)\
+                        and words[i] in log_dict:
+                            token_seq[j] =  (token_seq[j]).replace(formalized_words[i],  log_dict[words[i]])
 
         # return token_seq
         token_str = ' '.join(token_seq)
-        prog_dict[token_str] = None
-    return prog_dict
+        suggested_decodings.append(token_str)
+    return suggested_decodings
 
-    # token_str = patterns_dict[formalized_sent]
-    # token_seq = token_str.split()
-    #
-    # for i in range(len(words)):
-    #     if words[i] == formalized_words[i]:
-    #         continue
-    #     for j, token in enumerate(token_seq):
-    #         if formalized_words[i] in token and numbers_contained(formalized_words[i]) == numbers_contained(token):
-    #             token_seq[j] = words[i]
-    #
-    # # return token_seq
-    # token_str = ' '.join(token_seq)
-    # return token_str
-    # # return suggested_programs
 
 def get_formlized_sentence_and_decoding(sentence, program, patterns_dict):
     '''
@@ -433,13 +468,9 @@ def get_formlized_sentence_and_decoding(sentence, program, patterns_dict):
     formalized_sentence = formalized_sentence.strip()
     formalized_sentence = formalized_sentence.replace('$', '1')
 
-    log_dict = {' yellow ': 'yellow', ' blue ': 'blue', ' black ': 'black', ' top ': 'top', ' bottom ': 'bottom',
-                ' exactly ': 'equal_int', ' at least ': 'ge', ' at most ': 'le', ' triangle ': 'triangle',
-                ' circle ': 'circle', ' square ': 'square', ' 2 ': '2', ' 3 ': '3', ' 4 ': '4', ' 5 ': '5', ' 6 ': '6',
-                ' 7 ': '7', ' 1 ': '1', ' one ': '1'}
 
     for exp, replacement in temp_dict:
-        formalized_program = formalized_program.replace(log_dict[exp], replacement.strip())
+        formalized_program = formalized_program.replace(log_dict[exp.strip()], replacement.strip())
     formalized_program = formalized_program.strip()
     formalized_program = formalized_program.replace('$', '1')
 
@@ -449,6 +480,7 @@ def get_formlized_sentence_and_decoding(sentence, program, patterns_dict):
 
     return formalized_sentence, {formalized_program: None}
 
+
 def numbers_contained(string):
 
     nums = []
@@ -457,5 +489,89 @@ def numbers_contained(string):
             nums.append(char)
     return nums
 
+
 def update_programs_cache(cached_programs, sentence, prog, reward):
-    pass
+    '''
+    :param sentence: 'there is a yellow item'
+    :param program: exist filter ALL_ITEMS lambda_x_: is_yellow x
+    :return:
+            'there is a T_COLOR item', {'exist filter ALL_ITEMS lambda_x_: is_T_COLOR x': None}
+            and adding both to patterns_dict
+    '''
+
+    formalized_sentence = get_formalized_sentence(sentence)
+    if formalized_sentence not in cached_programs:
+        cached_programs[formalized_sentence] = {}
+    matching_cached_patterns = cached_programs.get(formalized_sentence)
+
+    # building replacements "dictionary" (it is actually a list of tuples)
+    formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
+    dict = load_dict_from_txt(formalization_file)
+    for i in range(2,10):
+        dict[str(i)] = 'T_INT'
+    dict["1"] = 'T_ONE'
+    dict["one"] = 'T_ONE'
+    manualy_chosen_replacements = sorted(dict.items(), key = lambda x : sentence.find(x[0]))
+    manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
+    formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
+    formalized_program = " {} ".format(" ".join(prog.token_seq))  # pad with whitespaces
+
+    temp_dict = {}
+    for exp, replacement in manualy_chosen_replacements:
+        if exp in formalized_sentence and replacement not in temp_dict.values():
+            temp_dict[exp] = replacement
+        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') not in temp_dict.values():
+            temp_dict[exp] = replacement.rstrip() + '_$ '
+        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') in temp_dict.values():
+            temp_dict[exp] = replacement.rstrip() + '_2 '
+    temp_dict = [(k, temp_dict[k]) for k in temp_dict]
+
+    for exp, replacement in temp_dict:
+        formalized_sentence = formalized_sentence.replace(exp, replacement)
+    formalized_sentence = formalized_sentence.strip()
+    formalized_sentence = formalized_sentence.replace('$', '1')
+
+
+    for exp, replacement in temp_dict:
+        if exp.strip() in log_dict: # TODO figure out what's wrong here
+            formalized_program = formalized_program.replace(log_dict[exp.strip()], replacement.strip())
+    formalized_program = formalized_program.strip()
+    formalized_program = formalized_program.replace('$', '1')
+
+    if formalized_program not in matching_cached_patterns:
+        matching_cached_patterns[formalized_program] = 0
+
+    matching_cached_patterns[formalized_program] += reward
+
+def get_ands(pp : PartialProgram):
+    ind = -1
+    results = []
+    while True:
+        if 'AND' in pp[ind+1:]:
+            ind = pp.token_seq.index('AND', ind+1)
+            stack_state_begin = len(pp.stack_history[ind])
+            try:
+                mid = min([i for i in range (ind +1 , len(pp)) if len(pp.stack_history[i]) == stack_state_begin])
+
+                fin = min([i for i in range (mid +1 , len(pp)+1) if len(pp.stack_history[i]) < stack_state_begin])
+            except:
+                pass
+            results.append((ind, mid, fin))
+        else:
+            break
+    decode_with_signs = []
+    if not results:
+        return [], " ".join(pp.token_seq)
+    if len(results)>1:
+        print()
+    inds, mids, fins = zip(*results)
+    #assert len(inds) + len(mids) + len(fins) == len(set(inds+mids+fins))
+    for i, tok in enumerate(pp):
+        if i in mids:
+            decode_with_signs.append(',')
+        decode_with_signs.append(tok)
+        if i in inds:
+            decode_with_signs.append('(')
+        if i+1 in fins:
+            decode_with_signs.append(')')
+    return results, " ".join(decode_with_signs)

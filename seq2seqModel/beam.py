@@ -3,10 +3,11 @@ from seq2seqModel.logical_forms_generation import *
 from seq2seqModel.utils import epsilon_greedy_sample
 
 
+
 max_decoding_length = 20
 max_decoding_steps = 14
-epsilon_greedy_p = 0.0
-beam_size = 50
+epsilon_greedy_p = 0.1
+beam_size = 40
 skip_autotokens = True
 decoding_steps_from_sentence_length = lambda n : 5 + n
 injection = True
@@ -57,8 +58,8 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
 
             for i, next_tok in enumerate(valid_next_tokens):
                 pp = partial_program.copy()
-                pp.add_token(next_tok, logprob_given_valid[i])
-                cont_list.append(pp)
+                if pp.add_token(next_tok, logprob_given_valid[i]):
+                    cont_list.append(pp)
             continuations[partial_program] = cont_list
 
         # choose the beam_size programs and place them in the beam
@@ -238,6 +239,11 @@ def get_multiple_programs_from_token_sequences(next_token_probs_getter, token_se
     # TODO : make more efficient using prefix trees
     result = []
     for seq in token_seqs:
-        result.append( program_from_token_sequence(next_token_probs_getter, seq,
-                                                   logical_tokens_mapping, original_sentence=original_sentence))
+        try:
+            prg = program_from_token_sequence(next_token_probs_getter, seq,
+                                                   logical_tokens_mapping, original_sentence=original_sentence)
+
+            result.append( prg[0])
+        except ValueError:
+            pass
     return result
