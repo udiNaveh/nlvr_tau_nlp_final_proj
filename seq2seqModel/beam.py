@@ -97,6 +97,9 @@ def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens
     beam = [PartialProgram(logical_tokens_mapping)]
     # create a beam of possible programs for sentence, the iteration continues while there are unfinished programs in beam and t < max_beam_steps
 
+    if injection:
+        suggested_partial_progs = [PartialProgram(logical_tokens_mapping)]*len(suggested_progs)
+
     for t in range(max_decoding_steps):
         # t steps in the beam search
 
@@ -135,27 +138,16 @@ def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens
         all_continuations_list = [c for p in continuations.values() for c in p]
 
         if injection:
-            for prog in suggested_progs:
-                # TODO i'm not sure what to do here when the suggested program contains lambda.
-                # if 'lambda' in prog[t+1]:
-                #     spp, _ = program_from_token_sequence(next_token_probs_getter, prog[:t + 2], logical_tokens_mapping,
-                #                                      original_sentence=original_sentence)
-                # else:
-                spp, _ = program_from_token_sequence(next_token_probs_getter, prog[:t + 1], logical_tokens_mapping,
-                                                     original_sentence=original_sentence)
-                if spp.token_seq not in [p.token_seq for p in all_continuations_list]:
-                    all_continuations_list.append(spp)
+            for i, prog in enumerate(suggested_partial_progs):
+                if len(suggested_progs[i]) <= t:
+                    continue
+                tokens, probs = next_token_probs_getter(suggested_partial_progs[i])
+                prog.add_token(suggested_progs[i][t], np.log(probs[tokens.index(suggested_progs[i][t])]))
+                if prog.token_seq not in [p.token_seq for p in all_continuations_list]:
+                    all_continuations_list.append(prog)
 
         all_continuations_list.sort(key=lambda c: - c.logprob)
         beam = epsilon_greedy_sample(all_continuations_list, beam_size, continuations, epsilon)
-
-        # # this if-clause should replace the previous one, if keeping the beam size is important at all times
-        # if injection:
-        #     for prog in suggested_progs:
-        #         spp, _ = program_from_token_sequence(next_token_probs_getter, prog[:t+1], logical_tokens_mapping,
-        #                                              original_sentence=original_sentence)
-        #         if spp not in beam:
-        #             beam.append(spp)
 
         # assert(len(prog.token_seq)<=t+1 for prog in beam)
 
@@ -166,6 +158,8 @@ def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens
     for prog in beam:
         prog.token_seq.pop(-1)  # take out the '<EOS>' token
 
+    # adding the suggested programs to the beam in the end.
+    # TODO important! if it is done outside of this function, erase the following if-clause
     if injection:
         for prog in suggested_progs:
             sp, _ = program_from_token_sequence(next_token_probs_getter, prog, logical_tokens_mapping,
