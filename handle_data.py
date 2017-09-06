@@ -142,7 +142,7 @@ class CNLVRDataSet:
         self.__ids = new_ids
 
     def ignore_all_true_samples(self):
-        all_true_filter = lambda s_samples : all([s.label==True for s in s_samples])
+        all_true_filter = lambda s_samples : not all([s.label==True for s in s_samples])
         self.use_subset_by_images_condition(all_true_filter)
 
     def sort_sentences_by_complexity(self, complexity_measure, n_classes):

@@ -8,7 +8,7 @@ max_decoding_length = 20
 max_decoding_steps = 14
 epsilon_greedy_p = 0.1
 beam_size = 40
-skip_autotokens = True
+skip_autotokens = False
 decoding_steps_from_sentence_length = lambda n : 5 + n
 injection = True
 
@@ -35,16 +35,20 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
         continuations = {}
 
         for partial_program in beam:
-            BP= False
+            bad_program= False
             while skip_autotokens:
                 poss = partial_program.get_possible_continuations()
                 if len(poss) == 1:
-                    BP = not partial_program.add_token(poss[0], 0.0)
+                    if not partial_program.add_token(poss[0], 0.0):
+                        # could not add the only possible token - program is helpless
+                        bad_program = True
+                        break
                 else:
                     break
-            if BP:
-                continuations[partial_program] = []
+
+            if bad_program:
                 continue
+
             if t > 0:
                 if partial_program[-1] == '<EOS>':
                     continuations[partial_program] = [partial_program]
@@ -106,6 +110,21 @@ def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens
 
         # getting all possible continuations and their probs
         # continuations - dict of lists {pp: [conts]}
+
+        if injection:
+            for i, prog in enumerate(suggested_partial_progs):
+                if len(prog) <= t:
+                    continue
+                while skip_autotokens:
+                    if len(prog.get_possible_continuations())==1:
+                        prog.add_token
+                tokens, probs = next_token_probs_getter(prog)
+                prog.add_token(suggested_progs[i][t], np.log(probs[tokens.index(suggested_progs[i][t])]))
+                if prog.token_seq not in [p.token_seq for p in beam]:
+                    prog_copy = prog.copy()
+                    all_continuations_list.append(prog_copy)
+
+
         continuations = {}
         for partial_program in beam:
             BP = False
@@ -131,21 +150,12 @@ def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens
 
             for i, next_tok in enumerate(valid_next_tokens):
                 pp = partial_program.copy()
-                pp.add_token(next_tok, logprob_given_valid[i])
-                cont_list.append(pp)
+                if pp.add_token(next_tok, logprob_given_valid[i]):
+                    cont_list.append(pp)
             continuations[partial_program] = cont_list
 
         # choose the beam_size programs and place them in the beam
         all_continuations_list = [c for p in continuations.values() for c in p]
-
-        if injection:
-            for i, prog in enumerate(suggested_partial_progs):
-                if len(suggested_progs[i]) <= t:
-                    continue
-                tokens, probs = next_token_probs_getter(suggested_partial_progs[i])
-                prog.add_token(suggested_progs[i][t], np.log(probs[tokens.index(suggested_progs[i][t])]))
-                if prog.token_seq not in [p.token_seq for p in all_continuations_list]:
-                    all_continuations_list.append(prog)
 
         all_continuations_list.sort(key=lambda c: - c.logprob)
         beam = epsilon_greedy_sample(all_continuations_list, beam_size, continuations, epsilon)
@@ -160,13 +170,13 @@ def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens
         prog.token_seq.pop(-1)  # take out the '<EOS>' token
 
     # adding the suggested programs to the beam in the end.
-    # TODO important! if it is done outside of this function, erase the following if-clause
-    if injection:
-        for prog in suggested_progs:
-            sp, _ = program_from_token_sequence(next_token_probs_getter, prog, logical_tokens_mapping,
-                                                original_sentence=original_sentence)
-            if sp.token_seq not in [p.token_seq for p in beam]:
-                beam.append(sp)
+    # # TODO important! if it is done outside of this function, erase the following if-clause
+    # if injection:
+    #     for prog in suggested_progs:
+    #         sp, _ = program_from_token_sequence(next_token_probs_getter, prog, logical_tokens_mapping,
+    #                                             original_sentence=original_sentence)
+    #         if sp.token_seq not in [p.token_seq for p in beam]:
+    #             beam.append(sp)
 
     beam = sorted(beam, key=lambda prog: -prog.logprob)
     return beam
@@ -233,6 +243,7 @@ def program_from_token_sequence(next_token_probs_getter, token_seq, logical_toke
         greedy_choices.append(valid_next_tokens[np.argmax(probs_given_valid)])
         partial_program.add_token(tok, np.log(p))
     return partial_program, (valid_tokens_history, greedy_choices)
+
 
 def get_multiple_programs_from_token_sequences(next_token_probs_getter, token_seqs, logical_tokens_mapping, original_sentence=None):
 

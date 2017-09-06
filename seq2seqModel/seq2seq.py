@@ -50,6 +50,7 @@ AUTOMATIC_TOKENS_IN_GRAD = False
 HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
 USE_N_CACHED_PROGRAMS = 10
 LOAD_CACHED_PROGRAMS = False
+SAVE_CACHED_PROGRAMS = True
 
 def load_meta_data():
 
@@ -270,8 +271,8 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     gradBuffer = {}
 
     # load data
-    train = CNLVRDataSet(DataSet.TRAIN)
-    train.ignore_all_true_samples()
+    train = CNLVRDataSet(DataSet.DEV)
+
     #train.choose_levels_for_curriculum_learning([0,1,2,3])
     # file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
     # sentences_in_pattern = pickle.load(file)
@@ -291,6 +292,8 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     if LOAD_CACHED_PROGRAMS:
         cpf = open(CACHED_PROGRAMS, 'rb')
         cached_programs = pickle.load(cpf)
+
+
     else:
          cached_programs = {}
 
@@ -302,16 +305,22 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     stack_max_lengths =[0]*10
     stack_max_lengths_top_prob = [0] * 10
     num_have_pattern = 0
-    while train.epochs_completed < 1:
+    while train.epochs_completed < 20:
 
         batch = train.next_batch(BATCH_SIZE_UNSUPERVISED)
         epoch_finished = epochs_completed != train.epochs_completed
+
+        if epoch_finished:
+            if train.epochs_completed % 2 == 1:
+                train.restart()
+            else:
+                train.ignore_all_true_samples()
+
+        train.restart()
         if epoch_finished:
             epochs_completed+=1
 
         ids = [key for key in batch.keys()]
-
-
 
         sentences, samples = zip(*[batch[k] for k in ids])
         current_logical_tokens_embeddings = sess.run(W_logical_tokens)
@@ -336,7 +345,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                                                                         token_prob_dist_tensor)
 
             beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
-                                                   original_sentence=sentence,  epsilon = 0.5)
+                                                   original_sentence=sentence,  epsilon = 0.00)
 
             beam_decodings = [" ".join(prog.token_seq) for prog in beam]
             beam_length_before = len(beam)
@@ -460,9 +469,13 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
         for var, grad in enumerate(gradBuffer):
             gradBuffer[var] = gradBuffer[var]*0
 
-        if save_model_path and epochs_completed:
+        if save_model_path and epoch_finished:
             saver2.save(sess, save_model_path, global_step=1,write_meta_graph=False)
             print("saved epoch %d" % train.epochs_completed)
+
+        if SAVE_CACHED_PROGRAMS and epoch_finished:
+            cpf = open(CACHED_PROGRAMS, 'wb')
+            pickle.dump(cached_programs, cpf)
 
     # with open("sentences decodings.txt ", 'w') as decs:
     #     decs.write("{} sentences has consistent programs".format(len([k for k, v in all_consistent_decodings.items() if v])))
@@ -723,6 +736,7 @@ TRAINED_WEIGHTS_UNS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learne
 TRAINED_WEIGHTS_UNSUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup.ckpt-4')
 TRAINED_WEIGHTS_UNSUPERVISED_2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_unsup_2.ckpt')
 TRAINED_WEIGHTS_SUP_CHECK = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check.ckpt')
+TRAINED_WEIGHTS_SUP_CHECK_2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_2.ckpt')
 
 if __name__ == '__main__':
     #tf.reset_default_graph()
@@ -730,12 +744,12 @@ if __name__ == '__main__':
 
         #run_supervised_training(sess,load_params_path=TRAINED_WEIGHTS_SUPERVISED,save_params_path=TRAINED_WEIGHTS_SUPERVISED)
         #start = time.time()
-        run_supervised_training(sess, save_model_path = TRAINED_WEIGHTS_SUP_CHECK)
-        #run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS_UNSUPERVISED, save_model_path=TRAINED_WEIGHTS_UNSUPERVISED_2)
+        #run_supervised_training(sess, save_params_path = TRAINED_WEIGHTS_SUP_CHECK_2)
+        run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS_UNSUPERVISED)
         #finish = time.time()
         #print("elapsed time for 30 epochs: %f" % ((finish - start) / 60 / 60))
-        data = CNLVRDataSet(DataSet.DEV)
+        #data = CNLVRDataSet(DataSet.DEV)
         #beam_training_set = run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS )
         #clf = run_beam_classifier(beam_training_set) #TODO
-        run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNSUPERVISED)#clf
+        #run_inference(sess, data, load_params=TRAINED_WEIGHTS_SUP_CHECK)#clf
     print("done")

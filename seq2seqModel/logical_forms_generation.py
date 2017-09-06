@@ -17,7 +17,7 @@ from general_utils import *
 TOKEN_MAPPING = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
 LOGICAL_TOKENS_EMBEDDINGS_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_embeddings')
-MAX_LENGTH = 35
+MAX_LENGTH = 25
 
 USE_PARAPHRASING = False
 
@@ -160,7 +160,7 @@ class PartialProgram:
         self.stack = ["bool"]
         self.token_seq = []
         self.vars_in_use = {}
-        self.logprob = 0
+        self.logprobs = []
         self.logical_tokens_mapping = lt_mapping
         self.stack_history = [tuple(["bool"])]
 
@@ -188,9 +188,13 @@ class PartialProgram:
         pp_copy.stack = self.stack.copy()
         pp_copy.token_seq = self.token_seq.copy()
         pp_copy.vars_in_use = self.vars_in_use.copy()
-        pp_copy.logprob = self.logprob
+        pp_copy.logprobs = self.logprobs.copy()
         pp_copy.stack_history = self.stack_history.copy()
         return pp_copy
+
+    @property
+    def logprob(self):
+        return np.sum(self.logprobs)
 
     def get_possible_continuations(self):
 
@@ -199,17 +203,14 @@ class PartialProgram:
                 return []
             return ["<EOS>"]  # end of decoding
 
-
-
-
-
+        if len(self.token_seq) >= MAX_LENGTH:
+            return []
 
         next_type = self.stack[-1]
+
         # the next token must have a return type that matches next_type or to be itself an instance of next_type
         # for example, if next_type is 'int' than the next token can be an integer literal, like '2', or the name
         # of a functions that has return type int, like 'count'.
-
-
 
         if next_type.startswith("bool_func"):
             # in that case there is no choice - the only valid token is 'lambda'
@@ -237,6 +238,8 @@ class PartialProgram:
 
 
     def __get_impossible_continuations(self):
+
+
         impossible_continuations = []
         if self.token_seq and self.token_seq[-1] in self.logical_tokens_mapping:
             last = self.token_seq[-1]
@@ -255,6 +258,9 @@ class PartialProgram:
             if len(self.stack)==3:
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                 if len(v.args_types)>1])
+
+            if len(self.token_seq) >= 3 and all(tok == self.token_seq[-1] for tok in self.token_seq[-3:]):
+                impossible_continuations.append(self.token_seq[-1])
 
             open_filter_scopes_begginnings = [start for start, end in self.filter_scopes() if not end]
             impossible_continuations.extend(
@@ -301,7 +307,6 @@ class PartialProgram:
                              token_args_types[::-1]]
             self.stack.extend(args_to_stack)
 
-        self.stack_history.append(tuple(self.stack))
 
         for var, (type_of_var, idx) in [kvp for kvp in self.vars_in_use.items()]:
         # after popping the stack, check whether one of the added variables is no longer in scope.
@@ -311,20 +316,14 @@ class PartialProgram:
                 else:
                     return False
                 break
-        self.logprob += logprob
 
-        if len(self.token_seq) >= 3 and all(tok == self.token_seq[-1] for tok in self.token_seq[-3:]):
-            return False
-
-        if len(self.stack) >4:
-            return False
 
         bool_scopes = [" ".join(self.token_seq[start : end]) for start, end in self.boolean_scopes() if end]
         if len(set(bool_scopes)) < len(bool_scopes):
             return False
 
-
-
+        self.stack_history.append(tuple(self.stack))
+        self.logprobs.append(logprob)
 
         return True
 
@@ -408,7 +407,7 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
 
 
     suggested_decodings = []
-    for prog, acc_reward in sorted(matching_patterns.items(), key = lambda item : item[1], reverse=True):
+    for prog, acc_reward in sorted(matching_patterns.items(), key = lambda item : item[1][0], reverse=True):
         token_seq = prog.split()
 
         for i, _ in enumerate(words):
