@@ -71,10 +71,24 @@ def load_functions(filename):
                 continue
             token, return_type, args_types = entry[0], entry[-1], entry[2:-1]
             functions_dict[token] = TokenTypes(return_type=return_type, args_types=args_types, necessity= necessary_words)
-        functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one', 'a', 'is'])
+        functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one', 'a'])
         functions_dict.update({str(i): TokenTypes(return_type='int', args_types=[], necessity=[str(i)]) for i in range(2, 10)})
 
     return functions_dict
+
+def words_to_tokens_dict(functions_dict):
+    words_to_tokens = {}
+    for tok, v in functions_dict.items():
+        if tok not in ('1', 'ALL_BOXES'):
+            for nec in v.necessity:
+                if nec not in words_to_tokens:
+                    words_to_tokens[nec] = []
+                words_to_tokens[nec].append(tok)
+    return words_to_tokens
+
+
+
+
 
 
 def check_types(required, suggested):
@@ -183,7 +197,6 @@ class PartialProgram:
 
     def copy(self):
         pp_copy = PartialProgram(self.logical_tokens_mapping)
-        pp_copy.vars = self.vars
         pp_copy.vars = self.vars.copy()
         pp_copy.stack = self.stack.copy()
         pp_copy.token_seq = self.token_seq.copy()
@@ -203,23 +216,17 @@ class PartialProgram:
                 return []
             return ["<EOS>"]  # end of decoding
 
-
-
-
-
-
         next_type = self.stack[-1]
         # the next token must have a return type that matches next_type or to be itself an instance of next_type
         # for example, if next_type is 'int' than the next token can be an integer literal, like '2', or the name
         # of a functions that has return type int, like 'count'.
 
 
-
         if next_type.startswith("bool_func"):
             # in that case there is no choice - the only valid token is 'lambda'
             if len(self.vars) == 0:
                 return [] # cannot recover
-            var = self.vars.pop(0)  # get a new letter to represent the var
+            var = self.vars[0]  # get a new letter to represent the var
             type_of_var = next_type[10:-1]
             if type_of_var == '?':
                 raise TypeError("var in lambda function must be typed")
@@ -265,8 +272,9 @@ class PartialProgram:
 
 
             open_filter_scopes_begginnings = [start for start, end in self.filter_scopes() if not end]
-            impossible_continuations.extend(
-            [self.token_seq[t+1] for t in open_filter_scopes_begginnings if t<len(self.token_seq)-1])
+            if last=='filter':
+                impossible_continuations.extend(
+                [self.token_seq[t+1] for t in open_filter_scopes_begginnings if t<len(self.token_seq)-1])
 
             if last == 'equal':
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
@@ -286,6 +294,8 @@ class PartialProgram:
         if token.startswith('lambda'):
             self.token_seq.append(token)
             self.stack.append('bool')
+            var = token[7]
+            self.vars.remove(var)
         else:
             if token in self.logical_tokens_mapping:
                 token_return_type,  token_args_types, token_necessity = self.logical_tokens_mapping[token]
@@ -328,9 +338,15 @@ class PartialProgram:
         # if len(self.stack) >4:
         #     return False
 
-        bool_scopes = [" ".join(self.token_seq[start : end]) for start, end in self.boolean_scopes() if end]
-        if len(set(bool_scopes)) < len(bool_scopes):
+        bool_scopes = self.boolean_scopes()
+
+        bool_scopes_str = [" ".join(self.token_seq[start : end]) for start, end in self.boolean_scopes() if end]
+        if len(set(bool_scopes_str)) < len(bool_scopes_str):
             return False
+
+
+
+
 
 
 
@@ -360,6 +376,60 @@ class PartialProgram:
                 else:
                     scopes.append((i, min(end_of_exp)))
         return scopes
+
+    def get_prefix_program(self, index):
+
+        prefix_program = PartialProgram(self.logical_tokens_mapping)
+        for i, tok in enumerate(self.token_seq[:index]):
+            valid_next_tokens = prefix_program.get_possible_continuations()
+            if tok not in valid_next_tokens:
+                raise ValueError(("{0} : {1} \n".format(self.token_seq, tok)))
+            log_p = self.logprobs[i]
+            prefix_program.add_token(tok, log_p)
+
+        return prefix_program
+
+def sentence_relevant_logical_tokens(logical_tokens_mapping, sentence):
+    return {k: v for k, v in logical_tokens_mapping.items() if
+                              (not v.necessity) or any([w in sentence.split() for w in v.necessity])}
+
+
+def program_from_token_sequence(next_token_probs_getter, token_seq, logical_tokens_mapping, original_sentence=None):
+
+    if original_sentence:
+        logical_tokens_mapping = sentence_relevant_logical_tokens(logical_tokens_mapping, original_sentence)
+
+    partial_program = PartialProgram(logical_tokens_mapping)
+    valid_tokens_history = []
+    greedy_choices = []
+
+    for ind, tok in enumerate(token_seq):
+        valid_next_tokens, probs_given_valid = \
+            next_token_probs_getter(partial_program)
+        valid_tokens_history.append(valid_next_tokens)
+        if tok not in valid_next_tokens:
+            #TODO DELETE
+            partial_program.get_possible_continuations()
+            raise ValueError(("{0} : {1}, {2} \n".format(token_seq, tok, ind)))
+        p = probs_given_valid[valid_next_tokens.index(tok)]
+        greedy_choices.append(valid_next_tokens[np.argmax(probs_given_valid)])
+        partial_program.add_token(tok, np.log(p))
+    return partial_program, (valid_tokens_history, greedy_choices)
+
+def get_multiple_programs_from_token_sequences(next_token_probs_getter, token_seqs, logical_tokens_mapping, original_sentence=None):
+
+    # TODO : make more efficient using prefix trees
+    result = []
+    for seq in token_seqs:
+        try:
+            prg = program_from_token_sequence(next_token_probs_getter, seq,
+                                                   logical_tokens_mapping, original_sentence=original_sentence)
+
+            result.append( prg[0])
+        except ValueError:
+            pass
+    return result
+
 
 
 def get_formalized_sentence(sentence):

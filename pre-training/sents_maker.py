@@ -4,14 +4,20 @@ from logical_forms_new import *
 import  random
 import os
 import definitions
-from seq2seqModel.logical_forms_generation import load_functions
+from seq2seqModel.logical_forms_generation import *
 from seq2seqModel.utils import execute
 from handle_data import *
 from preprocessing import *
 
 
 LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping')
-PARSED_FORMS_PATH = 'temp_sents.txt'
+PARSED_FORMS_PATH = os.path.join(definitions.ROOT_DIR, 'pre-training', 'temp_sents_new')
+WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
+
+embeddings_file = open(WORD_EMBEDDINGS_PATH, 'rb')
+embeddings_dict = pickle.load(embeddings_file)
+embeddings_file.close()
+
 
 colors = ['yellow', 'blue', 'black']
 locs = [('top', 'top'), ('bottom', 'bottom')]
@@ -27,6 +33,7 @@ replacements_dic = {'T_SHAPE' : [('square', ['square']),('triangle', ['triangle'
              'T_INT' : [(str(i), [str(i)]) for i in range (2,8)],
              'T_QUANTITY_COMPARE' : [('equal_int', ['exactly']),('le', ['at least']),('ge', ['at most']),
                                      ('lt', ['more than']),('gt', ['less than'])]
+
              }
 
 logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
@@ -110,13 +117,21 @@ def generate_eng_log_pairs(engsent, logsent, n_pairs):
     return result
 
 
-def check_generated_forms(forms_doctionary, samples):
+def check_generated_forms(forms_dictionary, samples):
+    next_token_probs_getter = lambda pp: (pp.get_possible_continuations(), [0.1 for p in pp.get_possible_continuations()])
 
-    for engsent, (form_count, logsents) in sorted(forms_doctionary.items(), key = lambda k : - k[1][0]):
+
+    i = 0
+    for engsent, (form_count, logsents) in sorted(forms_dictionary.items(), key = lambda k : - k[1][0]):
         for logsent in logsents:
             curr_samples = random.sample(samples, 5)
             generated_forms = generate_eng_log_pairs(engsent, logsent, 5)
             for gen_sent, gen_log in generated_forms:
+                i+=1
+                print(i)
+                for word in gen_sent.split():
+                    if word not in embeddings_dict:
+                        print (word)
                 for sample in curr_samples:
                     r = execute(gen_log.split(), sample.structured_rep, logical_tokens_mapping)
                     if r is None:
@@ -124,6 +139,9 @@ def check_generated_forms(forms_doctionary, samples):
                         print(gen_log)
                         print("original=" + logsent)
                         print()
+                prog = program_from_token_sequence(next_token_probs_getter, gen_log.split(), logical_tokens_mapping,
+                                            original_sentence=None)
+
 
 def generate_pairs(forms_doctionary):
     all_pairs =[]
@@ -257,6 +275,11 @@ def sents_maker(path = r'temp_sents.txt'):
 
 if __name__ == '__main__':
     parsed_forms = load_forms(PARSED_FORMS_PATH)
+    samples, sentences = build_data(read_data(TRAIN_JSON), preprocessing_type='shallow')
+    check_generated_forms(parsed_forms, samples)
+
+
+
     train, validation = generate_pairs(parsed_forms)
     # train = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train'), 'rb')
     # train = pickle.load(train)
@@ -276,7 +299,9 @@ if __name__ == '__main__':
     # validation_sep = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation_sep'), 'rb')
     # validation_sep = pickle.load(validation_sep)
     # pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation2'), 'wb'))
-    pickle.dump(train, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train2'), 'wb'))
-    pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation2'), 'wb'))
+    # pickle.dump(train, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train2'), 'wb'))
+    # pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation2'), 'wb'))
+
+
 
     print("")

@@ -1,7 +1,7 @@
 import numpy as np
+import time
 from seq2seqModel.logical_forms_generation import *
 from seq2seqModel.utils import epsilon_greedy_sample
-
 
 
 max_decoding_length = 20
@@ -14,7 +14,7 @@ injection = True
 
 
 def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
-                                    original_sentence = None, epsilon = epsilon_greedy_p):
+                                    original_sentence = None, epsilon = epsilon_greedy_p, suggested_decodings = []):
 
     if original_sentence:
         logical_tokens_mapping = sentence_relevant_logical_tokens(logical_tokens_mapping, original_sentence)
@@ -24,15 +24,49 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
     else:
         max_decoding_steps = 14
 
+
+    suggested_programs = {}
+
+    time_added = 0.0
+    if injection:
+        start = time.time()
+        for decoding in suggested_decodings:
+            try:
+                program, (valid_tokens_history, greedy_choices) = program_from_token_sequence(
+                    next_token_probs_getter, decoding, logical_tokens_mapping, original_sentence=original_sentence)
+                checkpoints = [i for i in range(len(valid_tokens_history)) if len(valid_tokens_history[i])>1]
+                suggested_programs[program] = checkpoints
+            except ValueError:
+                continue
+        end = time.time()
+        time_added += end-start
+
+
     beam = [PartialProgram(logical_tokens_mapping)]
-    # create a beam of possible programs for sentence, the iteration continues while there are unfinished programs in beam and t < max_beam_steps
+    # create a beam of possible programs for sentence, the iteration continues while there are unfinished programs
+    #  in beam and t < max_beam_steps
 
 
     for t in range(max_decoding_steps):
-        # if t>1 :
-        #     sampled_prefixes = sample_decoding_prefixes(next_token_probs_getter, 5, t)
-        #     beam.extend(sampled_prefixes)
+        beam_token_seqs = [p.token_seq for p in beam]
         continuations = {}
+
+        start = time.time()
+        if t>0:
+            for prog, checkpoints in suggested_programs.items():
+                if t-1 < len(checkpoints):
+                    try:
+                        ind = checkpoints[t-1] + 1
+                        partial_seq = prog[: ind]
+                        if not partial_seq in beam_token_seqs:
+                            beam_token_seqs.append(partial_seq)
+                            pp = prog.get_prefix_program(ind)
+                            beam.append(pp)
+                    except IndexError:
+                        print("exception on prog {}".format(prog))
+
+        end = time.time()
+        time_added+= (end-start)
 
         for partial_program in beam:
             bad_program= False
@@ -74,8 +108,17 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
     beam = [prog for prog in beam if prog.token_seq[-1] == '<EOS>']  # otherwise won't compile and therefore no reward
     for prog in beam:
         prog.token_seq.pop(-1)  # take out the '<EOS>' token
+
+    if injection:
+        beam_token_seqs = [p.token_seq for p in beam]
+        for prog in suggested_programs:
+            if prog.token_seq not in beam_token_seqs:
+                beam.append(prog)
+
     beam = sorted(beam, key=lambda prog: -prog.logprob)
     return beam
+
+
 
 
 def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens_mapping, suggested_progs,
@@ -210,41 +253,3 @@ def sample_decoding_prefixes(next_token_probs_getter, n_decodings, length, logic
     return decodings
 
 
-def sentence_relevant_logical_tokens(logical_tokens_mapping, sentence):
-    return {k: v for k, v in logical_tokens_mapping.items() if
-                              (not v.necessity) or any([w in sentence.split() for w in v.necessity])}
-
-
-def program_from_token_sequence(next_token_probs_getter, token_seq, logical_tokens_mapping, original_sentence=None):
-
-    if original_sentence:
-        logical_tokens_mapping = sentence_relevant_logical_tokens(logical_tokens_mapping, original_sentence)
-
-    partial_program = PartialProgram(logical_tokens_mapping)
-    valid_tokens_history = []
-    greedy_choices = []
-
-    for tok in token_seq:
-        valid_next_tokens, probs_given_valid = \
-            next_token_probs_getter(partial_program)
-        valid_tokens_history.append(valid_next_tokens)
-        if tok not in valid_next_tokens:
-            raise ValueError(("{0} : {1} \n".format(token_seq, tok)))
-        p = probs_given_valid[valid_next_tokens.index(tok)]
-        greedy_choices.append(valid_next_tokens[np.argmax(probs_given_valid)])
-        partial_program.add_token(tok, np.log(p))
-    return partial_program, (valid_tokens_history, greedy_choices)
-
-def get_multiple_programs_from_token_sequences(next_token_probs_getter, token_seqs, logical_tokens_mapping, original_sentence=None):
-
-    # TODO : make more efficient using prefix trees
-    result = []
-    for seq in token_seqs:
-        try:
-            prg = program_from_token_sequence(next_token_probs_getter, seq,
-                                                   logical_tokens_mapping, original_sentence=original_sentence)
-
-            result.append( prg[0])
-        except ValueError:
-            pass
-    return result

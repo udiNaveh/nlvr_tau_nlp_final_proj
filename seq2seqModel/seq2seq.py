@@ -65,6 +65,8 @@ def load_meta_data():
     logical_tokens = pickle.load(open(LOGICAL_TOKENS_LIST,'rb'))
     assert set(logical_tokens) == set(logical_tokens_mapping.keys())
 
+
+
     for var in "xyzwuv":
         logical_tokens.extend([var, 'lambda_{}_:'.format(var) ])
     logical_tokens.extend(['<s>', '<EOS>'])
@@ -72,6 +74,8 @@ def load_meta_data():
     return  logical_tokens_ids, logical_tokens_mapping, embeddings_dict
 
 logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict = load_meta_data()
+words_to_tokens = words_to_tokens_dict(logical_tokens_mapping)
+
 n_logical_tokens = len(logical_tokens_ids)
 
 if USE_BOW_HISTORY:
@@ -259,7 +263,6 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
 
     init = tf.global_variables_initializer()
     sess.run(init)
-    print(np.array(sess.run(theta)).shape)
     var_list=[i for i in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)[:8]]
 
     if load_params_path:
@@ -271,7 +274,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     gradBuffer = {}
 
     # load data
-    train = CNLVRDataSet(DataSet.DEV)
+    train = CNLVRDataSet(DataSet.TRAIN)
 
     #train.choose_levels_for_curriculum_learning([0,1,2,3])
     # file = open(SENTENCES_IN_PRETRAIN_PATTERNS, 'rb')
@@ -285,10 +288,12 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
         gradBuffer[var] = grad*0
     batch_num = 1
     total_correct = 0
-    top_beam = open("top beam result train learning.txt ", 'w')
+    #top_beam = open("top beam dev with alt sorting.txt ", 'w')
     num_consistent_per_sentence, beam_final_sizes, beam_final_sizes_before, mean_program_lengths = [], [], [], []
     accuracy_by_prog_rank , num_consistent_by_prog_rank = {} , {}
     incorrect_parses = {}
+    beam_reranking = open("beam_reranking.txt", 'w')
+
     if LOAD_CACHED_PROGRAMS:
         cpf = open(CACHED_PROGRAMS, 'rb')
         cached_programs = pickle.load(cpf)
@@ -343,11 +348,9 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                                                                         history_embedding_placeholder,
                                                                         token_prob_dist_tensor)
 
-            beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
-                                                   original_sentence=sentence,  epsilon = 0.00)
+            programs_from_cache = []
+            decodings_from_cache = []
 
-            beam_decodings = [" ".join(prog.token_seq) for prog in beam]
-            beam_length_before = len(beam)
             if USE_N_CACHED_PROGRAMS:
                 #sentence_formalized = get_formalized_sentence(sentence)
                 decodings_from_cache = get_programs_for_sentence_by_pattern(sentence, cached_programs)
@@ -361,14 +364,49 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                                                                                  original_sentence=sentence
                                                                                  )
 
-                beam = sorted(beam + programs_from_cache, key = lambda prog: -prog.logprob)
+            beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
+                                                   original_sentence=sentence,  epsilon = 0.00,
+                                                   suggested_decodings= decodings_from_cache)
 
+            beam_decodings = [" ".join(prog.token_seq) for prog in beam]
+            beam_length_before = len(beam)
+
+
+            beam = sorted(beam + programs_from_cache, key = lambda prog: -prog.logprob)
 
             rewarded_programs = []
+            sentence_words = sentence.split()
+            needed_tokens = []
 
 
+            for word in sentence_words:
+                needed_tokens.append(words_to_tokens.get(word, []))
+
+            progs_to_token_relevance_count = {}
+            for prog in beam:
+                n_releveant_tokens = 0
+                for i in range(len(needed_tokens)):
+                    for t in needed_tokens[i]:
+                        if t in prog:
+                            n_releveant_tokens+=1
+                            break
+                progs_to_token_relevance_count[prog] = n_releveant_tokens
+
+
+            resorted_beam = sorted(beam, key = lambda prog: (-progs_to_token_relevance_count[prog] ,-prog.logprob))
+
+            if beam:
+                default_prog = beam[0]
+                chosen_prog = resorted_beam[0]
+                different_chosen = default_prog != chosen_prog
+
+
+
+
+
+            beam = resorted_beam
             actual_labels = np.array([sample.label for sample in related_samples])
-            top_beam.write("{0} : {1}".format(sentence_id, sentence) +'\n')
+            #top_beam.write("{0} : {1}".format(sentence_id, sentence) +'\n')
             for prog_rank, prog in enumerate(beam):
                 # execute program and get reward is result is same as the label
 
@@ -382,7 +420,7 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                 reward = 1 if all(execution_results==actual_labels) else 0
                 n_correct = sum(execution_results==actual_labels)
                 if prog_rank<5:
-                    top_beam.write("{0} {1} {2} ".format(prog_rank, prog, 'correct' if reward else 'incorrect') + '\n')
+                    #top_beam.write("{0} {1} {2} {3}".format(prog_rank, prog, 'correct' if reward else 'incorrect', n_correct) + '\n')
                     if prog_rank==0 :
                         if reward:
                             stack_max_lengths_top_prob[max([len(stack) for stack in prog.stack_history])]+=1
@@ -390,6 +428,21 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
                             incorrect_parses[sentence_id] = (sentence, prog)
 
                 increment_count(accuracy_by_prog_rank, prog_rank, n_correct)
+
+                #TODO delete this horrific code duplication - just a check
+
+                # alt_prog = resorted_beam[prog_rank]
+                # execution_results = np.array([execute(alt_prog.token_seq,sample.structured_rep,logical_tokens_mapping)
+                #                      for sample in related_samples])
+                #
+                # for i in range(len(execution_results)):
+                #     if execution_results[i] is None:
+                #         execution_results[i] = True
+                # alt_reward = 1 if all(execution_results==actual_labels) else 0
+                # alt_n_correct = sum(execution_results==actual_labels)
+                # if prog_rank<5:
+                #     top_beam.write("{0} {1} {2} {3}".format(prog_rank, alt_prog, 'correct' if alt_reward else 'incorrect', alt_n_correct) + '\n')
+
 
                 if reward>0:
                     increment_count(num_consistent_by_prog_rank, prog_rank)
@@ -735,6 +788,9 @@ TRAINED_WEIGHTS_UNSUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel'
 TRAINED_WEIGHTS_UNSUPERVISED_2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_unsup_2.ckpt')
 TRAINED_WEIGHTS_SUP_CHECK = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check.ckpt')
 TRAINED_WEIGHTS_SUP_CHECK_2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_2.ckpt')
+TRAINED_WEIGHTS_SUP_CHECK_3 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_3_hs6.ckpt')
+TRAINED_WEIGHTS_SUP_CHECK_4 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_4_hs4.ckpt')
+
 
 if __name__ == '__main__':
     #tf.reset_default_graph()
@@ -742,7 +798,7 @@ if __name__ == '__main__':
 
         #run_supervised_training(sess,load_params_path=TRAINED_WEIGHTS_SUPERVISED,save_params_path=TRAINED_WEIGHTS_SUPERVISED)
         #start = time.time()
-        #run_supervised_training(sess, save_params_path = TRAINED_WEIGHTS_SUP_CHECK_2)
+        #run_supervised_training(sess, save_params_path = TRAINED_WEIGHTS_SUP_CHECK_4)
         run_unsupervised_training(sess, load_params_path=TRAINED_WEIGHTS_UNSUPERVISED)
         #finish = time.time()
         #print("elapsed time for 30 epochs: %f" % ((finish - start) / 60 / 60))

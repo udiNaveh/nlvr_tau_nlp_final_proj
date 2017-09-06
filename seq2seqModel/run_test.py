@@ -333,7 +333,6 @@ def run_unsupervised_inference(sess,data, load_params):
                                                    original_sentence= s)
 
             rewarded_programs = []
-
             compiled = 0
             correct = 0
 
