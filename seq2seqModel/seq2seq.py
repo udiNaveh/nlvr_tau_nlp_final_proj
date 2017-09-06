@@ -48,9 +48,9 @@ USE_BOW_HISTORY = False
 IRRELEVANT_TOKENS_IN_GRAD = True
 AUTOMATIC_TOKENS_IN_GRAD = False
 HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
-USE_N_CACHED_PROGRAMS = 10
+USE_N_CACHED_PROGRAMS = False
 LOAD_CACHED_PROGRAMS = False
-SAVE_CACHED_PROGRAMS = True
+SAVE_CACHED_PROGRAMS = False
 
 def load_meta_data():
 
@@ -305,18 +305,17 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
     stack_max_lengths =[0]*10
     stack_max_lengths_top_prob = [0] * 10
     num_have_pattern = 0
-    while train.epochs_completed < 20:
+    while train.epochs_completed < 1:
 
         batch = train.next_batch(BATCH_SIZE_UNSUPERVISED)
         epoch_finished = epochs_completed != train.epochs_completed
 
-        if epoch_finished:
-            if train.epochs_completed % 2 == 1:
-                train.restart()
-            else:
-                train.ignore_all_true_samples()
+        # if epoch_finished:
+        #     if train.epochs_completed % 2 == 1:
+        #         train.restart()
+        #     else:
+        #         train.ignore_all_true_samples()
 
-        train.restart()
         if epoch_finished:
             epochs_completed+=1
 
@@ -437,7 +436,6 @@ def run_unsupervised_training(sess, load_params_path = None, save_model_path = N
         stop = time.time()
         print("time for mini batch = {0:.2f} seconds".format(stop - start))
         start = time.time()
-
 
         if batch_num % 10 == 0 or epoch_finished:
             mean_corect = np.mean(num_consistent_per_sentence)
