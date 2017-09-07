@@ -18,10 +18,8 @@ import time
 LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
 WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
-TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables.ckpt')
-TRAINED_WEIGHTS2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables2.ckpt')
-TRAINED_WEIGHTS3 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables3.ckpt')
-TRAINED_UNS_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsUns','trained_variables3.ckpt')
+TRAINED_WEIGHTS_SUP_HISTORY_4 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'trained_variables_sup_check_hs4.ckpt')
+TRAINED_WEIGHTS_SUP_HISTORY_6 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_hs6.ckpt')
 SENTENCES_IN_PRETRAIN_PATTERNS = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'sentences_in_pattern')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.DATA_DIR, 'patterns_dict')
@@ -36,7 +34,7 @@ LOG_TOKEN_EMB_SIZE = 12
 DECODER_HIDDEN_SIZE = 50
 LSTM_HIDDEN_SIZE = 30
 SENT_EMB_SIZE = 2 * LSTM_HIDDEN_SIZE
-HISTORY_LENGTH = 4
+HISTORY_LENGTH = 6
 
 #other hyper parameters
 LEARNING_RATE = 0.001
@@ -54,6 +52,7 @@ USE_CACHED_PROGRAMS = False
 N_CACHED_PROGRAMS = 10
 LOAD_CACHED_PROGRAMS = False
 SAVE_CACHED_PROGRAMS = True
+SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
 PRINT_EVERY = 10
 
 
@@ -250,8 +249,9 @@ cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
     labels=chosen_logical_tokens, logits=logits))
 
 
-def run_unsupervised_training(sess, dataset,  mode = 'train', load_params_path = None, save_model_path = None):
 
+def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_path = None):
+    assert mode in ('train', 'test')
     # initialization
     theta = tf.trainable_variables()
     optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
@@ -348,12 +348,13 @@ def run_unsupervised_training(sess, dataset,  mode = 'train', load_params_path =
 
             epsilon_for_beam = 0.0 if mode == 'test' else EPSILON_FOR_BEAM_SEARCH
             # perform beam search to obtain candidate parsings for the sentence
+            original_sentence_for_beam = sentence if SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH else None
+
             beam = e_greedy_randomized_beam_search(next_token_probs_getter,
                                                    logical_tokens_mapping,
-                                                   original_sentence= sentence,
+                                                   original_sentence= original_sentence_for_beam,
                                                    epsilon=epsilon_for_beam,
                                                    suggested_decodings=decodings_from_cache)
-
 
             programs_execution_results = {}
             programs_from_cache = []
@@ -420,11 +421,6 @@ def run_unsupervised_training(sess, dataset,  mode = 'train', load_params_path =
             n_consistent_top_by_reranking.append(top_by_reranking_stats.is_consistent)
             n_ccorrect_top_by_model.append(top_by_model_stats.n_correct)
             n_correct_top_by_reranking.append(top_by_reranking_stats.n_correct)
-
-            # else:
-            #     # if beam is empty predict True for each image
-            #     for k in accuracy_by_prog_rank.keys():
-            #         increment_count(accuracy_by_prog_rank, k, np.count_nonzero(actual_labels))
 
             n_samples += len(related_samples)
             iter += 1
@@ -496,49 +492,10 @@ def run_unsupervised_training(sess, dataset,  mode = 'train', load_params_path =
 
         batch_num_in_epoch += 1
 
-    # with open("sentences decodings.txt ", 'w') as decs:
-    #     decs.write("{} sentences has consistent programs".format(len([k for k, v in all_consistent_decodings.items() if v])))
-    #     for k, v in all_consistent_decodings.items():
-    #         sent = train.get_sentence_by_id(k)
-    #         decs.write('#######################' + '\n')
-    #         decs.write(sent + '\n')
-    #         if not v:
-    #             decs.write("NO CONSISTENT DECODINGS" + '\n')
-    #         else:
-    #             i = 0
-    #             while i<10:
-    #                 for dec, count_dec in sorted(v.items(), key = lambda x : x[1], reverse=True):
-    #                     i += 1
-    #                     decs.write("{0}. {1} : {2}\n".format(i, dec, count_dec))
-
     return
 
 
 def run_supervised_training(sess, load_params_path = None, save_params_path = None):
-    # build the computaional graph:
-    # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
-    # and returns the lstm outputs.
-    sentence_placeholder, sent_lengths_placeholder, h, e_m = build_sentence_encoder()
-    # ff decoder - given the outputs of the encoder, and an embedding of the decoding history,
-    # computes a probability distribution over the tokens.
-    history_embedding_placeholder, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
-    valid_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                          name="valid_logical_tokens")
-    token_prob_dist_tensor = tf.nn.softmax(token_unnormalized_dist, dim=0)
-    chosen_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                           name="chosen_logical_tokens")  # a one-hot vector represents the action taken at each step
-    invalid_logical_tokens_mask = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                                 name="invalid_logical_tokens_mask")
-
-    program_dependent_placeholders = (history_embedding_placeholder,
-                                      chosen_logical_tokens,
-                                      invalid_logical_tokens_mask)
-
-    logits = tf.transpose(token_unnormalized_dist) # + invalid_logical_tokens_mask
-
-    # cross-entropy loss per single token in a single sentence
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-        labels=chosen_logical_tokens, logits=logits))
 
     theta = tf.trainable_variables()
     optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
@@ -548,11 +505,9 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 
     init = tf.global_variables_initializer()
     sess.run(init)
-    print(np.array(sess.run(theta)).shape)
     saver = tf.train.Saver(theta)
     if load_params_path:
         saver.restore(sess,load_params_path)
-
 
     # load data
     train = SupervisedParsing(definitions.SUPERVISED_TRAIN_PICKLE)
@@ -643,30 +598,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
         saver.save(sess, save_params_path)
 
 def run_inference(sess, data, load_params, clf=None):
-    # build the computaional graph:
-    # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
-    # and returns the lstm outputs.
-    sentence_placeholder, sent_lengths_placeholder, h, e_m = build_sentence_encoder()
-    # ff decoder - given the outputs of the encoder, and an embedding of the decoding history,
-    # computes a probability distribution over the tokens.
-    history_embedding_placeholder, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
-    valid_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                          name="valid_logical_tokens")
-    token_prob_dist_tensor = tf.nn.softmax(token_unnormalized_dist, dim=0)
-    chosen_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                           name="chosen_logical_tokens")  # a one-hot vector represents the action taken at each step
-    invalid_logical_tokens_mask = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                                 name="invalid_logical_tokens_mask")
 
-    program_dependent_placeholders = (history_embedding_placeholder,
-                                      chosen_logical_tokens,
-                                      invalid_logical_tokens_mask)
-
-    logits = tf.transpose(token_unnormalized_dist) # + invalid_logical_tokens_mask
-
-
-    # the log-probability according to the model of a program given an input sentnce.
-    #program_log_prob = tf.reduce_sum(tf.log(token_prob_dist_tensor) * tf.transpose(chosen_logical_tokens))
     theta = tf.trainable_variables()
     init = tf.global_variables_initializer()
     sess.run(init)
@@ -684,6 +616,7 @@ def run_inference(sess, data, load_params, clf=None):
 
     #beam_training_set = pd.DataFrame(columns=[col for col in range(len(features_vec)+1)]) ### TODO create dataframe
 
+    beam_by_sent ={}
     for sample in data.samples.values():
         if total % 10 == 0:
             print("sample %d out of %d" % (total,samples_num))
@@ -702,8 +635,12 @@ def run_inference(sess, data, load_params, clf=None):
                                                                                 history_embedding_placeholder,
                                                                                 token_prob_dist_tensor)
 
-            beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
-                                                   original_sentence= sentence, epsilon=0.1)
+            if sentence in beam_by_sent:
+                beam = beam_by_sent[sentence]
+            else:
+                beam = e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
+                                                       original_sentence=sentence, epsilon=0.0)
+                beam_by_sent[sentence] = beam
 
             execution_results = []
 
@@ -750,31 +687,13 @@ def run_inference(sess, data, load_params, clf=None):
 
 
 
-TRAINED_WEIGHTS_SUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup.ckpt')
-TRAINED_WEIGHTS_UNS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsUns','trained_variables_unsup.ckpt')
-TRAINED_WEIGHTS_UNSUPERVISED = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup.ckpt-4')
-TRAINED_WEIGHTS_UNSUPERVISED_2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_unsup_2.ckpt')
-TRAINED_WEIGHTS_SUP_CHECK = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check.ckpt')
-TRAINED_WEIGHTS_SUP_CHECK_2 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_2.ckpt')
-TRAINED_WEIGHTS_SUP_CHECK_3 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_3_hs6.ckpt')
-TRAINED_WEIGHTS_SUP_CHECK_4 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_4_hs4.ckpt')
-TRAINED_WEIGHTS_SUP_CHECK_5 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_new_train.ckpt')
-TRAINED_WEIGHTS_UNSUP_CHECK_6 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_unsup_new_train.ckpt-1')
+
 
 
 if __name__ == '__main__':
-    #tf.reset_default_graph()
-    with tf.Session() as sess:
 
-        #run_supervised_training(sess,load_params_path=TRAINED_WEIGHTS_SUPERVISED,save_params_path=TRAINED_WEIGHTS_SUPERVISED)
-        #start = time.time()
-        #run_supervised_training(sess, save_params_path = TRAINED_WEIGHTS_SUP_CHECK_5)
-        data = CNLVRDataSet(DataSet.DEV)
-        run_unsupervised_training(sess, data,  mode = 'train', load_params_path=TRAINED_WEIGHTS_UNSUP_CHECK_6,)
-        #finish = time.time()
-        #print("elapsed time for 30 epochs: %f" % ((finish - start) / 60 / 60))
-        #data = CNLVRDataSet(DataSet.DEV)
-        #beam_training_set = run_inference(sess, data, load_params=TRAINED_WEIGHTS_UNS )
-        #clf = run_beam_classifier(beam_training_set) #TODO
-        #run_inference(sess, data, load_params=TRAINED_WEIGHTS_SUP_CHECK)#clf
+    with tf.Session() as sess:
+        dev = CNLVRDataSet(DataSet.DEV)
+        run_unsupervised(sess, dev, mode='test',load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_6)
+        #run_unsupervised(sess, dev, mode='test', load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_4)
     print("done")
