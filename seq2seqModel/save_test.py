@@ -265,9 +265,9 @@ def run_unsupervised_training(sess, load_params_path = None, save1=None, save2=N
     saver2 = tf.train.Saver(var_list=var_list)
     saver3 = tf.train.Saver()
     if load_params_path: # try different options
-        saver1.restore(sess, load_params_path)
-        # saver2.restore(sess, load_params_path)
-        # saver3.restore(sess, load_params_path)
+        #saver1.restore(sess, load_params_path)
+         #saver2.restore(sess, load_params_path)
+        saver3.restore(sess, load_params_path)
 
     gradList = sess.run(theta) # just to get dimensions right
     gradBuffer = {}
@@ -534,9 +534,9 @@ def run_supervised_training(sess, load_params_path=None, save1=None, save2=None,
     saver2 = tf.train.Saver(var_list=var_list)
     saver3 = tf.train.Saver()
     if load_params_path: # try different options
-        # saver1.restore(sess, load_params_path)
-        # saver2.restore(sess, load_params_path)
-        saver3.restore(sess, load_params_path)
+            saver1.restore(sess, load_params_path)
+         #saver2.restore(sess, load_params_path)
+        #saver3.restore(sess, load_params_path)
 
 
     # load data

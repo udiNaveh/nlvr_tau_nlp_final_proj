@@ -36,6 +36,7 @@ class example():
     self.label = label
     self.image = image
 
+
 def load_examples(lines, tok_to_id, max_len, img_path_dict, split_name, how_many = 6):
   examples = [ ]
   for line in lines:
@@ -100,6 +101,6 @@ def vocab(lines):
       if not word in tok_to_id:
         tok_to_id[word] = len(id_to_tok)
         id_to_tok.append(word)
-  max_len += 1 
+  max_len += 1
 
   return tok_to_id, id_to_tok, max_len

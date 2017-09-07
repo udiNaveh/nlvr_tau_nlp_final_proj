@@ -7,7 +7,7 @@ we use a subset of these functions, that is defined in a different file.
 
 from typing import *
 from collections import Iterable
-from structured_rep_utils import *
+from structured_rep import *
 
 
 
@@ -353,7 +353,6 @@ def intersect_all(sets):
     if count(l)==0:
         return set()
     return [x for x in l[0] if all([x in s for s in sets])]
-
 
 
 def select_integers(k, min, max):

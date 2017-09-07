@@ -11,7 +11,7 @@ import os
 import definitions
 import display_images
 from handle_data import *
-from logical_forms_new import *
+from logical_forms import *
 from preprocessing import clean_sentence
 from seq2seqModel.logical_forms_generation import load_functions
 

@@ -1,6 +1,7 @@
 import typing
 from enum import Enum
-from copy import copy
+
+
 
 almost_touching_margin = 5
 
@@ -27,9 +28,6 @@ class Shape(Enum):
     TRIANGLE = 'triangle'
 
 
-
-
-
 class Item:
     def __init__(self, dic):
         assert isinstance(dic, dict)
@@ -41,7 +39,8 @@ class Item:
         self.box = None # a pointer to the containing box (List of Items). Added when the box constructor is done.
 
     def __repr__(self):
-        return "{0} {1} {2} at x: ({3}-{4}) y: ({5},{6})".format(self.size.name, self.color.name, self.shape.name, self.left, self.right, self.bottom, self.top).lower()
+        return "{0} {1} {2} at x: ({3}-{4}) y: ({5},{6})".format(
+            self.size.name, self.color.name, self.shape.name, self.left, self.right, self.bottom, self.top).lower()
 
     def __copy__(self):
         return Item({'y_loc': self.__y_loc,
@@ -68,7 +67,6 @@ class Item:
     @property
     def left(self):
         return self.__x_loc
-
 
     def touching_right(self, use_margin = False):
         margin = almost_touching_margin if use_margin else 0
@@ -121,7 +119,6 @@ class Item:
 
     def is_third(self):
         return self.box.is_tower() and self.bottom==42
-
 
 
 class Box:

@@ -10,14 +10,14 @@ import re
 
 from preprocessing import get_ngrams_counts
 import definitions
-from logical_forms_new import process_token_sequence
+from logical_forms import process_token_sequence
 from preprocessing import *
 from general_utils import *
 
 TOKEN_MAPPING = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
 LOGICAL_TOKENS_EMBEDDINGS_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_embeddings')
-MAX_LENGTH = 35
+MAX_LENGTH = 25
 
 USE_PARAPHRASING = False
 
@@ -216,6 +216,9 @@ class PartialProgram:
                 return []
             return ["<EOS>"]  # end of decoding
 
+        if len(self.token_seq)>=MAX_LENGTH:
+            return []
+
         next_type = self.stack[-1]
         # the next token must have a return type that matches next_type or to be itself an instance of next_type
         # for example, if next_type is 'int' than the next token can be an integer literal, like '2', or the name
@@ -257,7 +260,7 @@ class PartialProgram:
             if len(last_args_types) == 1 and last_args_types[0].startswith('set'):
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                                if not v.args_types])
-                if last!='count':
+                if last_return_type=='bool':
                     impossible_continuations.extend([t for t, v in self.vars_in_use.items()])
 
             if not last_args_types:
@@ -569,7 +572,7 @@ def numbers_contained(string):
     return nums
 
 
-def update_programs_cache(cached_programs, sentence, prog, n_correct, n_incorrect):
+def update_programs_cache(cached_programs, sentence, prog, prog_stats):
     '''
     :param sentence: 'there is a yellow item'
     :param program: exist filter ALL_ITEMS lambda_x_: is_yellow x
@@ -620,8 +623,8 @@ def update_programs_cache(cached_programs, sentence, prog, n_correct, n_incorrec
     if formalized_program not in matching_cached_patterns:
         matching_cached_patterns[formalized_program] = [0,0]
 
-    matching_cached_patterns[formalized_program][0] + n_correct
-    matching_cached_patterns[formalized_program][1] + n_incorrect
+    matching_cached_patterns[formalized_program][0] + prog_stats.n_correct
+    matching_cached_patterns[formalized_program][1] + prog_stats.n_incorrect
 
     if (matching_cached_patterns[formalized_program][0] + 1) / (matching_cached_patterns[formalized_program][1]
                                                           +0.1) < 3:
