@@ -20,6 +20,7 @@ WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embedding
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
 TRAINED_WEIGHTS_SUP_HISTORY_4 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'trained_variables_sup_check_hs4.ckpt')
 TRAINED_WEIGHTS_SUP_HISTORY_6 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_hs6.ckpt')
+TRAINED_WEIGHTS_TEMP = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','temp.ckpt')
 SENTENCES_IN_PRETRAIN_PATTERNS = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'sentences_in_pattern')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.DATA_DIR, 'patterns_dict')
@@ -49,9 +50,9 @@ IRRELEVANT_TOKENS_IN_GRAD = True
 AUTOMATIC_TOKENS_IN_GRAD = False
 HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
 USE_CACHED_PROGRAMS = False
-N_CACHED_PROGRAMS = 10
+N_CACHED_PROGRAMS = 0
 LOAD_CACHED_PROGRAMS = False
-SAVE_CACHED_PROGRAMS = True
+SAVE_CACHED_PROGRAMS = False
 SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
 PRINT_EVERY = 10
 
@@ -428,6 +429,7 @@ def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_pa
         stop = time.time()
         timer.append(stop-start)
         start = time.time()
+        print(".")
 
         if mode == 'train':
             for i, g in enumerate(gradBuffer):
@@ -694,6 +696,7 @@ if __name__ == '__main__':
 
     with tf.Session() as sess:
         dev = CNLVRDataSet(DataSet.DEV)
-        run_unsupervised(sess, dev, mode='test',load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_6)
+        run_unsupervised(sess, dev, mode='train',load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_6,
+                         save_model_path= TRAINED_WEIGHTS_TEMP)
         #run_unsupervised(sess, dev, mode='test', load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_4)
     print("done")

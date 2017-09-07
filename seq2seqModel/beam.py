@@ -4,10 +4,10 @@ import random
 from seq2seqModel.logical_forms_generation import *
 
 
-max_decoding_length = 20
+max_decoding_length = 22
 MAX_STEPS = 14
 beam_size = 40
-skip_autotokens = True
+SKIP_AUTO_TOKENS = False
 decoding_steps_from_sentence_length = lambda n : 5 + n
 injection = False
 
@@ -61,7 +61,8 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
             # TODO LOGGING ERROR - OR JUST AVOID IT (UDI)
             continue
 
-
+    if not SKIP_AUTO_TOKENS:
+        max_decoding_steps = max_decoding_length
     beam = [PartialProgram(logical_tokens_mapping)] # initialize the beam with the empty program
 
     for t in range(max_decoding_steps):
@@ -94,7 +95,7 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
             #  to a program ate automatically added to it. This means that at a given step, not all
             # programs in beam have the same number of tokens, but took the same number of choices to create them.
             bad_program= False
-            while skip_autotokens:
+            while SKIP_AUTO_TOKENS:
                 poss = partial_program.get_possible_continuations()
                 if len(poss) == 1:
                     bad_program = not partial_program.add_token(poss[0], 0.0)
