@@ -1,6 +1,6 @@
 import json
 from itertools import permutations
-from structured_rep_utils import *
+from structured_rep import *
 import definitions
 import numpy as np
 from preprocessing import preprocess_sentences, replace_rare_words_with_unk, get_ngrams_counts, write_ngrams
@@ -15,10 +15,9 @@ class DataSet(Enum):
     TEST = 3
 
 
-paths = {DataSet.TRAIN : definitions.TRAIN_JSON,
- DataSet.DEV : definitions.DEV_JSON,
-DataSet.TEST : definitions.TEST_JSON}
-
+paths = {   DataSet.TRAIN : definitions.TRAIN_JSON,
+            DataSet.DEV : definitions.DEV_JSON,
+            DataSet.TEST : definitions.TEST_JSON}
 
 
 def read_data(filename):
@@ -36,10 +35,6 @@ def rewrite_data(filename, data, mapping):
             sample["sentence"] = mapping[s_index]
             line = json.dump(sample,output_file)
             output_file.write('\n')
-
-
-            #output_file.writelines(data)
-
     return
 
 
@@ -142,7 +137,7 @@ class CNLVRDataSet:
         self.__ids = new_ids
 
     def ignore_all_true_samples(self):
-        all_true_filter = lambda s_samples : all([s.label==True for s in s_samples])
+        all_true_filter = lambda s_samples : not all([s.label==True for s in s_samples])
         self.use_subset_by_images_condition(all_true_filter)
 
     def sort_sentences_by_complexity(self, complexity_measure, n_classes):
@@ -184,16 +179,6 @@ class CNLVRDataSet:
             self._index_in_epoch = 0
 
         return batch
-
-
-def generate_new_samples(dataset, sentence_id):
-    sentence = dataset.processed_sentences[sentence_id]
-    samples = dataset.get_samples_by_sentence_id(sentence_id)
-    color_words = ['yellow', 'blue', 'black']
-    tokenized = sentence.split()
-    permuts = [p for p in permutations(color_words, 3)[1:]]
-    for p in permuts:
-        per_s = [p[color_words.index(w)] if w in color_words else w for w in tokenized]
 
 
 class SupervisedParsing:

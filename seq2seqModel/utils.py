@@ -1,47 +1,8 @@
 import random
 import numpy as np
+from collections import namedtuple
+from logical_forms import *
 
-from logical_forms_new import *
-
-def epsilon_greedy_sample(choices, num_to_sample, prefixes, epsilon=0.05):
-    """Samples without replacement num_to_sample choices from choices
-    where the ith choice is choices[i] with prob 1 - epsilon, and
-    uniformly at random with prob epsilon
-    Args:
-        choices (list[Object]): a list of choices
-        num_to_sample (int): number of things to sample
-        epsilon (float): probability to deviate
-    Returns:
-        list[Object]: list of size num_to_sample choices
-    """
-
-    assert(0 <= epsilon <= 1)
-
-    if (len(choices) <= num_to_sample):
-        return choices
-
-    # Performance
-    if epsilon == 0:
-        return choices[:num_to_sample]
-
-    sample = []
-    index_choices = [j for j in range(len(choices))]
-    nonempty_prefixes = [conts for pref, conts in prefixes.items() if conts]
-    choice_index = -1
-    for i in range(num_to_sample):
-        if random.random() <= epsilon or not i in index_choices:
-            while True:
-                prefix_conts = random.choice(nonempty_prefixes)
-                prog = random.choice(prefix_conts)
-                choice_index = choices.index(prog)
-                if choice_index in index_choices:
-                    break
-
-        else:
-            choice_index = i
-        index_choices.remove(choice_index)
-        sample.append(choices[choice_index])
-    return sample
 
 
 def execute(program_tokens,image,token_mapping):
@@ -56,6 +17,45 @@ def execute(program_tokens,image,token_mapping):
     #     if input("go inside? ") =='y':
     #         result = run_logical_form(logical_form, image)
     return result
+
+ProgramExecutionStats = namedtuple('ProgramExecutionStats', ['compiled', 'predicted_labels',
+                                                               'is_consistent', 'n_correct', 'n_incorrect' ])
+
+
+def get_program_execution_stats(token_seq, related_samples, logical_tokens_mapping):
+    actual_labels = np.array([sample.label for sample in related_samples])
+    execution_results = np.array([execute(token_seq, sample.structured_rep, logical_tokens_mapping)
+                                  for sample in related_samples])
+    prog_compiled = all(res is not None for res in execution_results)
+    predicted_labels = [res if res is not None else True for res in execution_results]
+    is_consistent = all(predicted_labels == actual_labels) and prog_compiled
+    n_correct = sum(predicted_labels == actual_labels)
+    n_incorrect = len(actual_labels) - n_correct
+
+    return ProgramExecutionStats(prog_compiled, predicted_labels, is_consistent, n_correct, n_incorrect)
+
+def programs_reranker(sentence, programs, words_to_tokens):
+    """   
+    :param sentence: a string
+    :param programs: a list of unique PartialProgram instances
+    :param words_to_tokens: a dictionary mapping words to lists of related tokens
+    :return: a list containing the programs resorted according to their relevance to the sentence
+    """
+
+    sentence_words = sentence.split()
+    needed_tokens = []
+    for word in sentence_words:
+        needed_tokens.append(words_to_tokens.get(word, []))
+    progs_to_token_relevance_count = {}
+    for prog in programs:
+        n_releveant_tokens = 0
+        for i in range(len(needed_tokens)):
+            for t in needed_tokens[i]:
+                if t in prog:
+                    n_releveant_tokens += 1
+                    break
+        progs_to_token_relevance_count[prog] = n_releveant_tokens
+    return sorted(programs, key=lambda prog: (-progs_to_token_relevance_count[prog], -prog.logprob))
 
 
 def one_hot(dim, index):

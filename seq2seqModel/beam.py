@@ -1,175 +1,196 @@
 import numpy as np
+import time
+import random
 from seq2seqModel.logical_forms_generation import *
-from seq2seqModel.utils import epsilon_greedy_sample
-
 
 
 max_decoding_length = 20
-max_decoding_steps = 14
-epsilon_greedy_p = 0.1
+MAX_STEPS = 14
 beam_size = 40
 skip_autotokens = True
 decoding_steps_from_sentence_length = lambda n : 5 + n
-injection = True
+injection = False
+
 
 
 def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapping,
-                                    original_sentence = None, epsilon = epsilon_greedy_p):
+                                    original_sentence = None, epsilon = 0.0, suggested_decodings = []):
+    """
+    An implementation of beam search for decoding logical forms.
+    :param next_token_probs_getter: a function that returns the possible next token for a program at a given state,
+            and their probabilities according to some model.
+    :param logical_tokens_mapping:  a dictionary that maps logical tokens to their syntactic properties. needed for
+            creating partial programs.
+    :param (optional) original_sentence:  a string with the sentence whose logical form is desired. This can be used
+             to restrict the search, but is not mandatory. It is assumed that the probabilistic model underlying 
+             next_token_probs_getter is given the original sentence.             
+    :param (optional) epsilon:  a real number in [0,1] representing the level of randomness in selecting the programs 
+            for the beam from all possible continuations at each steps. if epsilon==0 (default) this is classic beam search.
+            if epsilon==1 the selection is completely random.
+    :param (optional) suggested_decodings: a list of suggested logical forms. These are based on programs that
+            got reward on similar sentences.
+            
+    :return: The final beam. a list of <= beam_size partial programs with valid boolean logical forms, sorted
+            by their model probability.
+    """
 
     if original_sentence:
+        # given the original sentence whose logical form is desired, limit the beam search according to it:
+        # 1. Avoid certain tokens if they are not explicitly suggested from the sentence (e.g. do not allow 'is_yellow'
+        #   if the word 'yellow' is not in the original sentence)
+        # 2. limit the program length according to the sentence length
         logical_tokens_mapping = sentence_relevant_logical_tokens(logical_tokens_mapping, original_sentence)
-        if decoding_steps_from_sentence_length:
-            max_decoding_steps = decoding_steps_from_sentence_length(len(original_sentence.split()))
 
+        max_decoding_steps = decoding_steps_from_sentence_length(len(original_sentence.split()))
     else:
-        max_decoding_steps = 14
+            max_decoding_steps = MAX_STEPS
 
-    beam = [PartialProgram(logical_tokens_mapping)]
-    # create a beam of possible programs for sentence, the iteration continues while there are unfinished programs in beam and t < max_beam_steps
+    suggested_programs = {}
+    for decoding in suggested_decodings:
+        # if there are logical forms suggested for this sentence, create partial programs from them
+        # to get their model probability. For each such programs save the indices in which
+        # there were more than one valid option for the token. This information is needed later when
+        # the programs are 'injected' to the beam at each decoding step.
 
-
-    for t in range(max_decoding_steps):
-        # if t>1 :
-        #     sampled_prefixes = sample_decoding_prefixes(next_token_probs_getter, 5, t)
-        #     beam.extend(sampled_prefixes)
-        continuations = {}
-
-        for partial_program in beam:
-            BP= False
-            while skip_autotokens:
-                poss = partial_program.get_possible_continuations()
-                if len(poss) == 1:
-                    BP = not partial_program.add_token(poss[0], 0.0)
-                else:
-                    break
-            if BP:
-                continuations[partial_program] = []
-                continue
-            if t > 0:
-                if partial_program[-1] == '<EOS>':
-                    continuations[partial_program] = [partial_program]
-                    continue
-            cont_list = []
-
-            valid_next_tokens, probs_given_valid = \
-                next_token_probs_getter(partial_program)
-
-            logprob_given_valid = np.log(probs_given_valid)
-
-            for i, next_tok in enumerate(valid_next_tokens):
-                pp = partial_program.copy()
-                if pp.add_token(next_tok, logprob_given_valid[i]):
-                    cont_list.append(pp)
-            continuations[partial_program] = cont_list
-
-        # choose the beam_size programs and place them in the beam
-        all_continuations_list = [c for p in continuations.values() for c in p]
-        all_continuations_list.sort(key=lambda c: - c.logprob)
-        beam = epsilon_greedy_sample(all_continuations_list, beam_size, continuations, epsilon)
-
-        if all([prog.token_seq[-1] == '<EOS>' for prog in beam]):
-            break  # if we have beam_size full programs, no need to keep searching
-
-    beam = [prog for prog in beam if prog.token_seq[-1] == '<EOS>']  # otherwise won't compile and therefore no reward
-    for prog in beam:
-        prog.token_seq.pop(-1)  # take out the '<EOS>' token
-    beam = sorted(beam, key=lambda prog: -prog.logprob)
-    return beam
+        try:
+            program, (valid_tokens_history, _) = program_from_token_sequence(
+                next_token_probs_getter, decoding, logical_tokens_mapping, original_sentence=original_sentence)
+            checkpoints = [i for i in range(len(valid_tokens_history)) if len(valid_tokens_history[i])>1]
+            suggested_programs[program] = checkpoints
+        except ValueError:
+            # TODO LOGGING ERROR - OR JUST AVOID IT (UDI)
+            continue
 
 
-def e_greedy_randomized_beam_search_omer(next_token_probs_getter, logical_tokens_mapping, suggested_progs,
-                                         original_sentence=None, epsilon=epsilon_greedy_p):
-    '''
-    :param next_token_probs_getter:
-    :param logical_tokens_mapping:
-    :param suggested_progs: list of tokens lists
-    :param original_sentence:
-    :param epsilon:
-    :return:
-    '''
-
-    if original_sentence:
-        logical_tokens_mapping = sentence_relevant_logical_tokens(logical_tokens_mapping, original_sentence)
-        if decoding_steps_from_sentence_length:
-            max_decoding_steps = decoding_steps_from_sentence_length(len(original_sentence.split()))
-        else:
-            max_decoding_steps = 14
-
-    beam = [PartialProgram(logical_tokens_mapping)]
-    # create a beam of possible programs for sentence, the iteration continues while there are unfinished programs in beam and t < max_beam_steps
-
-    if injection:
-        suggested_partial_progs = [PartialProgram(logical_tokens_mapping)]*len(suggested_progs)
+    beam = [PartialProgram(logical_tokens_mapping)] # initialize the beam with the empty program
 
     for t in range(max_decoding_steps):
-        # t steps in the beam search
+        # at each step generate all possible continuations for programs in the beam and choose among them
+        # the beam for the next step.
 
-        # getting all possible continuations and their probs
-        # continuations - dict of lists {pp: [conts]}
-        continuations = {}
-        for partial_program in beam:
-            BP = False
-            while skip_autotokens:
-                poss = partial_program.get_possible_continuations()
-                if len(poss) == 1:
-                    BP = not partial_program.add_token(poss[0], 0.0)  # what's that?
-                else:
-                    break
-            if BP:
-                continuations[partial_program] = []
-                continue
-            if t > 0:
-                if partial_program[-1] == '<EOS>':
-                    continuations[partial_program] = [partial_program]
-                    continue
-            cont_list = []
-
-            valid_next_tokens, probs_given_valid = \
-                next_token_probs_getter(partial_program)
-
-            logprob_given_valid = np.log(probs_given_valid)
-
-            for i, next_tok in enumerate(valid_next_tokens):
-                pp = partial_program.copy()
-                pp.add_token(next_tok, logprob_given_valid[i])
-                cont_list.append(pp)
-            continuations[partial_program] = cont_list
-
-        # choose the beam_size programs and place them in the beam
-        all_continuations_list = [c for p in continuations.values() for c in p]
+        beam_token_seqs = set([tuple(p.token_seq) for p in beam])
 
         if injection:
-            for i, prog in enumerate(suggested_partial_progs):
-                if len(suggested_progs[i]) <= t:
-                    continue
-                tokens, probs = next_token_probs_getter(suggested_partial_progs[i])
-                prog.add_token(suggested_progs[i][t], np.log(probs[tokens.index(suggested_progs[i][t])]))
-                if prog.token_seq not in [p.token_seq for p in all_continuations_list]:
-                    all_continuations_list.append(prog)
+            # make sure that all prefixes of the suggested programs corresponding to t decoding steps in the
+            # are in the beam.
+            for prog, checkpoints in suggested_programs.items():
+                if t>0 and t-1 < len(checkpoints):
+                    try:
+                        ind = checkpoints[t-1] + 1
+                        partial_seq = tuple(prog[: ind])
+                        if not partial_seq in beam_token_seqs:
+                            pp = prog.get_prefix_program(ind)
+                            beam.append(pp)
+                            beam_token_seqs.add(partial_seq)
+                    except IndexError:
+                        # TODO LOGGING ERROR - OR JUST AVOID IT (UDI)
+                        print("exception on prog {}".format(prog))
 
-        all_continuations_list.sort(key=lambda c: - c.logprob)
+        continuations = {}
+
+        for partial_program in beam:
+
+            # if skip_autotokens is used, tokens that are the only valid continuation
+            #  to a program ate automatically added to it. This means that at a given step, not all
+            # programs in beam have the same number of tokens, but took the same number of choices to create them.
+            bad_program= False
+            while skip_autotokens:
+                poss = partial_program.get_possible_continuations()
+                if len(poss) == 1:
+                    bad_program = not partial_program.add_token(poss[0], 0.0)
+                    if bad_program:
+                        break
+                else:
+                    break
+            if bad_program:
+                continue
+
+            continuations[partial_program] = []
+
+            # for complete programs add the program as is to the pool of possible continuations.
+            # these programs may or may not survive until the end of the beam search.
+            if t > 0 and  partial_program[-1] == '<EOS>':
+                continuations[partial_program].append(partial_program)
+
+            else:
+                # otherwise, get the possible continuations for the program and add them to the pool
+                # of all possible continuations in step t.
+                valid_next_tokens, probs_given_valid = next_token_probs_getter(partial_program)
+                logprob_given_valid = np.log(probs_given_valid)
+
+                for i, next_tok in enumerate(valid_next_tokens):
+                    pp = partial_program.copy()
+                    if pp.add_token(next_tok, logprob_given_valid[i]):
+                        continuations[partial_program].append(pp)
+
+                if not continuations[partial_program]:
+                    # programs that got stack with no possible continuations are
+                    # not to be considered for selection to the next beam.
+                    del continuations[partial_program]
+
+        # stack together all possible continuations and soet them by model probability
+        all_continuations_list = [c for p in continuations.values() for c in p]
+        all_continuations_list.sort(key= lambda c: - c.logprob)
+        # choose the beam_size continuations for the next step
         beam = epsilon_greedy_sample(all_continuations_list, beam_size, continuations, epsilon)
 
-        # assert(len(prog.token_seq)<=t+1 for prog in beam)
-
         if all([prog.token_seq[-1] == '<EOS>' for prog in beam]):
-            break  # if we have beam_size full programs, no need to keep searching
+            break  # if there are already beam_size complete programs in beam, no need to keep searching
 
-    beam = [prog for prog in beam if prog.token_seq[-1] == '<EOS>']  # otherwise won't compile and therefore no reward
+    # filter out incomplete programs that won't compile anyway
+    beam = [prog for prog in beam if prog.token_seq[-1] == '<EOS>']
     for prog in beam:
         prog.token_seq.pop(-1)  # take out the '<EOS>' token
 
-    # adding the suggested programs to the beam in the end.
-    # TODO important! if it is done outside of this function, erase the following if-clause
-    if injection:
-        for prog in suggested_progs:
-            sp, _ = program_from_token_sequence(next_token_probs_getter, prog, logical_tokens_mapping,
-                                                original_sentence=original_sentence)
-            if sp.token_seq not in [p.token_seq for p in beam]:
-                beam.append(sp)
+    # make sure that all suggested programs are indeed in the final beam
+    beam_token_seqs = [p.token_seq for p in beam]
+    for prog in suggested_programs:
+        if prog.token_seq not in beam_token_seqs:
+            beam.append(prog)
 
     beam = sorted(beam, key=lambda prog: -prog.logprob)
     return beam
+
+
+def epsilon_greedy_sample(choices, num_to_sample, prefixes, epsilon=0.05):
+    """Samples without replacement num_to_sample choices from choices
+    where the ith choice is choices[i] with prob 1 - epsilon, and
+    uniformly at random with prob epsilon
+    Args:
+        choices (list[Object]): a list of choices
+        num_to_sample (int): number of things to sample
+        epsilon (float): probability to deviate
+    Returns:
+        list[Object]: list of size num_to_sample choices
+    """
+
+    assert(0 <= epsilon <= 1)
+
+    if (len(choices) <= num_to_sample):
+        return choices
+
+    # Performance
+    if epsilon == 0:
+        return choices[:num_to_sample]
+
+    sample = []
+    index_choices = [j for j in range(len(choices))]
+    nonempty_prefixes = [conts for pref, conts in prefixes.items() if conts]
+    choice_index = -1
+    for i in range(num_to_sample):
+        if random.random() <= epsilon or not i in index_choices:
+            while True:
+                prefix_conts = random.choice(nonempty_prefixes)
+                prog = random.choice(prefix_conts)
+                choice_index = choices.index(prog)
+                if choice_index in index_choices:
+                    break
+
+        else:
+            choice_index = i
+        index_choices.remove(choice_index)
+        sample.append(choices[choice_index])
+    return sample
 
 
 def sample_valid_decodings(next_token_probs_getter, n_decodings, logical_tokens_mapping):
@@ -209,41 +230,3 @@ def sample_decoding_prefixes(next_token_probs_getter, n_decodings, length, logic
     return decodings
 
 
-def sentence_relevant_logical_tokens(logical_tokens_mapping, sentence):
-    return {k: v for k, v in logical_tokens_mapping.items() if
-                              (not v.necessity) or any([w in sentence.split() for w in v.necessity])}
-
-
-def program_from_token_sequence(next_token_probs_getter, token_seq, logical_tokens_mapping, original_sentence=None):
-
-    if original_sentence:
-        logical_tokens_mapping = sentence_relevant_logical_tokens(logical_tokens_mapping, original_sentence)
-
-    partial_program = PartialProgram(logical_tokens_mapping)
-    valid_tokens_history = []
-    greedy_choices = []
-
-    for tok in token_seq:
-        valid_next_tokens, probs_given_valid = \
-            next_token_probs_getter(partial_program)
-        valid_tokens_history.append(valid_next_tokens)
-        if tok not in valid_next_tokens:
-            raise ValueError(("{0} : {1} \n".format(token_seq, tok)))
-        p = probs_given_valid[valid_next_tokens.index(tok)]
-        greedy_choices.append(valid_next_tokens[np.argmax(probs_given_valid)])
-        partial_program.add_token(tok, np.log(p))
-    return partial_program, (valid_tokens_history, greedy_choices)
-
-def get_multiple_programs_from_token_sequences(next_token_probs_getter, token_seqs, logical_tokens_mapping, original_sentence=None):
-
-    # TODO : make more efficient using prefix trees
-    result = []
-    for seq in token_seqs:
-        try:
-            prg = program_from_token_sequence(next_token_probs_getter, seq,
-                                                   logical_tokens_mapping, original_sentence=original_sentence)
-
-            result.append( prg[0])
-        except ValueError:
-            pass
-    return result

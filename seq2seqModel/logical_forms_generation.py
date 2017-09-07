@@ -10,14 +10,14 @@ import re
 
 from preprocessing import get_ngrams_counts
 import definitions
-from logical_forms_new import process_token_sequence
+from logical_forms import process_token_sequence
 from preprocessing import *
 from general_utils import *
 
 TOKEN_MAPPING = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
 LOGICAL_TOKENS_EMBEDDINGS_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_embeddings')
-MAX_LENGTH = 35
+MAX_LENGTH = 25
 
 USE_PARAPHRASING = False
 
@@ -71,10 +71,24 @@ def load_functions(filename):
                 continue
             token, return_type, args_types = entry[0], entry[-1], entry[2:-1]
             functions_dict[token] = TokenTypes(return_type=return_type, args_types=args_types, necessity= necessary_words)
-        functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one', 'a', 'is'])
+        functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one', 'a'])
         functions_dict.update({str(i): TokenTypes(return_type='int', args_types=[], necessity=[str(i)]) for i in range(2, 10)})
 
     return functions_dict
+
+def words_to_tokens_dict(functions_dict):
+    words_to_tokens = {}
+    for tok, v in functions_dict.items():
+        if tok not in ('1', 'ALL_BOXES'):
+            for nec in v.necessity:
+                if nec not in words_to_tokens:
+                    words_to_tokens[nec] = []
+                words_to_tokens[nec].append(tok)
+    return words_to_tokens
+
+
+
+
 
 
 def check_types(required, suggested):
@@ -160,7 +174,7 @@ class PartialProgram:
         self.stack = ["bool"]
         self.token_seq = []
         self.vars_in_use = {}
-        self.logprob = 0
+        self.logprobs = []
         self.logical_tokens_mapping = lt_mapping
         self.stack_history = [tuple(["bool"])]
 
@@ -183,14 +197,17 @@ class PartialProgram:
 
     def copy(self):
         pp_copy = PartialProgram(self.logical_tokens_mapping)
-        pp_copy.vars = self.vars
         pp_copy.vars = self.vars.copy()
         pp_copy.stack = self.stack.copy()
         pp_copy.token_seq = self.token_seq.copy()
         pp_copy.vars_in_use = self.vars_in_use.copy()
-        pp_copy.logprob = self.logprob
+        pp_copy.logprobs = self.logprobs.copy()
         pp_copy.stack_history = self.stack_history.copy()
         return pp_copy
+
+    @property
+    def logprob(self):
+        return np.sum(self.logprobs)
 
     def get_possible_continuations(self):
 
@@ -199,10 +216,8 @@ class PartialProgram:
                 return []
             return ["<EOS>"]  # end of decoding
 
-
-
-
-
+        if len(self.token_seq)>=MAX_LENGTH:
+            return []
 
         next_type = self.stack[-1]
         # the next token must have a return type that matches next_type or to be itself an instance of next_type
@@ -210,12 +225,11 @@ class PartialProgram:
         # of a functions that has return type int, like 'count'.
 
 
-
         if next_type.startswith("bool_func"):
             # in that case there is no choice - the only valid token is 'lambda'
             if len(self.vars) == 0:
                 return [] # cannot recover
-            var = self.vars.pop(0)  # get a new letter to represent the var
+            var = self.vars[0]  # get a new letter to represent the var
             type_of_var = next_type[10:-1]
             if type_of_var == '?':
                 raise TypeError("var in lambda function must be typed")
@@ -246,7 +260,7 @@ class PartialProgram:
             if len(last_args_types) == 1 and last_args_types[0].startswith('set'):
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                                if not v.args_types])
-                if last!='count':
+                if last_return_type=='bool':
                     impossible_continuations.extend([t for t, v in self.vars_in_use.items()])
 
             if not last_args_types:
@@ -256,9 +270,14 @@ class PartialProgram:
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                 if len(v.args_types)>1])
 
+            if len(self.token_seq) >= 2 and all(tok == self.token_seq[-1] for tok in self.token_seq[-2:]):
+                impossible_continuations.append(self.token_seq[-1])
+
+
             open_filter_scopes_begginnings = [start for start, end in self.filter_scopes() if not end]
-            impossible_continuations.extend(
-            [self.token_seq[t+1] for t in open_filter_scopes_begginnings if t<len(self.token_seq)-1])
+            if last=='filter':
+                impossible_continuations.extend(
+                [self.token_seq[t+1] for t in open_filter_scopes_begginnings if t<len(self.token_seq)-1])
 
             if last == 'equal':
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
@@ -266,7 +285,6 @@ class PartialProgram:
 
 
         return impossible_continuations
-
 
     def add_token(self, token, logprob):
         if len(self.stack)==0:
@@ -279,6 +297,8 @@ class PartialProgram:
         if token.startswith('lambda'):
             self.token_seq.append(token)
             self.stack.append('bool')
+            var = token[7]
+            self.vars.remove(var)
         else:
             if token in self.logical_tokens_mapping:
                 token_return_type,  token_args_types, token_necessity = self.logical_tokens_mapping[token]
@@ -301,7 +321,7 @@ class PartialProgram:
                              token_args_types[::-1]]
             self.stack.extend(args_to_stack)
 
-        self.stack_history.append(tuple(self.stack))
+
 
         for var, (type_of_var, idx) in [kvp for kvp in self.vars_in_use.items()]:
         # after popping the stack, check whether one of the added variables is no longer in scope.
@@ -311,17 +331,25 @@ class PartialProgram:
                 else:
                     return False
                 break
-        self.logprob += logprob
+
+        self.stack_history.append(tuple(self.stack))
+        self.logprobs.append(logprob)
 
         if len(self.token_seq) >= 3 and all(tok == self.token_seq[-1] for tok in self.token_seq[-3:]):
             return False
+        #
+        # if len(self.stack) >4:
+        #     return False
 
-        if len(self.stack) >4:
+        bool_scopes = self.boolean_scopes()
+
+        bool_scopes_str = [" ".join(self.token_seq[start : end]) for start, end in self.boolean_scopes() if end]
+        if len(set(bool_scopes_str)) < len(bool_scopes_str):
             return False
 
-        bool_scopes = [" ".join(self.token_seq[start : end]) for start, end in self.boolean_scopes() if end]
-        if len(set(bool_scopes)) < len(bool_scopes):
-            return False
+
+
+
 
 
 
@@ -351,6 +379,60 @@ class PartialProgram:
                 else:
                     scopes.append((i, min(end_of_exp)))
         return scopes
+
+    def get_prefix_program(self, index):
+
+        prefix_program = PartialProgram(self.logical_tokens_mapping)
+        for i, tok in enumerate(self.token_seq[:index]):
+            valid_next_tokens = prefix_program.get_possible_continuations()
+            if tok not in valid_next_tokens:
+                raise ValueError(("{0} : {1} \n".format(self.token_seq, tok)))
+            log_p = self.logprobs[i]
+            prefix_program.add_token(tok, log_p)
+
+        return prefix_program
+
+def sentence_relevant_logical_tokens(logical_tokens_mapping, sentence):
+    return {k: v for k, v in logical_tokens_mapping.items() if
+                              (not v.necessity) or any([w in sentence.split() for w in v.necessity])}
+
+
+def program_from_token_sequence(next_token_probs_getter, token_seq, logical_tokens_mapping, original_sentence=None):
+
+    if original_sentence:
+        logical_tokens_mapping = sentence_relevant_logical_tokens(logical_tokens_mapping, original_sentence)
+
+    partial_program = PartialProgram(logical_tokens_mapping)
+    valid_tokens_history = []
+    greedy_choices = []
+
+    for ind, tok in enumerate(token_seq):
+        valid_next_tokens, probs_given_valid = \
+            next_token_probs_getter(partial_program)
+        valid_tokens_history.append(valid_next_tokens)
+        if tok not in valid_next_tokens:
+            #TODO DELETE
+            partial_program.get_possible_continuations()
+            raise ValueError(("{0} : {1}, {2} \n".format(token_seq, tok, ind)))
+        p = probs_given_valid[valid_next_tokens.index(tok)]
+        greedy_choices.append(valid_next_tokens[np.argmax(probs_given_valid)])
+        partial_program.add_token(tok, np.log(p))
+    return partial_program, (valid_tokens_history, greedy_choices)
+
+def get_multiple_programs_from_token_sequences(next_token_probs_getter, token_seqs, logical_tokens_mapping, original_sentence=None):
+
+    # TODO : make more efficient using prefix trees
+    result = []
+    for seq in token_seqs:
+        try:
+            prg = program_from_token_sequence(next_token_probs_getter, seq,
+                                                   logical_tokens_mapping, original_sentence=original_sentence)
+
+            result.append( prg[0])
+        except ValueError:
+            pass
+    return result
+
 
 
 def get_formalized_sentence(sentence):
@@ -490,7 +572,7 @@ def numbers_contained(string):
     return nums
 
 
-def update_programs_cache(cached_programs, sentence, prog, reward):
+def update_programs_cache(cached_programs, sentence, prog, prog_stats):
     '''
     :param sentence: 'there is a yellow item'
     :param program: exist filter ALL_ITEMS lambda_x_: is_yellow x
@@ -539,9 +621,15 @@ def update_programs_cache(cached_programs, sentence, prog, reward):
     formalized_program = formalized_program.replace('$', '1')
 
     if formalized_program not in matching_cached_patterns:
-        matching_cached_patterns[formalized_program] = 0
+        matching_cached_patterns[formalized_program] = [0,0]
 
-    matching_cached_patterns[formalized_program] += reward
+    matching_cached_patterns[formalized_program][0] + prog_stats.n_correct
+    matching_cached_patterns[formalized_program][1] + prog_stats.n_incorrect
+
+    if (matching_cached_patterns[formalized_program][0] + 1) / (matching_cached_patterns[formalized_program][1]
+                                                          +0.1) < 3:
+        del matching_cached_patterns [formalized_program]
+    return
 
 def get_ands(pp : PartialProgram):
     ind = -1

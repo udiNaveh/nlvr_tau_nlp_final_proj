@@ -1,17 +1,23 @@
 from copy import deepcopy
 import pickle
-from logical_forms_new import *
+from logical_forms import *
 import  random
 import os
 import definitions
-from seq2seqModel.logical_forms_generation import load_functions
+from seq2seqModel.logical_forms_generation import *
 from seq2seqModel.utils import execute
 from handle_data import *
 from preprocessing import *
 
 
-LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping')
-PARSED_FORMS_PATH = 'temp_sents.txt'
+LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
+PARSED_FORMS_PATH = os.path.join(definitions.ROOT_DIR, 'pre-training', 'temp_sents_new')
+WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
+
+embeddings_file = open(WORD_EMBEDDINGS_PATH, 'rb')
+embeddings_dict = pickle.load(embeddings_file)
+embeddings_file.close()
+
 
 colors = ['yellow', 'blue', 'black']
 locs = [('top', 'top'), ('bottom', 'bottom')]
@@ -27,6 +33,7 @@ replacements_dic = {'T_SHAPE' : [('square', ['square']),('triangle', ['triangle'
              'T_INT' : [(str(i), [str(i)]) for i in range (2,8)],
              'T_QUANTITY_COMPARE' : [('equal_int', ['exactly']),('le', ['at least']),('ge', ['at most']),
                                      ('lt', ['more than']),('gt', ['less than'])]
+
              }
 
 logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
@@ -97,26 +104,36 @@ def generate_eng_log_pairs(engsent, logsent, n_pairs):
         log_sent = " ".join(log_tokens)
         if 'gt 1' in log_sent or 'ge 1' in log_sent:
             continue
+        bad_int_use = False
         for j in (3,4,5,6,7):
             if np.random.rand() < 0.10 * j:
                 continue
             if '{} tower'.format(j) in eng_sent or '{} box'.format(j) in eng_sent\
                     or '{} ALL_BOXES'.format(j) in log_sent:
-                continue
+                bad_int_use =True
+                break
 
 
-
-        result.append((eng_sent, log_sent))
+        if not bad_int_use:
+            result.append((eng_sent, log_sent))
     return result
 
 
-def check_generated_forms(forms_doctionary, samples):
+def check_generated_forms(forms_dictionary, samples):
+    next_token_probs_getter = lambda pp: (pp.get_possible_continuations(), [0.1 for p in pp.get_possible_continuations()])
 
-    for engsent, (form_count, logsents) in sorted(forms_doctionary.items(), key = lambda k : - k[1][0]):
+
+    i = 0
+    for engsent, (form_count, logsents) in sorted(forms_dictionary.items(), key = lambda k : - k[1][0]):
         for logsent in logsents:
-            curr_samples = random.sample(samples, 5)
+            curr_samples = random.sample(samples, 1)
             generated_forms = generate_eng_log_pairs(engsent, logsent, 5)
             for gen_sent, gen_log in generated_forms:
+                i+=1
+                print(i)
+                for word in gen_sent.split():
+                    if word not in embeddings_dict:
+                        print (word)
                 for sample in curr_samples:
                     r = execute(gen_log.split(), sample.structured_rep, logical_tokens_mapping)
                     if r is None:
@@ -124,13 +141,22 @@ def check_generated_forms(forms_doctionary, samples):
                         print(gen_log)
                         print("original=" + logsent)
                         print()
+                if not "filter filter filter" in gen_log:
+                    try:
+                        prog = program_from_token_sequence(next_token_probs_getter, gen_log.split(), logical_tokens_mapping,
+                                                    original_sentence=gen_sent)
+                    except ValueError:
+
+                        print(gen_sent)
+                        print(gen_log)
+
 
 def generate_pairs(forms_doctionary):
     all_pairs =[]
     parsing_dict = {}
     for engsent, (form_count, logsents) in sorted(forms_doctionary.items(), key=lambda k: - k[1][0]):
         for logsent in logsents:
-            num = 12 *form_count // len(logsents)
+            num = int(50 *form_count**(0.8)) // len(logsents)
             all_pairs.extend(generate_eng_log_pairs(engsent, logsent, num))
 
 
@@ -257,10 +283,12 @@ def sents_maker(path = r'temp_sents.txt'):
 
 if __name__ == '__main__':
     parsed_forms = load_forms(PARSED_FORMS_PATH)
+    samples, sentences = build_data(read_data(TRAIN_JSON), preprocessing_type='shallow')
+    #check_generated_forms(parsed_forms, samples)
     train, validation = generate_pairs(parsed_forms)
-    # train = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train'), 'rb')
+    # train = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train3'), 'rb')
     # train = pickle.load(train)
-    # validation = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation'), 'rb')
+    # validation = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation3'), 'rb')
     # validation = pickle.load(validation)
     # train_sep, validation_sep = generate_pairs_woth_train_val_separation(parsed_forms)
     # train_sep = list(set(train_sep))
@@ -275,8 +303,10 @@ if __name__ == '__main__':
     # train_sep = pickle.load(train_sep)
     # validation_sep = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation_sep'), 'rb')
     # validation_sep = pickle.load(validation_sep)
+    pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation3'), 'wb'))
+    pickle.dump(train, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train3'), 'wb'))
     # pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation2'), 'wb'))
-    pickle.dump(train, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train2'), 'wb'))
-    pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation2'), 'wb'))
+
+
 
     print("")

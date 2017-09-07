@@ -60,11 +60,11 @@ is_touching_wall	2	Item	Side	bool	: edge touch
 is_touching_corner	2	Item	Side	bool	: corner
 
 
-query_color	1	Item|set<Item>	set<Color>	: color blue yellow black
+query_color	1	Item|set<Item>	set<Color>	: color
 
-query_size	1	Item|set<Item>	set<Size>	: size	big medium small
+query_size	1	Item|set<Item>	set<Size>	: size
 
-query_shape	1	Item|set<Item>	set<Shape>	: shape	square	circle	triangle
+query_shape	1	Item|set<Item>	set<Shape>	: shape
 
 le	2	int int	bool
 
@@ -86,7 +86,7 @@ AND	2	bool	bool	bool
 
 OR	2	bool	bool	bool
 
-NOT	1	bool	bool
+NOT	1	bool	bool	:  no not none
 
 #member_of	2
 
@@ -100,7 +100,7 @@ all_same	1	set<?>	bool
 
 union_all	1	set<set<Item>>	set<Item>
 
-#union	2	set<?>	set<?>	set<?>
+# union	2	set<?>	set<?>	set<?>
 
 #intersect	2	set<?>	set<?>	set<?>
 
