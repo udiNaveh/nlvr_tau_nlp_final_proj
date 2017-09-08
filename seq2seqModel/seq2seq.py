@@ -8,53 +8,11 @@ from seq2seqModel.utils import *
 from seq2seqModel.logical_forms_generation import *
 from handle_data import CNLVRDataSet, SupervisedParsing, DataSet
 from seq2seqModel.beam import *
+from seq2seqModel.hyper_params import *
 from general_utils import increment_count, union_dicts
-import definitions
 import time
-#import pandas as pd
 
-#paths
 
-LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
-WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
-PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
-TRAINED_WEIGHTS_SUP_HISTORY_4 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'trained_variables_sup_check_hs4.ckpt')
-TRAINED_WEIGHTS_SUP_HISTORY_6 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_hs6.ckpt')
-TRAINED_WEIGHTS_TEMP = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','temp.ckpt')
-SENTENCES_IN_PRETRAIN_PATTERNS = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'sentences_in_pattern')
-LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
-CACHED_PROGRAMS = os.path.join(definitions.DATA_DIR, 'patterns_dict')
-
-####
-###hyperparameters
-####
-
-#dimensions
-WORD_EMB_SIZE = 12
-LOG_TOKEN_EMB_SIZE = 12
-DECODER_HIDDEN_SIZE = 50
-LSTM_HIDDEN_SIZE = 30
-SENT_EMB_SIZE = 2 * LSTM_HIDDEN_SIZE
-HISTORY_LENGTH = 6
-
-#other hyper parameters
-LEARNING_RATE = 0.001
-BETA = 0.5
-EPSILON_FOR_BEAM_SEARCH = 0.1
-MAX_N_EPOCHS = 20
-
-BATCH_SIZE_UNSUPERVISED = 8
-BATCH_SIZE_SUPERVISED = 10
-USE_BOW_HISTORY = False
-IRRELEVANT_TOKENS_IN_GRAD = True
-AUTOMATIC_TOKENS_IN_GRAD = False
-HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
-USE_CACHED_PROGRAMS = False
-N_CACHED_PROGRAMS = 0
-LOAD_CACHED_PROGRAMS = False
-SAVE_CACHED_PROGRAMS = False
-SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
-PRINT_EVERY = 10
 
 
 def load_meta_data():
@@ -627,6 +585,7 @@ def run_inference(sess, data, load_params, clf=None):
         label = sample.label
 
         for step in range (len(sentences)):
+
             sentence = (sentences[step])
 
             encoder_feed_dict, decoder_feed_dict = \
@@ -695,8 +654,10 @@ def run_inference(sess, data, load_params, clf=None):
 if __name__ == '__main__':
 
     with tf.Session() as sess:
+        train = CNLVRDataSet(DataSet.TRAIN)
         dev = CNLVRDataSet(DataSet.DEV)
-        run_unsupervised(sess, dev, mode='train',load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_6,
-                         save_model_path= TRAINED_WEIGHTS_TEMP)
+        test = CNLVRDataSet(DataSet.TEST)
+        run_unsupervised(sess, dev, mode='train',load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_4,
+                         )
         #run_unsupervised(sess, dev, mode='test', load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_4)
     print("done")
