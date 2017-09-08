@@ -13,6 +13,7 @@ import definitions
 from logical_forms import process_token_sequence
 from preprocessing import *
 from general_utils import *
+from seq2seqModel.utils import *
 
 TOKEN_MAPPING = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
@@ -24,24 +25,10 @@ USE_PARAPHRASING = False
 TokenTypes = namedtuple('TokenTypes', ['return_type', 'args_types', 'necessity'])
 
 log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
-            'exactly': 'equal_int', 'at least': 'ge', 'at most': 'le', 'triangle': 'triangle',
+            'exactly': 'equal_int', 'at least': 'le', 'at most': 'ge', 'triangle': 'triangle',
             'circle': 'circle', 'square': 'square', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
-            '7': '7', '1': '1', 'one': '1'}
-
-
-def get_probs_from_file(path):
-    token_seqs = []
-    with open(path) as parsed_examples:
-        for line in parsed_examples:
-            if line.isspace():
-                continue
-            line = line.strip()
-            if line.startswith('#'):
-                continue
-            if not line[0].isdigit():
-                token_seqs.append(line.split())
-
-    return get_ngrams_counts(token_seqs, 3, include_start_and_stop=True)
+            '7': '7', '1': '1', 'one': '1', 'big' : 'big', 'small' : 'small', 'medium' : 'medium',
+            'more than' : 'lt', 'less than' : 'gt', 'on': 'above', 'below': 'below', 'touch' : 'touching'}
 
 
 def load_functions(filename):
@@ -76,6 +63,8 @@ def load_functions(filename):
 
     return functions_dict
 
+token_mapping = load_functions(TOKEN_MAPPING)
+
 def words_to_tokens_dict(functions_dict):
     words_to_tokens = {}
     for tok, v in functions_dict.items():
@@ -85,10 +74,6 @@ def words_to_tokens_dict(functions_dict):
                     words_to_tokens[nec] = []
                 words_to_tokens[nec].append(tok)
     return words_to_tokens
-
-
-
-
 
 
 def check_types(required, suggested):
@@ -415,8 +400,6 @@ def program_from_token_sequence(next_token_probs_getter, token_seq, logical_toke
             next_token_probs_getter(partial_program)
         valid_tokens_history.append(valid_next_tokens)
         if tok not in valid_next_tokens:
-            #TODO DELETE
-            partial_program.get_possible_continuations()
             raise ValueError(("{0} : {1}, {2} \n".format(token_seq, tok, ind)))
         p = probs_given_valid[valid_next_tokens.index(tok)]
         greedy_choices.append(valid_next_tokens[np.argmax(probs_given_valid)])
@@ -489,12 +472,15 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
     matching_patterns = patterns_dict.get(formalized_sent, {})
 
     for i, word in enumerate(words):
-        if word == 'at' and (words[i+1] == 'most' or words[i+1] == 'least'):
-            words[i:i+2] = [' '.join(words[i:i+2])]
+        if i< len(words)-1:
+            if word == 'at' and (words[i+1] == 'most' or words[i+1] == 'least'):
+                words[i:i+2] = [' '.join(words[i:i+2])]
+            if (word == 'more' or word == 'less') and  words[i+1] == 'than':
+                words[i:i + 2] = [' '.join(words[i:i + 2])]
 
 
     suggested_decodings = []
-    for prog, acc_reward in sorted(matching_patterns.items(), key = lambda item : item[1], reverse=True):
+    for prog, acc_reward in sorted(matching_patterns.items(), key = lambda item : binomial_prob(item[1][0],item[1][1])):
         token_seq = prog.split()
 
         for i, _ in enumerate(words):
@@ -507,64 +493,19 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
             for j, token in enumerate(token_seq):
                 if formalized_words[i] in token and numbers_contained(formalized_words[i]) == numbers_contained(token)\
                         and words[i] in log_dict:
-                            token_seq[j] =  (token_seq[j]).replace(formalized_words[i],  log_dict[words[i]])
+                            formalized_token= token_seq[j]
+                            rep = str.upper(log_dict[words[i]]) if '.' in formalized_token else log_dict[words[i]]
+                            str.upper(token_seq[j]) if '.' in token_seq[j] else token_seq[j]
+                            token_seq[j] =  (formalized_token).replace(formalized_words[i],  rep)
+                            if token_seq[j] not in token_mapping:
+                                print("token {} not exist".format( token_seq[j]))
+
 
         # return token_seq
         token_str = ' '.join(token_seq)
         suggested_decodings.append(token_str)
     return suggested_decodings
 
-
-def get_formlized_sentence_and_decoding(sentence, program, patterns_dict):
-    '''
-    :param sentence: 'there is a yellow item'
-    :param program: exist filter ALL_ITEMS lambda_x_: is_yellow x
-    :return:
-            'there is a T_COLOR item', {'exist filter ALL_ITEMS lambda_x_: is_T_COLOR x': None}
-            and adding both to patterns_dict
-    '''
-
-    if get_formalized_sentence(sentence) in patterns_dict:
-        return get_formalized_sentence(sentence), patterns_dict[get_formalized_sentence(sentence)]
-
-    # building replacements "dictionary" (it is actually a list of tuples)
-    formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
-    dict = load_dict_from_txt(formalization_file)
-    for i in range(2,10):
-        dict[str(i)] = 'T_INT'
-    dict["1"] = 'T_ONE'
-    dict["one"] = 'T_ONE'
-    manualy_chosen_replacements = sorted(dict.items(), key = lambda x : sentence.find(x[0]))
-    manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
-    formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
-    formalized_program = " {} ".format(program)  # pad with whitespaces
-
-    temp_dict = {}
-    for exp, replacement in manualy_chosen_replacements:
-        if exp in formalized_sentence and replacement not in temp_dict.values():
-            temp_dict[exp] = replacement
-        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') not in temp_dict.values():
-            temp_dict[exp] = replacement.rstrip() + '_$ '
-        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') in temp_dict.values():
-            temp_dict[exp] = replacement.rstrip() + '_2 '
-    temp_dict = [(k, temp_dict[k]) for k in temp_dict]
-
-    for exp, replacement in temp_dict:
-        formalized_sentence = formalized_sentence.replace(exp, replacement)
-    formalized_sentence = formalized_sentence.strip()
-    formalized_sentence = formalized_sentence.replace('$', '1')
-
-
-    for exp, replacement in temp_dict:
-        formalized_program = formalized_program.replace(log_dict[exp.strip()], replacement.strip())
-    formalized_program = formalized_program.strip()
-    formalized_program = formalized_program.replace('$', '1')
-
-    if formalized_sentence not in patterns_dict:
-        patterns_dict[formalized_sentence] = {}
-    patterns_dict[formalized_sentence][formalized_program] = None
-
-    return formalized_sentence, {formalized_program: None}
 
 
 def numbers_contained(string):
@@ -617,22 +558,29 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
     formalized_sentence = formalized_sentence.strip()
     formalized_sentence = formalized_sentence.replace('$', '1')
 
-
     for exp, replacement in temp_dict:
-        if exp.strip() in log_dict: # TODO figure out what's wrong here
-            formalized_program = formalized_program.replace(log_dict[exp.strip()], replacement.strip())
+        exp = exp.strip()
+        #replacement = replacement.strip()
+        if exp in log_dict: #
+            formalized_program = formalized_program.replace(" {} ".format(log_dict[exp]), replacement)
+            formalized_program = formalized_program.replace(str.upper(log_dict[exp]), replacement.strip())
+            formalized_program = formalized_program.replace("_{}".format(log_dict[exp]), '_'+replacement.strip())
     formalized_program = formalized_program.strip()
     formalized_program = formalized_program.replace('$', '1')
 
     if formalized_program not in matching_cached_patterns:
         matching_cached_patterns[formalized_program] = [0,0]
 
-    matching_cached_patterns[formalized_program][0] + prog_stats.n_correct
-    matching_cached_patterns[formalized_program][1] + prog_stats.n_incorrect
+    matching_cached_patterns[formalized_program][0] += prog_stats.n_correct
+    matching_cached_patterns[formalized_program][1] += prog_stats.n_incorrect
 
-    if (matching_cached_patterns[formalized_program][0] + 1) / (matching_cached_patterns[formalized_program][1]
-                                                          +0.1) < 3:
+
+    total_n_correct, total_n_incorrect = matching_cached_patterns[formalized_program]
+    if total_n_incorrect>0 and (total_n_correct / total_n_incorrect) <3:
         del matching_cached_patterns [formalized_program]
+
+
+
     return
 
 def get_ands(pp : PartialProgram):
