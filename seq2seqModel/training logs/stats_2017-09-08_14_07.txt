@@ -1,0 +1,21 @@
+##############################
+current mode = test
+current dataset = DEV
+2017-09-08 14:09
+finished epoch 1.
+parameters used in learning:
+EPSILON_FOR_BEAM_SEARCH : 0.05
+BETA : 0.5
+SKIP_AUTO_TOKENS : False
+N_CACHED_PROGRAMS : 0
+INJECT_TO_BEAM : False
+SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH : True
+AVOID_ALL_TRUE_SENTENCES : True
+INPUT_WEIGHTS : C:\Users\ASUS\PycharmProjects\nlvr_tau_nlp_final_proj\seq2seqModel\learnedWeights\trained_variables_sup_check_hs4.ckpt
+OUTPUT_WEIGHTS : C:\Users\ASUS\PycharmProjects\nlvr_tau_nlp_final_proj\seq2seqModel\learnedWeightsUns\weights_2017-09-08_14_07.ckpt
+stats for this epoch:
+208 out of 267 sentences had consistent programs in beam
+mean consistent parses for sentence = 5.59, mean beam size for sentence = 23.11,  mean prog length = 15.17
+top programs by model had so far 754 correct answers out of 989 samples (76.24%), and 133 consistent parses out of 267 sentences (49.81%)
+top programs by reranking had so far 784 correct answers out of 989 samples (79.27%), and 152 consistent parses out of 267 sentences (56.93%)
+##############################
