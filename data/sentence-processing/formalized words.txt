@@ -27,3 +27,12 @@
   medium : T_SIZE
   small : T_SIZE
   big : T_SIZE
+
+# relation words
+    on : T_REL
+    below : T_REL
+    touch : T_REL
+
+# wall words
+    edge : T_EDGE
+    corner : T_EDGE

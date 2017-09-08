@@ -53,10 +53,13 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
         try:
             program, (valid_tokens_history, _) = program_from_token_sequence(
                 next_token_probs_getter, decoding, logical_tokens_mapping, original_sentence=original_sentence)
-            checkpoints = [i for i in range(len(valid_tokens_history)) if len(valid_tokens_history[i])>1]
+            if SKIP_AUTO_TOKENS:
+                checkpoints = [i for i in range(len(valid_tokens_history)) if len(valid_tokens_history[i])>1]
+            else:
+                checkpoints = [i for i in range(len(valid_tokens_history))]
             suggested_programs[program] = checkpoints
-        except ValueError:
-            # TODO LOGGING ERROR - OR JUST AVOID IT (UDI)
+        except ValueError as err:
+            # if for some reason a suggested decoding was not a valid program
             continue
 
     if not SKIP_AUTO_TOKENS:
@@ -73,7 +76,7 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
             # make sure that all prefixes of the suggested programs corresponding to t decoding steps in the
             # are in the beam.
             for prog, checkpoints in suggested_programs.items():
-                if t>0 and t-1 < len(checkpoints):
+                if t>0 and t < len(checkpoints):
                     try:
                         ind = checkpoints[t-1] + 1
                         partial_seq = tuple(prog[: ind])
@@ -82,7 +85,6 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
                             beam.append(pp)
                             beam_token_seqs.add(partial_seq)
                     except IndexError:
-                        # TODO LOGGING ERROR - OR JUST AVOID IT (UDI)
                         print("exception on prog {}".format(prog))
 
         continuations = {}
