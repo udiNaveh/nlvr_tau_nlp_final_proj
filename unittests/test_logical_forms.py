@@ -187,7 +187,7 @@ def test_forms_from_beam():
 def test_almost_touching():
     train = CNLVRDataSet(definitions.TRAIN_JSON)
     while True:
-        batch = train.next_batch(100)
+        batch, _ = train.next_batch(100)
         ids = [key for key in batch.keys()]
         sentences, samples = zip(*[batch[k] for k in ids])
         for i in range(len(sentences)):

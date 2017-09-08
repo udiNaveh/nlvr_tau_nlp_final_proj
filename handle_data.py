@@ -10,9 +10,9 @@ import pickle
 
 
 class DataSet(Enum):
-    TRAIN = 1,
-    DEV = 2,
-    TEST = 3
+    TRAIN = 'train',
+    DEV = 'dev',
+    TEST = 'test'
 
 
 paths = {   DataSet.TRAIN : definitions.TRAIN_JSON,
@@ -81,6 +81,9 @@ class CNLVRDataSet:
         self.__ids_by_complexity = []
         self.get_data(paths[dataset])
 
+    @property
+    def name(self):
+        return self.__dataset.name
 
     @property
     def num_examples(self):
@@ -137,7 +140,7 @@ class CNLVRDataSet:
         self.__ids = new_ids
 
     def ignore_all_true_samples(self):
-        all_true_filter = lambda s_samples : all([s.label==True for s in s_samples])
+        all_true_filter = lambda s_samples : not all([s.label==True for s in s_samples])
         self.use_subset_by_images_condition(all_true_filter)
 
     def sort_sentences_by_complexity(self, complexity_measure, n_classes):
@@ -161,6 +164,9 @@ class CNLVRDataSet:
 
     def next_batch(self,batch_size):
 
+        if batch_size <= 0 or batch_size> self.num_examples:
+            raise ValueError("invalid argument for batch size:  {}".format(batch_size))
+
         if self._index_in_epoch  == 0:
             np.random.shuffle(self.__ids)  # shuffle index
 
@@ -178,7 +184,8 @@ class CNLVRDataSet:
             self.epochs_completed +=1
             self._index_in_epoch = 0
 
-        return batch
+
+        return batch, self._index_in_epoch == 0
 
 
 class SupervisedParsing:
