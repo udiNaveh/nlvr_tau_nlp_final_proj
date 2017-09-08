@@ -283,6 +283,10 @@ class PartialProgram:
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                 if not ('Color' in v.return_type or 'Shape' in v.return_type)])
 
+            if 'select' in self.token_seq:
+                impossible_continuations.append('select')
+
+
 
         return impossible_continuations
 

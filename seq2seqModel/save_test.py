@@ -306,7 +306,7 @@ def run_unsupervised_training(sess, load_params_path = None, save1=None, save2=N
     num_have_pattern = 0
     while train.epochs_completed < 1:
 
-        batch = train.next_batch(BATCH_SIZE_UNSUPERVISED)
+        batch, _ = train.next_batch(BATCH_SIZE_UNSUPERVISED)
         epoch_finished = epochs_completed != train.epochs_completed
         if epoch_finished:
             epochs_completed+=1

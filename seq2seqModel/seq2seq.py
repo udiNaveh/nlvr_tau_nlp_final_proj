@@ -3,58 +3,17 @@ from tensorflow.contrib.rnn import BasicLSTMCell
 import pickle
 import numpy as np
 import os
+import sys
 import definitions
 from seq2seqModel.utils import *
 from seq2seqModel.logical_forms_generation import *
 from handle_data import CNLVRDataSet, SupervisedParsing, DataSet
 from seq2seqModel.beam import *
+from seq2seqModel.hyper_params import *
 from general_utils import increment_count, union_dicts
-import definitions
 import time
-#import pandas as pd
 
-#paths
 
-LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
-WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
-PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
-TRAINED_WEIGHTS_SUP_HISTORY_4 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'trained_variables_sup_check_hs4.ckpt')
-TRAINED_WEIGHTS_SUP_HISTORY_6 = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','trained_variables_sup_check_hs6.ckpt')
-TRAINED_WEIGHTS_TEMP = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','temp.ckpt')
-SENTENCES_IN_PRETRAIN_PATTERNS = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'sentences_in_pattern')
-LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
-CACHED_PROGRAMS = os.path.join(definitions.DATA_DIR, 'patterns_dict')
-
-####
-###hyperparameters
-####
-
-#dimensions
-WORD_EMB_SIZE = 12
-LOG_TOKEN_EMB_SIZE = 12
-DECODER_HIDDEN_SIZE = 50
-LSTM_HIDDEN_SIZE = 30
-SENT_EMB_SIZE = 2 * LSTM_HIDDEN_SIZE
-HISTORY_LENGTH = 6
-
-#other hyper parameters
-LEARNING_RATE = 0.001
-BETA = 0.5
-EPSILON_FOR_BEAM_SEARCH = 0.1
-MAX_N_EPOCHS = 20
-
-BATCH_SIZE_UNSUPERVISED = 8
-BATCH_SIZE_SUPERVISED = 10
-USE_BOW_HISTORY = False
-IRRELEVANT_TOKENS_IN_GRAD = True
-AUTOMATIC_TOKENS_IN_GRAD = False
-HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
-USE_CACHED_PROGRAMS = False
-N_CACHED_PROGRAMS = 0
-LOAD_CACHED_PROGRAMS = False
-SAVE_CACHED_PROGRAMS = False
-SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
-PRINT_EVERY = 10
 
 
 def load_meta_data():
@@ -251,8 +210,14 @@ cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
 
 
 
-def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_path = None):
-    assert mode in ('train', 'test')
+def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_params_path = None, save_model_path = None):
+
+
+    modes = ('train', 'test')
+    assert mode in modes
+    test_between_training_epochs = validation_dataset is not None
+    assert not (mode=='test' and test_between_training_epochs)
+
     # initialization
     theta = tf.trainable_variables()
     optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
@@ -297,11 +262,16 @@ def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_pa
 
     start = time.time()
 
-    while dataset.epochs_completed < n_epochs and not stopping_criterion_met:
+    curr_dataset, other_dataset = train_dataset, validation_dataset
+    curr_mode = mode
+    other_mode = 'train' if mode=='test' else 'test'
+
+
+
+    while train_dataset.epochs_completed < n_epochs and not stopping_criterion_met:
 
         # get a mini-batch of sentences and their related images
-        batch = dataset.next_batch(BATCH_SIZE_UNSUPERVISED)
-        is_last_batch_in_epoch = epochs_completed != dataset.epochs_completed
+        batch, is_last_batch_in_epoch = curr_dataset.next_batch(BATCH_SIZE_UNSUPERVISED)
         batch_sentence_ids = [key for key in batch.keys()]
         sentences, samples = zip(*[batch[k] for k in batch_sentence_ids])
 
@@ -320,9 +290,8 @@ def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_pa
             sentence = (sentences[step])
             related_samples = samples[step]
 
-
             decodings_from_cache = []
-            if USE_CACHED_PROGRAMS and mode=='train':
+            if USE_CACHED_PROGRAMS and curr_mode == 'train':
                 # find the N top-rated candidate programs for parsing the given sentence.
                 # the rating is based on previous rewards of these programs om sentences that
                 # are similar in pattern to the current sentence.
@@ -347,7 +316,7 @@ def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_pa
                                                                     token_prob_dist_tensor,
                                                                     )
 
-            epsilon_for_beam = 0.0 if mode == 'test' else EPSILON_FOR_BEAM_SEARCH
+            epsilon_for_beam = 0.0 if curr_mode == 'test' else EPSILON_FOR_BEAM_SEARCH
             # perform beam search to obtain candidate parsings for the sentence
             original_sentence_for_beam = sentence if SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH else None
 
@@ -367,7 +336,7 @@ def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_pa
                 programs_execution_results[prog] = get_program_execution_stats(
                     prog.token_seq, related_samples, logical_tokens_mapping)
 
-            if USE_CACHED_PROGRAMS:
+            if USE_CACHED_PROGRAMS and curr_mode =='train':
                 for prog, prog_stats in programs_execution_results.items():
                     if prog_stats.is_consistent or prog in programs_from_cache:
                         update_programs_cache(all_cached_programs, sentence, prog, prog_stats)
@@ -380,7 +349,7 @@ def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_pa
 
             consistent_programs = [prog for prog, stats in programs_execution_results.items() if stats.is_consistent]
 
-            if mode=='train':
+            if curr_mode =='train':
                 # in order to mitigate the problem of spurious programs, a program for a given sentence gets
                 #  a reward iff it is consistent with all its related images, (i.e. compiles and returns the correct
                 # label on all samples related to the sentence).
@@ -431,7 +400,7 @@ def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_pa
         start = time.time()
         print(".")
 
-        if mode == 'train':
+        if curr_mode == 'train':
             for i, g in enumerate(gradBuffer):
                 gradBuffer[i] = gradBuffer[i]/len(sentences)
 
@@ -440,59 +409,91 @@ def run_unsupervised(sess, dataset, mode, load_params_path = None, save_model_pa
                 gradBuffer[i] = gradBuffer[i]*0
 
 
-
         if batch_num_in_epoch % PRINT_EVERY == 0 or is_last_batch_in_epoch:
-            print("##############################")
+
+            stats_file = open(STATS_FILE, 'a')
             if is_last_batch_in_epoch:
-                print("finished epoch {}. stats for epoch:".format(epochs_completed + 1))
+
+                print_to = (orig_stdout,stats_file )
             else:
-                print("epoch {}".format(epochs_completed + 1))
-                print("finished {0} mini batches within {1:.2f} seconds".format(batch_num_in_epoch, np.sum(timer)))
-                print("stats for this epoch so far:")
-            mean_consistent = np.mean(num_consistent_per_sentence)
-            mean_beam_size = np.mean(beam_final_sizes)
-            n_non_zero = np.count_nonzero(num_consistent_per_sentence)
+                print_to =  [orig_stdout]
 
-            print("{0} out of {1} sentences had consistent programs in beam".format(n_non_zero, len(
-                num_consistent_per_sentence)))
-            print("mean consistent parses for sentence = {0:.2f}, mean beam size for sentence = {1:.2f}" \
-                  ",  mean prog length = {2:.2f}".format(
-                mean_consistent, mean_beam_size, np.mean(mean_program_lengths)))
 
-            print('top programs by model had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
-                '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_ccorrect_top_by_model),
-                                                                    n_samples,
-                                                                    (sum(n_ccorrect_top_by_model) / n_samples) * 100,
-                                                                    sum(n_consistent_top_by_model),
-                                                                    iter,
-                                                                    (sum(n_consistent_top_by_model) / iter) * 100))
-            print('top programs by reranking had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
-                '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking),
-                                                                    n_samples,
-                                                                    (sum(n_correct_top_by_reranking) / n_samples) * 100,
-                                                                    sum(n_consistent_top_by_reranking),
-                                                                    iter,
-                                                                    (sum(n_consistent_top_by_reranking) / iter) * 100))
+            for print_target in print_to:
+                sys.stdout = print_target
+                print("##############################")
+                print("current mode = " + curr_mode)
+                print("current dataset = " + curr_dataset.name)
 
-            if is_last_batch_in_epoch:
-                num_consistent_per_sentence , beam_final_sizes, n_ccorrect_top_by_model, n_correct_top_by_reranking\
-                    = [], [] , [], []
-                n_consistent_top_by_reranking, n_consistent_top_by_model, timer = [], [], []
-                n_samples,iter = 0, 0
 
+                if is_last_batch_in_epoch:
+                    print(time.strftime("%Y-%m-%d %H:%M"))
+                    print("finished epoch {}.".format(curr_dataset.epochs_completed))
+                    print("parameters used in learning:")
+                    for param_name in ['EPSILON_FOR_BEAM_SEARCH', 'BETA', 'SKIP_AUTO_TOKENS', 'N_CACHED_PROGRAMS',
+                                       'INJECT_TO_BEAM',
+                                        'SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH',
+                                       'AVOID_ALL_TRUE_SENTENCES', 'INPUT_WEIGHTS',
+                                       'OUTPUT_WEIGHTS']:
+                        print ("{0} : {1}".format(param_name, eval(param_name)))
+                    print("stats for this epoch:")
+
+
+                else:
+                    print("epoch {}".format(curr_dataset.epochs_completed + 1))
+                    print("finished {0} mini batches within {1:.2f} seconds".format(batch_num_in_epoch, np.sum(timer)))
+                    print("number of sentences in data = {}".format(curr_dataset.num_examples))
+                    print("stats for this epoch so far:")
+                mean_consistent = np.mean(num_consistent_per_sentence)
+                mean_beam_size = np.mean(beam_final_sizes)
+                n_non_zero = np.count_nonzero(num_consistent_per_sentence)
+
+                print("{0} out of {1} sentences had consistent programs in beam".format(n_non_zero, len(
+                    num_consistent_per_sentence)))
+                print("mean consistent parses for sentence = {0:.2f}, mean beam size for sentence = {1:.2f}" \
+                      ",  mean prog length = {2:.2f}".format(
+                    mean_consistent, mean_beam_size, np.mean(mean_program_lengths)))
+
+                print('top programs by model had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
+                    '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_ccorrect_top_by_model),
+                                                                        n_samples,
+                                                                        (sum(n_ccorrect_top_by_model) / n_samples) * 100,
+                                                                        sum(n_consistent_top_by_model),
+                                                                        iter,
+                                                                        (sum(n_consistent_top_by_model) / iter) * 100))
+                print('top programs by reranking had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
+                    '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking),
+                                                                        n_samples,
+                                                                        (sum(n_correct_top_by_reranking) / n_samples) * 100,
+                                                                        sum(n_consistent_top_by_reranking),
+                                                                        iter,
+                                                                        (sum(n_consistent_top_by_reranking) / iter) * 100))
+                print("##############################")
+
+            sys.stdout = orig_stdout
+            stats_file.close()
         if is_last_batch_in_epoch:
-            epochs_completed += 1
+            num_consistent_per_sentence , beam_final_sizes, n_ccorrect_top_by_model, n_correct_top_by_reranking\
+                = [], [] , [], []
+            n_consistent_top_by_reranking, n_consistent_top_by_model, timer = [], [], []
+            n_samples,iter = 0, 0
+
             batch_num_in_epoch=0
 
-            if save_model_path :
-                saver2.save(sess, save_model_path, global_step=epochs_completed,write_meta_graph=False)
-                print("saved epoch %d" % dataset.epochs_completed)
+            if curr_mode == 'train':
+                if save_model_path :
+                    saver2.save(sess, save_model_path, global_step=train_dataset.epochs_completed,write_meta_graph=False)
+                    print("saved epoch %d" % train_dataset.epochs_completed)
 
-            if SAVE_CACHED_PROGRAMS:
-                cpf = open(CACHED_PROGRAMS, 'wb')
-                pickle.dump(all_cached_programs, cpf)
+                if SAVE_CACHED_PROGRAMS:
+                    cpf = open(CACHED_PROGRAMS, 'wb')
+                    pickle.dump(all_cached_programs, cpf)
 
         batch_num_in_epoch += 1
+
+        if is_last_batch_in_epoch and test_between_training_epochs:
+            curr_mode, other_mode = other_mode, curr_mode
+            curr_dataset, other_dataset = other_dataset, curr_dataset
 
     return
 
@@ -627,6 +628,7 @@ def run_inference(sess, data, load_params, clf=None):
         label = sample.label
 
         for step in range (len(sentences)):
+
             sentence = (sentences[step])
 
             encoder_feed_dict, decoder_feed_dict = \
@@ -694,9 +696,19 @@ def run_inference(sess, data, load_params, clf=None):
 
 if __name__ == '__main__':
 
+    orig_stdout = sys.stdout
+    STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'training logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
+    OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_' + time.strftime("%Y-%m-%d_%H_%M")+ '.ckpt')
+    train_dataset = CNLVRDataSet(DataSet.TRAIN)
+    dev_dataset = CNLVRDataSet(DataSet.DEV)
+    test_dataset = CNLVRDataSet(DataSet.TEST)
+
+    if AVOID_ALL_TRUE_SENTENCES:
+        train_dataset.ignore_all_true_samples()
+
     with tf.Session() as sess:
-        dev = CNLVRDataSet(DataSet.DEV)
-        run_unsupervised(sess, dev, mode='train',load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_6,
-                         save_model_path= TRAINED_WEIGHTS_TEMP)
-        #run_unsupervised(sess, dev, mode='test', load_params_path=TRAINED_WEIGHTS_SUP_HISTORY_4)
+
+        run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
+                         load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
+
     print("done")
