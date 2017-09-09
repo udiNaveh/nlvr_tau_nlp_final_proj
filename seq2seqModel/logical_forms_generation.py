@@ -271,6 +271,9 @@ class PartialProgram:
             if 'select' in self.token_seq:
                 impossible_continuations.append('select')
 
+            if last == 'select':
+                impossible_continuations.append([t for t, v in self.logical_tokens_mapping.items() if t not in ('2','3')])
+
 
 
         return impossible_continuations
@@ -335,11 +338,6 @@ class PartialProgram:
         bool_scopes_str = [" ".join(self.token_seq[start : end]) for start, end in self.boolean_scopes() if end]
         if len(set(bool_scopes_str)) < len(bool_scopes_str):
             return False
-
-
-
-
-
 
 
 
