@@ -44,6 +44,7 @@ TRAINED_WEIGHTS_UNSUP_HISTORY_4 = os.path.join(definitions.ROOT_DIR, 'seq2seqMod
 TRAINED_WEIGHTS_TEMP = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','temp.ckpt-1')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
+NGRAM_PROBS =  os.path.join(definitions.DATA_DIR, 'sentence-processing', 'ngram_logprobs')
 
 
 #beam settings
