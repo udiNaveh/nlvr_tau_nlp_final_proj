@@ -142,23 +142,6 @@ def disambiguate(typed, nontyped):
         return None
 
 
-def get_ngram_probs(token_history, p_dict, possible_continuations):
-    """
-    return a probability vector over the next tokens given an ngram 'language model' of the
-    the logical fforms. this is just a POC for generating plausible logical forms.
-    the probability vector is the real model will come of course from the parameters of the
-    decoder network.
-    """
-    probs = []
-    prevprev_token = token_history[-2]
-    prev_token = token_history[-1]
-    token_counts = p_dict[0]
-    bigram_counts = p_dict[1]
-    trigram_counts = p_dict[2]
-    for token in possible_continuations:
-        probs.append(max(token_counts.get(token, 0) + 5 * bigram_counts.get((prev_token, token), 0) + \
-                         9 * trigram_counts.get((prevprev_token, prev_token, token), 0), 1))
-    return np.array(probs) / np.sum(probs)
 
 class PartialProgram:
     """

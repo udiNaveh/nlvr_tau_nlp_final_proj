@@ -230,7 +230,8 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
     if load_params_path:
         tf.train.Saver(var_list=theta).restore(sess, load_params_path)
     if save_model_path:
-        saver2 = tf.train.Saver(max_to_keep=2, keep_checkpoint_every_n_hours=1)
+        saver2 = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
+
 
     # initialize gradient buffers to zero
     gradList = sess.run(theta) # just to get dimensions right
@@ -508,7 +509,8 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 
     init = tf.global_variables_initializer()
     sess.run(init)
-    saver = tf.train.Saver(theta)
+    #saver = tf.train.Saver(theta)
+    saver = tf.train.Saver()
     if load_params_path:
         saver.restore(sess,load_params_path)
 
@@ -527,7 +529,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
     current_data_set = train
     statistics = {train : [], validation : []}
 
-    while epoch_num < 13:
+    while epoch_num < 15:
         if current_data_set.epochs_completed != epoch_num:
             statistics[current_data_set].append((np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens)))
             print("epoch number {0}: mean loss = {1:.3f}, mean accuracy = {2:.3f}, mean accuracy ignore automatic = {3:.3f},"
@@ -699,16 +701,29 @@ if __name__ == '__main__':
     orig_stdout = sys.stdout
     STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'training logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
     OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_' + time.strftime("%Y-%m-%d_%H_%M")+ '.ckpt')
+    INPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns' , 'weights_2017-09-08_15_47.ckpt-13')
+    #INPUT_WEIGHTS = TRAINED_WEIGHTS_UNSUP_HISTORY_4
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
+
+
+
+
+
+    # TODO DELETE ALL THE BULLSHIT BEFORE COMMIT
+
+
 
     if AVOID_ALL_TRUE_SENTENCES:
         train_dataset.ignore_all_true_samples()
 
     with tf.Session() as sess:
 
-        run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
-                         load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
+        # run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
+        #                  load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
+
+        run_unsupervised(sess, dev_dataset, mode='test',
+                         load_params_path=INPUT_WEIGHTS, save_model_path=None)
 
     print("done")
