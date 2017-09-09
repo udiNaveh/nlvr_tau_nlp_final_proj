@@ -57,6 +57,28 @@ def programs_reranker(sentence, programs, words_to_tokens):
         progs_to_token_relevance_count[prog] = n_releveant_tokens
     return sorted(programs, key=lambda prog: (-progs_to_token_relevance_count[prog], -prog.logprob))
 
+def programs_reranker_2(sentence, programs, words_to_tokens):
+    programs_c = [p for p in programs]
+    return sorted(programs_c, key=lambda prog: (- sentence_program_relevance_score(sentence, prog, words_to_tokens),
+                                              -prog.logprob))
+
+
+def sentence_program_relevance_score(sentence, program, words_to_tokens):
+    relevant_tokens_found = 0
+    relevant_tokens_needed = 0
+    sentence_words = sentence.split()
+    for word in sentence_words:
+        if word in words_to_tokens:
+            relevant_tokens_needed+=1
+            for l in words_to_tokens[word]:
+                if all(tok in program for tok in l):
+                    relevant_tokens_found+=1
+                    break
+    if relevant_tokens_needed == 0:
+        return 0
+    return relevant_tokens_found / relevant_tokens_needed
+
+
 
 def one_hot(dim, index):
     v = np.zeros(dim)

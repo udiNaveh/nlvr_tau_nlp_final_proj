@@ -6,6 +6,7 @@ from collections import namedtuple
 import numpy as np
 import os
 import re
+import pickle
 
 
 from preprocessing import get_ngrams_counts
@@ -13,6 +14,7 @@ import definitions
 from logical_forms import process_token_sequence
 from preprocessing import *
 from general_utils import *
+from seq2seqModel.utils import ProgramExecutionStats
 
 TOKEN_MAPPING = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
 PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
@@ -567,7 +569,7 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
             'there is a T_COLOR item', {'exist filter ALL_ITEMS lambda_x_: is_T_COLOR x': None}
             and adding both to patterns_dict
     '''
-
+    token_seq = prog.token_seq if isinstance(prog, PartialProgram) else prog
     formalized_sentence = get_formalized_sentence(sentence)
     if formalized_sentence not in cached_programs:
         cached_programs[formalized_sentence] = {}
@@ -583,7 +585,7 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
     manualy_chosen_replacements = sorted(dict.items(), key = lambda x : sentence.find(x[0]))
     manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
     formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
-    formalized_program = " {} ".format(" ".join(prog.token_seq))  # pad with whitespaces
+    formalized_program = " {} ".format(" ".join(token_seq))  # pad with whitespaces
 
     temp_dict = {}
     for exp, replacement in manualy_chosen_replacements:
@@ -610,8 +612,8 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
     if formalized_program not in matching_cached_patterns:
         matching_cached_patterns[formalized_program] = [0,0]
 
-    matching_cached_patterns[formalized_program][0] + prog_stats.n_correct
-    matching_cached_patterns[formalized_program][1] + prog_stats.n_incorrect
+    matching_cached_patterns[formalized_program][0] += prog_stats.n_correct
+    matching_cached_patterns[formalized_program][1] += prog_stats.n_incorrect
 
     if (matching_cached_patterns[formalized_program][0] + 1) / (matching_cached_patterns[formalized_program][1]
                                                           +0.1) < 3:
@@ -650,3 +652,17 @@ def get_ands(pp : PartialProgram):
         if i+1 in fins:
             decode_with_signs.append(')')
     return results, " ".join(decode_with_signs)
+
+if __name__ == '__main__':
+    parsed_sents = pickle.load(open(definitions.SUPERVISED_TRAIN_PICKLE, 'rb'))
+    cached_programs = {}
+    for s, parse in parsed_sents:
+        stats = ProgramExecutionStats(True, [], True, 4, 0)
+        update_programs_cache(cached_programs, s, parse.split(), stats)
+
+    print("")
+    parsed_sents = pickle.dump(cached_programs, open(definitions.SUPERVISED_TRAIN_PICKLE, 'wb'))
+
+
+
+
