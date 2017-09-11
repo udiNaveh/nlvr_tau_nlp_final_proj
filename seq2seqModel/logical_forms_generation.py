@@ -620,15 +620,17 @@ def get_ands(pp : PartialProgram):
             decode_with_signs.append(')')
     return results, " ".join(decode_with_signs)
 
-if __name__ == '__main__':
-    parsed_sents = pickle.load(open(definitions.SUPERVISED_TRAIN_PICKLE, 'rb'))
-    cached_programs = {}
-    for s, parse in parsed_sents:
-        stats = ProgramExecutionStats(True, [], True, 4, 0)
-        update_programs_cache(cached_programs, s, parse.split(), stats)
 
-    print("")
-    parsed_sents = pickle.dump(cached_programs, open(definitions.SUPERVISED_TRAIN_PICKLE, 'wb'))
+    # parsed_sents = pickle.load(open(definitions.SUPERVISED_TRAIN_PICKLE, 'rb'))
+    # cached_programs = {}
+    # for s, parse in parsed_sents:
+    #     stats = ProgramExecutionStats(True, [], True, 4, 0)
+    #     update_programs_cache(cached_programs, s, parse.split(), stats)
+    #
+    # print("")
+    # CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',
+    #                                         'cached_programs_based_on_pretrain')
+    # parsed_sents = pickle.dump(cached_programs, open(CACHED_PROGRAMS_PRETRAIN, 'wb'))
 
 
 

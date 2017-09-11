@@ -3,6 +3,7 @@ import numpy as np
 from collections import namedtuple
 from logical_forms import *
 from scipy.stats import binom
+from general_utils import increment_count
 
 
 
@@ -60,21 +61,36 @@ def programs_reranker(sentence, programs, words_to_tokens):
 
 def programs_reranker_2(sentence, programs, words_to_tokens):
     programs_c = [p for p in programs]
-    return sorted(programs_c, key=lambda prog: (- sentence_program_relevance_score(sentence, prog, words_to_tokens),
+    return sorted(programs_c, key=lambda prog: ( - sentence_program_relevance_score(sentence, prog, words_to_tokens),
+                                              -prog.logprob))
+
+def programs_reranker_3(sentence, programs, words_to_tokens):
+    programs_c = [p for p in programs]
+    return sorted(programs_c, key=lambda prog: ( - sentence_program_relevance_score(sentence, prog, words_to_tokens, recurring=True),
                                               -prog.logprob))
 
 
-def sentence_program_relevance_score(sentence, program, words_to_tokens):
+def sentence_program_relevance_score(sentence, program, words_to_tokens, recurring = False):
     relevant_tokens_found = 0
     relevant_tokens_needed = 0
     sentence_words = sentence.split()
+    copies = {}
+    for word in sentence_words:
+        if sentence_words.count(word)>1:
+            if word not in copies:
+                copies[word] = program.token_seq.copy()
     for word in sentence_words:
         if word in words_to_tokens:
             relevant_tokens_needed+=1
+            token_seq = copies.get(word, program.token_seq)
             for l in words_to_tokens[word]:
-                if all(tok in program for tok in l):
+                if all(tok in token_seq for tok in l):
                     relevant_tokens_found+=1
+                    if word in copies and recurring:
+                        for tok in l:
+                            token_seq.remove(tok)
                     break
+
     if relevant_tokens_needed == 0:
         return 0
     return relevant_tokens_found / relevant_tokens_needed
