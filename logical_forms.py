@@ -1,34 +1,18 @@
+"""
+This module contains the methods needed for executing logical forms (also referred to as 'programs')
+on structured representations of images. In the formalism we used, a logical form is a sequence of tokens,
+each represents a value of certain type or a function with predefined arity and argument types.
+Thus, each such valid logical form (after adding brackets and commas to it) is an executable
+line of python code.
 
-'''
-All functions involved in executing logical forms (obtained by parsing sentences) 
-Feel free to add more functions if there is a need, don't be afraid to have to many - as anyway
-we use a subset of these functions, that is defined in a different file.   
-'''
+Note that the actual syntax of our formalism and the set of allowed tokens is not defined here.
+However, any such set of tokens must be a subset of the functions defined here. 
 
-from typing import *
+"""
+
 from collections import Iterable
 from structured_rep import *
-
-
-
-
-class Location(Enum):
-    TOP = 'top'
-    SECOND = 'second'
-    BOTTOM = 'bottom'
-
-class Relation(Enum):
-    ABOVE = 'above'
-    BELOW = 'below'
-    TOUCH = 'touch'
-    CLOSELY_TOUCH = 'closely touch'
-
-class Side(Enum):
-    RIGHT = 'right',
-    LEFT = 'left',
-    TOP = 'top',
-    BOTTOM = 'bottom'
-    ANY = 'any'
+from structured_rep_enums import *
 
 
 def exist(_set : set):
@@ -52,42 +36,50 @@ def count(_set):
 
 def is_yellow(x):
     return x.color == Color.YELLOW
+
 def is_blue(x):
     return x.color == Color.BLUE
+
 def is_black(x):
     return x.color == Color.BLACK
 
 # shape
+
 def is_circle(x):
     return x.shape == Shape.CIRCLE
+
 def is_square(x):
     return x.shape == Shape.SQUARE
+
 def is_triangle(x):
     return x.shape == Shape.TRIANGLE
 
 #size
+
 def is_big(x):
     return x.size == Size.BIG
+
 def is_medium(x):
     return x.size == Size.MEDIUM
+
 def is_small(x):
     return x.size == Size.SMALL
 
-# relative location
+# relative location in box
 
 def is_top(x):
     return x.is_top()
+
 def is_bottom(x):
     return x.is_bottom()
+
 def is_second(x):
     return x.is_second()
+
 def is_third(x):
     return x.is_third()
 
-    # right and left not used for now
-
-# touching wall
-
+# touching the walls of the box
 
 def is_touching_wall(x, side=None):
     if side == Side.ANY or side is None:
@@ -119,7 +111,7 @@ def is_touching_corner(x, side = None):
 
 
 ####################
-### query functions for item properties
+### query functions that return item properties
 ####################
 
 
@@ -150,8 +142,10 @@ def query_shape(x):
 def filter(_set, func):
     return [x for x in _set if func(x)]
 
-## specific filters: we can do without them but they might be helpful in case we need
-## to avoid too many lambda expressions
+# type specific filters: inspired by the filters used in CLEVR.
+# it's possible do without them but they might be helpful in case we need
+# to avoid too many lambda expressions
+
 
 def filter_color(_set, color : Color):
      return filter(_set, lambda x : equal(query_color(x), color))
@@ -211,7 +205,7 @@ def equal(a,b):
     return equal_set(a, b)
 
 
-# type-specific equality functions. we can decide whether to use them or the generic equal.
+# type-specific equality functions.
 
 
 def equal_color(a, b):
@@ -231,25 +225,27 @@ def equal_shape(a, b):
         raise TypeError
     return equal(a, b)
 
-
-## relation functions - given an Item or a set of items, return a set pf items in
-## a specific relation with it/them.
+# relation functions - given an Item or a set of items, return a set of items in
+# a specific relation with it/them.
 
 
 def get_above(s):
-    return union_all(__set_per_item_function(s, lambda x : relate(Relation.ABOVE, x)))
+    return union_all(__set_per_item_function(s, lambda x : __relate(Relation.ABOVE, x)))
+
 
 def get_below(s):
-    return union_all(__set_per_item_function(s, lambda x : relate(Relation.BELOW, x)))
+    return union_all(__set_per_item_function(s, lambda x : __relate(Relation.BELOW, x)))
 
 
 def get_touching(s):
-    return union_all(__set_per_item_function(s, lambda x : relate(Relation.TOUCH, x)))
+    return union_all(__set_per_item_function(s, lambda x : __relate(Relation.TOUCH, x)))
+
 
 def get_closely_touching(s):
-    return union_all(__set_per_item_function(s, lambda x : relate(Relation.CLOSELY_TOUCH, x)))
+    return union_all(__set_per_item_function(s, lambda x : __relate(Relation.CLOSELY_TOUCH, x)))
 
-def relate(rel:Relation, item):
+
+def __relate(rel:Relation, item):
     return set([x for x in get_box_exclusive(item) if __check_relation(x,item,rel)])
 
 
@@ -272,8 +268,8 @@ def get_box_inclusive(item : Item):
 def get_box_exclusive(item : Item):
     return [x for x in item.box if x is not item]
 
-
 # Logical operators
+
 
 def AND(a,b):
     if type(a) is not bool or type(b) is not bool:
@@ -342,11 +338,14 @@ def all_same_color(_set):
 def union_all(sets):
     return set([item for subset in sets for item in subset])
 
+
 def union(set1, set2):
     return set1.union(set2)
 
+
 def intersect(set1, set2):
     return set1.intersection(set2)
+
 
 def intersect_all(sets):
     l = list(sets)
@@ -355,17 +354,23 @@ def intersect_all(sets):
     return [x for x in l[0] if all([x in s for s in sets])]
 
 
-def select_integers(k, min, max):
+def __select_integers(k, min, max):
     if k> max-min or k==0:
         return [set()]
-    return [set([min]).union(s) for s in select_integers(k-1, min+1, max)] + [s for s in select_integers(k, min+1, max) if len(s)>0]
+    return [set([min]).union(s) for s in __select_integers(k - 1, min + 1, max)] + [s for s in __select_integers(k, min + 1, max) if len(s) > 0]
+
 
 def __is_type_or_set_of_type(x, t : type):
     return isinstance(x, t) or (isinstance(x, Iterable) and all([isinstance(a, t) for a in x]))
 
+
 def select(k, _set):
+    """
+    returns the set of all sunsets of size k in __set
+    """
     l = list(_set)
-    return [[l[i] for i in idx] for idx in select_integers(k, 0, len(l))]
+    return [[l[i] for i in idx] for idx in __select_integers(k, 0, len(l))]
+
 
 
 ###############
@@ -373,14 +378,12 @@ def select(k, _set):
 ###############
 
 
-
 def process_token_sequence(token_seq, tokens_mapping):
-    '''
-    
+    """ 
     :param token_seq:   a sequence of valid tokens in the formal language 
     :param tokens_mapping: a dictionary mapping tokens to the number of arguments they take
     :return: the sequence with added brackets and commas,  runnable by python's eval function
-    '''
+    """
     stack = []
 
     token_seq = token_seq.copy()
@@ -392,7 +395,6 @@ def process_token_sequence(token_seq, tokens_mapping):
         added_chars = ""
         if token.startswith('lambda'):
             token = token.replace('_', ' ')
-
 
         elif n_args == 0:
             while next_ch != ', ' and len(stack)>0:
@@ -410,10 +412,8 @@ def process_token_sequence(token_seq, tokens_mapping):
     return " ".join(token_seq)
 
 
-
 def run_logical_form(expression, image):
-    '''
-    
+    '''   
     :param expression: a logical form (string)
     :param image: an object of type Image (a strutured representation of an image)
     :return: the result of executing the logical form on the structured representation
@@ -422,21 +422,40 @@ def run_logical_form(expression, image):
     all_boxes = image.get_all_boxes()
     all_items = image.get_all_items()
 
-
     f = eval("lambda ALL_BOXES, ALL_ITEMS : " + expression)
-    result = f(all_boxes, all_items) # no error handling here for now...
-
+    result = f(all_boxes, all_items)
 
     if type(result) is not bool:
         raise TypeError("parsing returned a non boolean type")
     return result
 
 
-def parse(sentence, pre_parsed_dic = {}):
-    # a mock: as we don't have a parser yet, the parse just returns a parsing from a dictionary of pre-parsed sentences
-    if sentence in pre_parsed_dic:
-        return pre_parsed_dic[sentence][1]
-    else:
-        raise NotImplementedError
+def edit_logical_form_by_sentence(sentence, logical_form):
+    if 'closely' in sentence:
+        logical_form = logical_form.replace('touching_wall', 'closely_touching_wall')
+        logical_form = logical_form.replace('get_touching', 'get_closely_touching')
+    return logical_form
+
+
+def execute(program_tokens,image,token_mapping = DEFAULT_TOKEN_MAPPING, sentence = ''):
+    """
+    :param program_tokens: a list of strings that reprsents an executable program
+    :param image: an obkect of type Image: the structured representation on which to run the program
+    :param token_mapping: 
+    :param sentence: 
+    :return: 
+    """
+    logical_form = process_token_sequence(program_tokens, token_mapping)
+    logical_form = edit_logical_form_by_sentence(sentence, logical_form)
+    try:
+        result = run_logical_form(logical_form,image)
+    except (TypeError, SyntaxError, ValueError, AttributeError,
+                RuntimeError, RecursionError, Exception, NotImplementedError) as err:
+        result = None
+
+    # if result is None:
+    #     if input("go inside? ") =='y':
+    #         result = run_logical_form(logical_form, image)
+    return result
 
 

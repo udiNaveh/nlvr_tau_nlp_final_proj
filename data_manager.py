@@ -3,7 +3,7 @@ from itertools import permutations
 from structured_rep import *
 import definitions
 import numpy as np
-from preprocessing import preprocess_sentences, replace_rare_words_with_unk, get_ngrams_counts, write_ngrams
+from sentence_processing import preprocess_sentences, replace_rare_words_with_unk, get_ngrams_counts, write_ngrams
 import pickle
 
 

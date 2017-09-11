@@ -1,5 +1,5 @@
 import json
-import preprocessing
+import sentence_processing
 import embeddings_maker
 import tensorflow as tf
 
@@ -15,8 +15,8 @@ for datum in data:
     s_index = int(str.split(datum["identifier"], "-")[0])
     mapping[s_index] = datum['sentence']
 
-mapping = preprocessing.preprocess_sentences(mapping, processing_type='deep')
-mapping = preprocessing.replace_rare_words_with_unk(mapping)
+mapping = sentence_processing.preprocess_sentences(mapping, processing_type='deep')
+mapping = sentence_processing.replace_rare_words_with_unk(mapping)
 print(mapping)
 
 sents = []

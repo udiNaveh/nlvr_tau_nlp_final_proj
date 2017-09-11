@@ -6,26 +6,14 @@ from scipy.stats import binom
 
 
 
-def execute(program_tokens,image,token_mapping):
-    logical_form = process_token_sequence(program_tokens, token_mapping)
-    try:
-        result = run_logical_form(logical_form,image)
-    except (TypeError, SyntaxError, ValueError, AttributeError,
-                RuntimeError, RecursionError, Exception, NotImplementedError) as err:
-        result = None
-
-    # if result is None:
-    #     if input("go inside? ") =='y':
-    #         result = run_logical_form(logical_form, image)
-    return result
 
 ProgramExecutionStats = namedtuple('ProgramExecutionStats', ['compiled', 'predicted_labels',
                                                                'is_consistent', 'n_correct', 'n_incorrect' ])
 
 
-def get_program_execution_stats(token_seq, related_samples, logical_tokens_mapping):
+def get_program_execution_stats(token_seq, related_samples, logical_tokens_mapping, sentence = ''):
     actual_labels = np.array([sample.label for sample in related_samples])
-    execution_results = np.array([execute(token_seq, sample.structured_rep, logical_tokens_mapping)
+    execution_results = np.array([execute(token_seq, sample.structured_rep, logical_tokens_mapping, sentence)
                                   for sample in related_samples])
     prog_compiled = all(res is not None for res in execution_results)
     predicted_labels = [res if res is not None else True for res in execution_results]
@@ -34,6 +22,7 @@ def get_program_execution_stats(token_seq, related_samples, logical_tokens_mappi
     n_incorrect = len(actual_labels) - n_correct
 
     return ProgramExecutionStats(prog_compiled, predicted_labels, is_consistent, n_correct, n_incorrect)
+
 
 def programs_reranker(sentence, programs, words_to_tokens):
     """   
@@ -106,21 +95,3 @@ def softmax(x, axis=0):
 def binomial_prob(n_correct, n_incorrect):
     n_samples = n_correct+n_incorrect
     return sum(binom.pmf(x, n_samples, 0.5) for x in range(n_correct ,n_samples+1))
-
-def get_probs_from_ngram_language_model(self, p_dict, possible_continuations):
-    """
-    return a probability vector over the next tokens given an ngram 'language model' of the
-    the logical fforms. this is just a POC for generating plausible logical forms.
-    the probability vector is the real model will come of course from the parameters of the
-    decoder network.
-    """
-    probs = []
-    prevprev_token = self.token_seq[-1] if len(self.token_seq) > 0 else "<s>"
-    prev_token = self.token_seq[-2] if len(self.token_seq) > 1 else "<s>"
-    token_counts = p_dict[0]
-    bigram_counts = p_dict[1]
-    trigram_counts = p_dict[2]
-    for token in possible_continuations:
-        probs.append(max(token_counts.get(token, 0) + 10 * bigram_counts.get((prev_token, token), 0) + \
-                         9 * trigram_counts.get((prevprev_token, prev_token, token), 0), 1))
-    return np.array(probs) / np.sum(probs)

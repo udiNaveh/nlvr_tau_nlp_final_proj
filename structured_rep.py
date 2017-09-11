@@ -1,34 +1,25 @@
+'''
+This module contains class that represent the object that constitute the structured representations  
+of images in the CNLVR dataset. these classes wrap the the data that is loaded from the json 
+as dictionaries and list containing strings, and provide an interface through which logical forms
+can be run on structured representations of images. 
+'''
+
 import typing
-from enum import Enum
+
+from structured_rep_enums import *
 
 
-
-almost_touching_margin = 5
-
-
-Colors = ['Yellow', 'Black', 'Blue']
-Shapes = ['circle', 'square', 'triangle']
-
-
-class Size(Enum):
-    SMALL = 10
-    MEDIUM = 20
-    BIG = 30
-
-
-class Color(Enum):
-    YELLOW = 'Yellow'
-    BLACK = 'Black'
-    BLUE = '#0099ff'
-
-
-class Shape(Enum):
-    CIRCLE = 'circle'
-    SQUARE = 'square'
-    TRIANGLE = 'triangle'
+# constants:
+ALMOST_TOUCHING_MARGIN = 5
 
 
 class Item:
+    """
+    represents the basic building blocks of the structured representations - objects that have shape, color and 
+    spatial location, each  belongs to a certain 'box'. 
+    """
+
     def __init__(self, dic):
         assert isinstance(dic, dict)
         self.__y_loc = dic['y_loc']
@@ -62,26 +53,29 @@ class Item:
         return 100 - (self.__y_loc + self.size.value)
 
     # note: in the original representation the value of y_loc is bigger when the item is closer to the bottom.
-    # here it is changed in order to be more intuitive and match the regular notion of x,y axes.
+    # here it is switched in order to be more intuitive and match the regular notion of x,y axes.
 
     @property
     def left(self):
         return self.__x_loc
 
+    # information concerning the spatial location of an item is provided to outside modules
+    # through these methods alone. Logical forms cannot relate directly to an item's (x,y) coordinates
+
     def touching_right(self, use_margin = False):
-        margin = almost_touching_margin if use_margin else 0
+        margin = ALMOST_TOUCHING_MARGIN if use_margin else 0
         return self.right >= 100 - margin
 
     def touching_left(self, use_margin = False):
-        margin = almost_touching_margin if use_margin else 0
+        margin = ALMOST_TOUCHING_MARGIN if use_margin else 0
         return self.left <= margin
 
     def touching_bottom(self, use_margin = False):
-        margin = almost_touching_margin if use_margin else 0
+        margin = ALMOST_TOUCHING_MARGIN if use_margin else 0
         return self.bottom <= margin
 
     def touching_top(self, use_margin = False):
-        margin = almost_touching_margin if use_margin else 0
+        margin = ALMOST_TOUCHING_MARGIN if use_margin else 0
         return self.top >= 100 - margin
 
     def touching_wall(self, use_margin = False):
@@ -104,7 +98,7 @@ class Item:
                other.bottom - self.top)
 
     def is_touching(self, other, use_margin=False):
-        margin = almost_touching_margin if use_margin else 1
+        margin = ALMOST_TOUCHING_MARGIN if use_margin else 1
         return self is not other and self.box is other.box and self.__distance(other) <= margin
 
     def is_top(self):
@@ -148,11 +142,15 @@ class Box:
         return Box([item.__copy__() for item in self.items])
 
     def is_tower(self):
+
         return all(s.shape == Shape.SQUARE for s in self.items) and \
                all(s.right == self.items[0].right for s in self.items)
 
 
 class Image:
+    '''
+    represent the structured representation of an image
+    '''
 
     def __init__(self, structured_rep : typing.List[typing.List[dict]]):
         self.boxes = [Box(items_as_dicts) for items_as_dicts in structured_rep]
@@ -176,12 +174,16 @@ class Image:
     def get_all_items(self):
         return [item for box in self.boxes for item in box]
 
+    # whether this is an image of towers of blocks or a regular image with objects of various shapes
     def is_tower(self):
         return all([b.is_tower() for b in self.boxes])
 
 
 class Sample:
-
+    '''
+    represents one line (sample) in the data set, which is composed of an image, a sentence, and a label
+    which the truth value of the sentence w.r.t the image
+    '''
     def __init__(self, line):
         self.evals = line["evals"]
         self.identifier = line["identifier"]
