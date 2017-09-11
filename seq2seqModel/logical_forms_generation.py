@@ -8,10 +8,9 @@ import os
 import re
 
 
-from preprocessing import get_ngrams_counts
+from sentence_processing import get_ngrams_counts
 import definitions
-from logical_forms import process_token_sequence
-from preprocessing import *
+from sentence_processing import *
 from general_utils import *
 from seq2seqModel.utils import *
 

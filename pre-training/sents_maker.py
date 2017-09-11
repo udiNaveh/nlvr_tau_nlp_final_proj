@@ -6,8 +6,8 @@ import os
 import definitions
 from seq2seqModel.logical_forms_generation import *
 from seq2seqModel.utils import execute
-from handle_data import *
-from preprocessing import *
+from data_manager import *
+from sentence_processing import *
 
 
 LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
