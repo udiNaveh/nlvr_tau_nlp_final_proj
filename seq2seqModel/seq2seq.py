@@ -231,7 +231,8 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
     modes = ('train', 'test')
     assert mode in modes
     test_between_training_epochs = validation_dataset is not None
-    assert not (mode=='test' and test_between_training_epochs)
+    if (mode=='test'):
+        test_between_training_epochs = False
 
     # initialization
     theta = tf.trainable_variables()
@@ -351,7 +352,7 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
                     programs_from_cache.append(prog)
 
                 programs_execution_results[prog] = get_program_execution_stats(
-                    prog.token_seq, related_samples, logical_tokens_mapping)
+                    prog.token_seq, related_samples, logical_tokens_mapping, sentence)
 
             if USE_CACHED_PROGRAMS and curr_mode =='train':
                 for prog, prog_stats in programs_execution_results.items():
@@ -717,31 +718,33 @@ if __name__ == '__main__':
     orig_stdout = sys.stdout
     STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'training logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
     OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_' + time.strftime("%Y-%m-%d_%H_%M")+ '.ckpt')
-    #INPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns' , 'weights_2017-09-08_15_47.ckpt-13')
-    #INPUT_WEIGHTS = TRAINED_WEIGHTS_UNSUP_HISTORY_4
+
+    INPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_2017-09-09_00_50.ckpt-15')
+
+
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
 
-
-
-
-
-    # TODO DELETE ALL THE BULLSHIT BEFORE COMMIT
-
-
+    train_dataset.sort_sentences_by_complexity(lambda s : -ngram_logprobs_dict[s], 5)
 
     if AVOID_ALL_TRUE_SENTENCES:
         train_dataset.ignore_all_true_samples()
 
     with tf.Session() as sess:
 
-        run_unsupervised(sess, train_dataset, mode='test',
-                         load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
-        #run_supervised_training(sess, load_params_path=None, save_params_path=OUTPUT_WEIGHTS)
-        # INPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns' , 'weights_2017-09-09_16_04.ckpt')
-        # run_unsupervised(sess, dev_dataset, mode='train',
-        #                  load_params_path=INPUT_WEIGHTS, save_model_path=None)
+        # run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
+        #                  load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
+        #
+        run_unsupervised(sess, dev_dataset, mode='test', validation_dataset=dev_dataset,
+                         load_params_path=INPUT_WEIGHTS, save_model_path=None)
 
+    with tf.Session() as sess:
+
+        # run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
+        #                  load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
+        #
+        run_unsupervised(sess, test_dataset, mode='test', validation_dataset=dev_dataset,
+                         load_params_path=INPUT_WEIGHTS, save_model_path=None)
 
     print("done")

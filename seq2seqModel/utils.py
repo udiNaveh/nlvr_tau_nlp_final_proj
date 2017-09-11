@@ -2,6 +2,7 @@ import random
 import numpy as np
 from collections import namedtuple
 from logical_forms import *
+from scipy.stats import binom
 
 
 
@@ -124,7 +125,9 @@ def softmax(x, axis=0):
     return x
 
 
-
+def binomial_prob(n_correct, n_incorrect):
+    n_samples = n_correct+n_incorrect
+    return sum(binom.pmf(x, n_samples, 0.5) for x in range(n_correct ,n_samples+1))
 
 def get_probs_from_ngram_language_model(self, p_dict, possible_continuations):
     """
