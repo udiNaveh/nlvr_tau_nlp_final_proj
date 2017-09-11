@@ -6,6 +6,7 @@ from collections import namedtuple
 import numpy as np
 import os
 import re
+import pickle
 
 
 from sentence_processing import get_ngrams_counts
@@ -340,6 +341,11 @@ class PartialProgram:
 
 
 
+
+
+
+
+
         return True
 
     def boolean_scopes(self):
@@ -522,7 +528,7 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
             'there is a T_COLOR item', {'exist filter ALL_ITEMS lambda_x_: is_T_COLOR x': None}
             and adding both to patterns_dict
     '''
-
+    token_seq = prog.token_seq if isinstance(prog, PartialProgram) else prog
     formalized_sentence = get_formalized_sentence(sentence)
     if formalized_sentence not in cached_programs:
         cached_programs[formalized_sentence] = {}
@@ -538,7 +544,7 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
     manualy_chosen_replacements = sorted(dict.items(), key = lambda x : sentence.find(x[0]))
     manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
     formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
-    formalized_program = " {} ".format(" ".join(prog.token_seq))  # pad with whitespaces
+    formalized_program = " {} ".format(" ".join(token_seq))  # pad with whitespaces
 
     temp_dict = {}
     for exp, replacement in manualy_chosen_replacements:
@@ -612,3 +618,19 @@ def get_ands(pp : PartialProgram):
         if i+1 in fins:
             decode_with_signs.append(')')
     return results, " ".join(decode_with_signs)
+
+
+    # parsed_sents = pickle.load(open(definitions.SUPERVISED_TRAIN_PICKLE, 'rb'))
+    # cached_programs = {}
+    # for s, parse in parsed_sents:
+    #     stats = ProgramExecutionStats(True, [], True, 4, 0)
+    #     update_programs_cache(cached_programs, s, parse.split(), stats)
+    #
+    # print("")
+    # CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',
+    #                                         'cached_programs_based_on_pretrain')
+    # parsed_sents = pickle.dump(cached_programs, open(CACHED_PROGRAMS_PRETRAIN, 'wb'))
+
+
+
+

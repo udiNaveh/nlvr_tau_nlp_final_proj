@@ -1,6 +1,7 @@
 import string
 from nltk.stem import WordNetLemmatizer
 import nltk.tag
+import numpy as np
 
 from definitions import *
 from general_utils import increment_count, union_count_dicts
@@ -90,13 +91,53 @@ def get_ngrams_counts(dataset, max_ngram, include_start_and_stop = False):
         for word in sentence:
             increment_count(all_ngrams[0], word)
         if include_start_and_stop:
-            sentence = ["<s>"] + sentence; sentence.append("<\s>")
+            sentence = ["<s>", "<s>"] + sentence;
+            increment_count(all_ngrams[0], "<s>")
         length = len(sentence)
         for n in range(2, max_ngram+1):
             for i in range(n, length+1):
                 increment_count(all_ngrams[n-1], tuple(sentence[i-n:i]))
 
     return all_ngrams
+
+
+def get_distributions(trigram_counts, bigram_counts, unigram_counts, train_token_count):
+
+        tri_q = lambda wi_2, wi_1, wi : trigram_counts.get((wi_2, wi_1, wi), 0) / bigram_counts.get((wi_2, wi_1), 1)
+        bi_q = lambda wi_1, wi : bigram_counts.get((wi_1, wi), 0) / unigram_counts[wi_1]
+        uni_q = lambda wi : unigram_counts[wi] / train_token_count
+
+        return uni_q, bi_q, tri_q
+
+
+def get_sentence_ngram_prob(sentence, p_dict):
+    """
+    return a probability vector over the next tokens given an ngram 'language model' of the
+    the logical fforms. this is just a POC for generating plausible logical forms.
+    the probability vector is the real model will come of course from the parameters of the
+    decoder network.
+    """
+    sentence = sentence.split()
+    unigram_counts, bigram_counts, trigram_counts, all_token_counts = p_dict
+    lambda1= 0.4
+    lambda2 = 0.4
+    lambda3 = 1 - lambda1 - lambda2
+    eval_token_count = 0
+    sum_of_logs = 0
+    tri_q = lambda wi_2, wi_1, wi: trigram_counts.get((wi_2, wi_1, wi), 0) / bigram_counts.get((wi_2, wi_1), 1)
+    bi_q = lambda wi_1, wi: bigram_counts.get((wi_1, wi), 0) / unigram_counts[wi_1]
+    uni_q = lambda wi: unigram_counts[wi] / all_token_counts
+
+    sentence = ["<s>",'<s>'] + sentence
+    #sentence.append("<\s>")
+    for i in range(2, len(sentence)):
+        wi_2, wi_1, wi = sentence[i - 2: i + 1]
+        qLI = lambda1 * tri_q(wi_2, wi_1, wi) + \
+              lambda2 * bi_q(wi_1, wi) + lambda3 * uni_q(wi)
+        sum_of_logs += np.log2(qLI)
+
+    return sum_of_logs / len(sentence)
+
 
 
 def clean_sentence(sent):

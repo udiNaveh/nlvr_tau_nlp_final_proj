@@ -17,17 +17,11 @@ import time
 
 
 def load_meta_data():
-
     # load word embeddings
     embeddings_file = open(WORD_EMBEDDINGS_PATH,'rb')
     embeddings_dict = pickle.load(embeddings_file)
     embeddings_file.close()
     assert WORD_EMB_SIZE == np.size(embeddings_dict['blue'])
-
-    ngrams_file = open(NGRAM_PROBS,'rb')
-    ngram_logprobs_dict = pickle.load(ngrams_file)
-    ngrams_file.close()
-
 
     # load logical tokens inventory
     logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
@@ -38,12 +32,14 @@ def load_meta_data():
         logical_tokens.extend([var, 'lambda_{}_:'.format(var) ])
     logical_tokens.extend(['<s>', '<EOS>'])
     logical_tokens_ids = {lt: i for i, lt in enumerate(logical_tokens)}
-    return  logical_tokens_ids, logical_tokens_mapping, embeddings_dict, ngram_logprobs_dict
+    return  logical_tokens_ids, logical_tokens_mapping, embeddings_dict
 
-logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, ngram_logprobs_dict = load_meta_data()
-words_to_tokens = words_to_tokens_dict(logical_tokens_mapping)
+logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict = load_meta_data()
+words_to_tokens = pickle.load(open(os.path.join(definitions.DATA_DIR, 'logical forms', 'words_to_tokens'), 'rb'))
+
+
+
 n_logical_tokens = len(logical_tokens_ids)
-
 
 if USE_BOW_HISTORY:
     HISTORY_EMB_SIZE += n_logical_tokens
@@ -237,7 +233,8 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
     if load_params_path:
         tf.train.Saver(var_list=theta).restore(sess, load_params_path)
     if save_model_path:
-        saver2 = tf.train.Saver(max_to_keep=2, keep_checkpoint_every_n_hours=1)
+        saver2 = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
+
 
     # initialize gradient buffers to zero
     gradList = sess.run(theta) # just to get dimensions right
@@ -260,7 +257,7 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
     batch_num_in_epoch = 1
 
     # a dictionary for cached programs
-    if USE_CACHED_PROGRAMS and LOAD_CACHED_PROGRAMS and mode=='train':
+    if USE_CACHED_PROGRAMS and LOAD_CACHED_PROGRAMS: # and mode=='train':
         cpf = open(CACHED_PROGRAMS, 'rb')
         all_cached_programs = pickle.load(cpf)
     else:
@@ -272,6 +269,8 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
     curr_dataset, other_dataset = train_dataset, validation_dataset
     curr_mode = mode
     other_mode = 'train' if mode=='test' else 'test'
+
+    stats_for_all_sentences = {}
 
 
 
@@ -341,12 +340,13 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
                     programs_from_cache.append(prog)
 
                 programs_execution_results[prog] = get_program_execution_stats(
-                    prog.token_seq, related_samples, logical_tokens_mapping, sentence)
+                    prog.token_seq, related_samples, logical_tokens_mapping)
 
             if USE_CACHED_PROGRAMS and curr_mode =='train':
                 for prog, prog_stats in programs_execution_results.items():
                     if prog_stats.is_consistent or prog in programs_from_cache:
-                        update_programs_cache(all_cached_programs, sentence, prog, prog_stats)
+                        pass
+                        #update_programs_cache(all_cached_programs, sentence, prog, prog_stats)
 
 
             # prog_str = " ".join(prog.token_seq)
@@ -355,6 +355,8 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
             # increment_count(all_consistent_decodings[sentence_id], prog_str)
 
             consistent_programs = [prog for prog, stats in programs_execution_results.items() if stats.is_consistent]
+
+
 
             if curr_mode =='train':
                 # in order to mitigate the problem of spurious programs, a program for a given sentence gets
@@ -384,20 +386,37 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
 
             if beam:
                 mean_program_lengths.append(np.mean([len(pp) for pp in beam]))
-                beam_reranked = programs_reranker(sentence, beam, words_to_tokens)
+                beam_reranked = programs_reranker_2(sentence, beam, words_to_tokens)
+                beam_reranked_rec = programs_reranker_3(sentence, beam, words_to_tokens)
                 top_program_by_model = beam[0]
                 top_program_by_reranking = beam_reranked[0]
+                top_by_rec = beam_reranked_rec[0]
                 top_by_model_stats = programs_execution_results[top_program_by_model]
                 top_by_reranking_stats = programs_execution_results[top_program_by_reranking]
+                top_by_rec_stats = programs_execution_results[top_by_rec]
+
 
             if not beam: # no valid program was found by the beam - default is to guess 'True' for all images
                 top_by_model_stats = top_by_reranking_stats = get_program_execution_stats(
                     ["ERR"], related_samples, logical_tokens_mapping)
 
+            if mode == 'test':
+                stats_for_all_sentences[sentence_id] = {'top_program_by_reranking' : top_program_by_reranking,
+                                                        'top_by_reranking_stats' : top_by_reranking_stats,
+                                                        'top_program_by_model' : top_program_by_model,
+                                                        'top_by_model_stats' : top_by_model_stats,
+                                                        'consistent_programs' : consistent_programs,
+                                                        'beam_reranked' : beam_reranked,
+                                                        'samples' : samples}
+
             n_consistent_top_by_model.append(top_by_model_stats.is_consistent)
-            n_consistent_top_by_reranking.append(top_by_reranking_stats.is_consistent)
+            n_consistent_top_by_reranking.append((top_by_reranking_stats.is_consistent,
+                                                  top_by_rec_stats.is_consistent))
             n_ccorrect_top_by_model.append(top_by_model_stats.n_correct)
-            n_correct_top_by_reranking.append(top_by_reranking_stats.n_correct)
+            n_correct_top_by_reranking.append((top_by_reranking_stats.n_correct,
+                                              top_by_rec_stats.n_correct))
+
+
 
             n_samples += len(related_samples)
             iter += 1
@@ -461,6 +480,8 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
                       ",  mean prog length = {2:.2f}".format(
                     mean_consistent, mean_beam_size, np.mean(mean_program_lengths)))
 
+                n_correct_top_by_reranking_1, n_correct_top_by_reranking_2 = zip(*n_correct_top_by_reranking)
+                n_consistent_top_by_reranking_1, n_consistent_top_by_reranking_2 = zip(*n_consistent_top_by_reranking)
                 print('top programs by model had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
                     '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_ccorrect_top_by_model),
                                                                         n_samples,
@@ -469,12 +490,19 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
                                                                         iter,
                                                                         (sum(n_consistent_top_by_model) / iter) * 100))
                 print('top programs by reranking had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
-                    '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking),
+                    '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking_1),
                                                                         n_samples,
-                                                                        (sum(n_correct_top_by_reranking) / n_samples) * 100,
-                                                                        sum(n_consistent_top_by_reranking),
+                                                                        (sum(n_correct_top_by_reranking_1) / n_samples) * 100,
+                                                                        sum(n_consistent_top_by_reranking_1),
                                                                         iter,
-                                                                        (sum(n_consistent_top_by_reranking) / iter) * 100))
+                                                                        (sum(n_consistent_top_by_reranking_1) / iter) * 100))
+                print('top programs by reranking2 had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
+                    '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking_2),
+                                                                        n_samples,
+                                                                        (sum(n_correct_top_by_reranking_2) / n_samples) * 100,
+                                                                        sum(n_consistent_top_by_reranking_2),
+                                                                        iter,
+                                                                        (sum(n_consistent_top_by_reranking_2) / iter) * 100))
                 print("##############################")
 
             sys.stdout = orig_stdout
@@ -501,6 +529,9 @@ def run_unsupervised(sess, train_dataset, mode, validation_dataset = None, load_
         if is_last_batch_in_epoch and test_between_training_epochs:
             curr_mode, other_mode = other_mode, curr_mode
             curr_dataset, other_dataset = other_dataset, curr_dataset
+    if mode == 'test':
+        f = BEAMS_PATH + '_' + curr_dataset.name + '_' + time.strftime("%Y-%m-%d_%H_%M")
+        #pickle.dump(stats_for_all_sentences, open(f, 'wb'))
 
     return
 
@@ -515,7 +546,8 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 
     init = tf.global_variables_initializer()
     sess.run(init)
-    saver = tf.train.Saver(theta)
+    #saver = tf.train.Saver(theta)
+    saver = tf.train.Saver()
     if load_params_path:
         saver.restore(sess,load_params_path)
 
@@ -534,7 +566,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
     current_data_set = train
     statistics = {train : [], validation : []}
 
-    while epoch_num < 13:
+    while epoch_num < 1:
         if current_data_set.epochs_completed != epoch_num:
             statistics[current_data_set].append((np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens)))
             print("epoch number {0}: mean loss = {1:.3f}, mean accuracy = {2:.3f}, mean accuracy ignore automatic = {3:.3f},"
@@ -693,8 +725,43 @@ def run_inference(sess, data, load_params, clf=None):
     return
 
 
-#def run_beam_classifier(beam_training_set):
-    # TODO
+def analyze_results(stats_dict, dataset):
+    print("")
+    patterns_count_dict = {}
+    patterns_n_consistent_im_beam_dict = {}
+    patterns_top_by_reranking_consistent = {}
+    #patterns_top_by_reranking_correct = {}
+    # stats_for_all_sentences[sentence_id] = {'top_program_by_reranking': top_program_by_reranking,
+    #                                         'top_by_reranking_stats': top_by_reranking_stats,
+    #                                         'top_program_by_model': top_program_by_model,
+    #                                         'top_by_model_stats': top_by_model_stats,
+    #                                         'consistent_programs': consistent_programs,
+    #                                         'beam_reranked': beam_reranked,
+    #                                         'samples': samples}
+    i=0
+    for sent_id, stats in stats_dict.items():
+        s = dataset.get_sentence_by_id(sent_id)
+        print(" ")
+        print(s)
+        stats = stats_dict[sent_id]
+        for p in stats['consistent_programs']:
+            print(p.logprob, p.token_seq)
+            i+=1
+            if i>25:
+                break
+        # pattern = get_formalized_sentence(s)
+        # increment_count(patterns_count_dict, pattern)
+        # if stats['top_by_reranking_stats'].is_consistent:
+        #     increment_count(patterns_top_by_reranking_consistent, pattern)
+        # increment_count(patterns_n_consistent_im_beam_dict, pattern, len(stats['beam_reranked']))
+
+    roi = sorted(patterns_count_dict.items(), key=lambda x: x[1], reverse=True)[:200]
+    chos = {v[0]: patterns_top_by_reranking_consistent.get(v[0],0) / v[1] for v in roi}
+    beamcons = {v[0]: patterns_n_consistent_im_beam_dict.get(v[0],0) / v[1] for v in roi}
+    for pattern, percent_cons in sorted(chos.items(), key=lambda x: x[1], reverse=True):
+        print (pattern, percent_cons, beamcons[pattern]/patterns_count_dict[pattern], patterns_count_dict[pattern])
+    print()
+    return
 
 
 
@@ -706,35 +773,67 @@ if __name__ == '__main__':
     pickle.load(open)
 
     orig_stdout = sys.stdout
-    STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'training logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
-    OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_' + time.strftime("%Y-%m-%d_%H_%M")+ '.ckpt')
+    # #STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'training logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
+    # OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_' + time.strftime("%Y-%m-%d_%H_%M")+ '.ckpt')
+    #
+    # sf = pickle.load(open(BEAMS_PATH + '_TRAIN_2017-09-10_01_09', 'rb'))
+    # train_dataset = CNLVRDataSet(DataSet.TRAIN)
+    # #
+    # #ev_beams = pickle.load(open(BEAMS_PATH + '_DEV_2017-09-09_22_25', 'rb'))
+    # analyze_results(sf, train_dataset)
 
-    INPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_2017-09-09_00_50.ckpt-15')
+
+    NikasWeights = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'NikaWeights')
+    weights = [
+    'weights_cur2017-09-09_11_14.ckpt-4',
+        #'weights_cached_auto_inj2017-09-09_10_49.ckpt-15',
+        'weights_cached_2017-09-09_01_17.ckpt-15', # CA
+        'weights_auto_tokens2017-09-09_01_21.ckpt-15',
+        'weights_2017-09-08_15_05.ckpt-15',
+        'weights_2017-09-08_15_05.ckpt-13'
+
+     ]
 
 
-    train_dataset = CNLVRDataSet(DataSet.TRAIN)
-    dev_dataset = CNLVRDataSet(DataSet.DEV)
-    test_dataset = CNLVRDataSet(DataSet.TEST)
+    for i, wf in enumerate(weights):
 
-    train_dataset.sort_sentences_by_complexity(lambda s : -ngram_logprobs_dict[s], 5)
+        for i in range(2):
+            #SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = not SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH
+            #INPUT_WEIGHTS = os.path.join(NikasWeights, wf)
+            STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'training logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
+            train_dataset = CNLVRDataSet(DataSet.TRAIN)
+            dev_dataset = CNLVRDataSet(DataSet.DEV)
+            test_dataset = CNLVRDataSet(DataSet.TEST)
+            #analyze_results(sf, train_dataset)
 
-    if AVOID_ALL_TRUE_SENTENCES:
-        train_dataset.ignore_all_true_samples()
+            with tf.Session() as sess:
 
-    with tf.Session() as sess:
+                # run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
+                #                  load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
+                #
 
-        # run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
-        #                  load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
-        #
-        run_unsupervised(sess, dev_dataset, mode='test', validation_dataset=dev_dataset,
-                         load_params_path=INPUT_WEIGHTS, save_model_path=None)
+                run_unsupervised(sess, dev_dataset, mode='train', validation_dataset=None,
+                                 load_params_path=INPUT_WEIGHTS, save_model_path=None)
 
-    with tf.Session() as sess:
+            with tf.Session() as sess:
 
-        # run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
-        #                  load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
-        #
-        run_unsupervised(sess, test_dataset, mode='test', validation_dataset=dev_dataset,
-                         load_params_path=INPUT_WEIGHTS, save_model_path=None)
+                # run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
+                #                  load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
+                #
+                run_unsupervised(sess, test_dataset, mode='test', validation_dataset=None,
+                                 load_params_path=INPUT_WEIGHTS, save_model_path=None)
+
+            # with tf.Session() as sess:
+            #
+            #     # run_unsupervised(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
+            #     #                  load_params_path=INPUT_WEIGHTS, save_model_path=OUTPUT_WEIGHTS)
+            #     #
+            #     run_unsupervised(sess, train_dataset, mode='test', validation_dataset=None,
+            #                      load_params_path=INPUT_WEIGHTS, save_model_path=None)
+
+    #train_dataset.sort_sentences_by_complexity(lambda s : -ngram_logprobs_dict[s], 5)
+
+
+
 
     print("done")

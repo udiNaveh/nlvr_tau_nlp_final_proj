@@ -16,7 +16,7 @@ HISTORY_LENGTH = 4
 #other hyper parameters
 LEARNING_RATE = 0.001
 BETA = 0.5
-EPSILON_FOR_BEAM_SEARCH = 0.05
+EPSILON_FOR_BEAM_SEARCH = 0
 MAX_N_EPOCHS = 15
 
 BATCH_SIZE_UNSUPERVISED = 8
@@ -30,8 +30,8 @@ N_CACHED_PROGRAMS = 10 if USE_CACHED_PROGRAMS else 0
 LOAD_CACHED_PROGRAMS = False
 SAVE_CACHED_PROGRAMS = False
 SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
-AVOID_ALL_TRUE_SENTENCES = True
-PRINT_EVERY = 10
+AVOID_ALL_TRUE_SENTENCES = False
+PRINT_EVERY = 1000
 
 
 #paths
@@ -44,6 +44,9 @@ TRAINED_WEIGHTS_UNSUP_HISTORY_4 = os.path.join(definitions.ROOT_DIR, 'seq2seqMod
 TRAINED_WEIGHTS_TEMP = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeights','temp.ckpt-1')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
+CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',
+                                        'cached_programs_based_on_pretrain')
+BEAMS_PATH = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs', 'beams_by_sentences')
 NGRAM_PROBS =  os.path.join(definitions.DATA_DIR, 'sentence-processing', 'ngram_logprobs')
 
 
@@ -51,11 +54,11 @@ NGRAM_PROBS =  os.path.join(definitions.DATA_DIR, 'sentence-processing', 'ngram_
 MAX_DECODING_LENGTH = 22
 MAX_STEPS = 14
 BEAM_SIZE = 40
-SKIP_AUTO_TOKENS = False
+SKIP_AUTO_TOKENS = True
 INJECT_TO_BEAM = False and USE_CACHED_PROGRAMS
 
 # chosen weights path - change every time
-INPUT_WEIGHTS = TRAINED_WEIGHTS_SUP_HISTORY_4
+INPUT_WEIGHTS = TRAINED_WEIGHTS_SUP_HISTORY_4 #TRAINED_WEIGHTS_SUP_HISTORY_4
 OUTPUT_WEIGHTS = None
 
 
