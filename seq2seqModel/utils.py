@@ -25,30 +25,8 @@ def get_program_execution_stats(token_seq, related_samples, logical_tokens_mappi
     return ProgramExecutionStats(prog_compiled, predicted_labels, is_consistent, n_correct, n_incorrect)
 
 
-def programs_reranker(sentence, programs, words_to_tokens):
-    """   
-    :param sentence: a string
-    :param programs: a list of unique PartialProgram instances
-    :param words_to_tokens: a dictionary mapping words to lists of related tokens
-    :return: a list containing the programs resorted according to their relevance to the sentence
-    """
 
-    sentence_words = sentence.split()
-    needed_tokens = []
-    for word in sentence_words:
-        needed_tokens.append(words_to_tokens.get(word, []))
-    progs_to_token_relevance_count = {}
-    for prog in programs:
-        n_releveant_tokens = 0
-        for i in range(len(needed_tokens)):
-            for t in needed_tokens[i]:
-                if t in prog:
-                    n_releveant_tokens += 1
-                    break
-        progs_to_token_relevance_count[prog] = n_releveant_tokens
-    return sorted(programs, key=lambda prog: (-progs_to_token_relevance_count[prog], -prog.logprob))
-
-def programs_reranker_2(sentence, programs, words_to_tokens):
+def beam_reranker(sentence, programs, words_to_tokens):
     programs_c = [p for p in programs]
     return sorted(programs_c, key=lambda prog: ( - sentence_program_relevance_score(sentence, prog, words_to_tokens),
                                               -prog.logprob))
