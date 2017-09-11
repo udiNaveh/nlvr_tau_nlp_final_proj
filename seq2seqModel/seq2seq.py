@@ -238,16 +238,15 @@ cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
     labels=chosen_logical_tokens, logits=logits))
 
 
-
 def run_model(sess, dataset, mode, validation_dataset = None, load_params_path = None, save_model_path = None,
               save_stats_path=None):
     """ 
     a method for running the weakly-supervised model
     
     :param sess: a tf Session in the context of which the model is to be run
-    :param dataset: a CNLVRDataSet object on which to run.
+    :param dataset: a CNLVRDataSet object on which to run, whether in train or in teat mode.
     :param mode: either 'train' or 'test'
-    :param validation_dataset: another CNLVRDataSet object
+    :param validation_dataset: another CNLVRDataSet object, that's used for validation when running in train mode.
     :param load_params_path: a path to pre-trained weights
     :param save_model_path: a path for saving the learned model
     
@@ -307,7 +306,7 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
 
     start = time.time()
 
-    curr_dataset, other_dataset = train_dataset, validation_dataset
+    curr_dataset, other_dataset = dataset, validation_dataset
     curr_mode = mode
     other_mode = 'train' if mode=='test' else 'test'
 
@@ -315,7 +314,7 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
 
 
 
-    while train_dataset.epochs_completed < n_epochs and not stopping_criterion_met:
+    while dataset.epochs_completed < n_epochs and not stopping_criterion_met:
 
         # get a mini-batch of sentences and their related images
         batch, is_last_batch_in_epoch = curr_dataset.next_batch(BATCH_SIZE_UNSUPERVISED)
@@ -426,14 +425,14 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
             if beam:
                 # gather some statistics about the programs in the beam
                 mean_program_lengths.append(np.mean([len(pp) for pp in beam]))
-                beam_reranked = programs_reranker_2(sentence, beam, words_to_tokens)
-                beam_reranked_rec = programs_reranker_3(sentence, beam, words_to_tokens)
+                beam_reranked = beam_reranker(sentence, beam, words_to_tokens)
+
                 top_program_by_model = beam[0]
                 top_program_by_reranking = beam_reranked[0]
-                top_by_rec = beam_reranked_rec[0]
+
                 top_by_model_stats = programs_execution_results[top_program_by_model]
                 top_by_reranking_stats = programs_execution_results[top_program_by_reranking]
-                top_by_rec_stats = programs_execution_results[top_by_rec]
+
 
 
             if not beam: # no valid program was found by the beam - default is to guess 'True' for all images
@@ -450,11 +449,10 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
                                                         'samples' : samples}
 
             n_consistent_top_by_model.append(top_by_model_stats.is_consistent)
-            n_consistent_top_by_reranking.append((top_by_reranking_stats.is_consistent,
-                                                  top_by_rec_stats.is_consistent))
+            n_consistent_top_by_reranking.append(top_by_reranking_stats.is_consistent,
+                                                  )
             n_ccorrect_top_by_model.append(top_by_model_stats.n_correct)
-            n_correct_top_by_reranking.append((top_by_reranking_stats.n_correct,
-                                              top_by_rec_stats.n_correct))
+            n_correct_top_by_reranking.append(top_by_reranking_stats.n_correct)
 
 
 
@@ -522,8 +520,6 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
                       ",  mean prog length = {2:.2f}".format(
                     mean_consistent, mean_beam_size, np.mean(mean_program_lengths)))
 
-                n_correct_top_by_reranking_1, n_correct_top_by_reranking_2 = zip(*n_correct_top_by_reranking)
-                n_consistent_top_by_reranking_1, n_consistent_top_by_reranking_2 = zip(*n_consistent_top_by_reranking)
                 print('top programs by model had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
                     '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_ccorrect_top_by_model),
                                                                         n_samples,
@@ -532,19 +528,12 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
                                                                         iter,
                                                                         (sum(n_consistent_top_by_model) / iter) * 100))
                 print('top programs by reranking had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
-                    '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking_1),
+                    '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking),
                                                                         n_samples,
-                                                                        (sum(n_correct_top_by_reranking_1) / n_samples) * 100,
-                                                                        sum(n_consistent_top_by_reranking_1),
+                                                                        (sum(n_correct_top_by_reranking) / n_samples) * 100,
+                                                                        sum(n_consistent_top_by_reranking),
                                                                         iter,
-                                                                        (sum(n_consistent_top_by_reranking_1) / iter) * 100))
-                print('top programs by reranking2 had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
-                    '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking_2),
-                                                                        n_samples,
-                                                                        (sum(n_correct_top_by_reranking_2) / n_samples) * 100,
-                                                                        sum(n_consistent_top_by_reranking_2),
-                                                                        iter,
-                                                                        (sum(n_consistent_top_by_reranking_2) / iter) * 100))
+                                                                        (sum(n_consistent_top_by_reranking) / iter) * 100))
                 print("##############################")
 
             sys.stdout = orig_stdout
@@ -559,8 +548,8 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
 
             if curr_mode == 'train':
                 if save_model_path :
-                    saver2.save(sess, save_model_path, global_step=train_dataset.epochs_completed,write_meta_graph=False)
-                    print("saved epoch %d" % train_dataset.epochs_completed)
+                    saver2.save(sess, save_model_path, global_step=dataset.epochs_completed,write_meta_graph=False)
+                    print("saved epoch %d" % dataset.epochs_completed)
 
                 if SAVE_CACHED_PROGRAMS:
                     cpf = open(CACHED_PROGRAMS, 'wb')
@@ -692,6 +681,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
         saver.save(sess, save_params_path)
 
 
+
 if __name__ == '__main__':
 
     orig_stdout = sys.stdout
@@ -700,10 +690,14 @@ if __name__ == '__main__':
     time_stamp = time.strftime("%Y-%m-%d_%H_%M")
     OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_' + time_stamp + '.ckpt')
 
-    STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'training logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
+    STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'running logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
+
+    with tf.Session() as sess:
+        run_supervised_training(sess)
+
 
     run_train = False # change to True if you really want to run the whole thing...
 
