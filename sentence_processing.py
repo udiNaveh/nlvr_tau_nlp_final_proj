@@ -327,7 +327,8 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     replacements_dic = load_dict_from_txt(SYNONYMS)
     lemmatized_sentences_with_replacements = replace_words_by_dictionary(lemmatized_sentences, replacements_dic)
 
-
+    unigrams_lemmatized, bigrams_lemmatized = get_ngrams_counts(
+        [s.split() for s in lemmatized_sentences_with_replacements.values()], 2)
     return lemmatized_sentences_with_replacements
     # notice: to replace rare words with <unk> token, run the 'replace_rare_words_with_unk' methodsh
     # on the output if this method

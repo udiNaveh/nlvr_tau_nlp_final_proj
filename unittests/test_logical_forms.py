@@ -10,9 +10,9 @@ import unittest
 import os
 import definitions
 import display_images
-from handle_data import *
+from data_manager import *
 from logical_forms import *
-from preprocessing import clean_sentence
+from sentence_processing import clean_sentence
 from seq2seqModel.logical_forms_generation import load_functions
 
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
@@ -123,7 +123,7 @@ def test_parsing_on_samples(sentence, samples, only_tokens=TOKENS_ONLY, show_mis
     n_errors = 0
     n_mistakes = 0
 
-    logical_forms = parse(sentence, parsing_dic)
+    logical_forms = parsing_dic[sentence][1]
     n_logical_forms = len(logical_forms)
 
     for form in logical_forms:

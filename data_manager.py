@@ -3,9 +3,8 @@ from itertools import permutations
 from structured_rep import *
 import definitions
 import numpy as np
-from preprocessing import preprocess_sentences, replace_rare_words_with_unk, get_ngrams_counts, get_distributions, get_sentence_ngram_prob
+from sentence_processing import preprocess_sentences, replace_rare_words_with_unk, get_ngrams_counts, write_ngrams
 import pickle
-import os
 
 
 
@@ -157,8 +156,6 @@ class CNLVRDataSet:
                                             class_size*i : min(class_size*i + class_size, len(self.processed_sentences))])
         return
 
-
-
     def choose_levels_for_curriculum_learning(self, levels):
         self.__ids = [idx for idx in set(ind for level in levels for ind in self.__ids_by_complexity[level])]
 
@@ -189,7 +186,6 @@ class CNLVRDataSet:
 
 
         return batch, self._index_in_epoch == 0
-
 
 
 class SupervisedParsing:
@@ -224,4 +220,5 @@ class SupervisedParsing:
         end = self._index_in_epoch
         indices = self.__ids[start : end]
         return [(self.examples[k][0], self.examples[k][1]) for k in indices]
+
 

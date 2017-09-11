@@ -4,7 +4,7 @@ from random import shuffle
 import json
 import pickle
 import definitions
-from handle_data import *
+from data_manager import *
 from sklearn.neighbors import KNeighborsClassifier
 
 # sents_path = None

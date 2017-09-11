@@ -7,7 +7,7 @@ import sys
 import definitions
 from seq2seqModel.utils import *
 from seq2seqModel.logical_forms_generation import *
-from handle_data import CNLVRDataSet, SupervisedParsing, DataSet
+from data_manager import CNLVRDataSet, SupervisedParsing, DataSet
 from seq2seqModel.beam import *
 from seq2seqModel.hyper_params import *
 from general_utils import increment_count, union_dicts
@@ -769,6 +769,8 @@ def analyze_results(stats_dict, dataset):
 
 
 if __name__ == '__main__':
+
+    pickle.load(open)
 
     orig_stdout = sys.stdout
     # #STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'training logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
