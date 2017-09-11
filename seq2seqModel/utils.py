@@ -12,9 +12,9 @@ ProgramExecutionStats = namedtuple('ProgramExecutionStats', ['compiled', 'predic
                                                                'is_consistent', 'n_correct', 'n_incorrect' ])
 
 
-def get_program_execution_stats(token_seq, related_samples, logical_tokens_mapping, sentence = ''):
+def get_program_execution_stats(token_seq, related_samples, logical_tokens_mapping):
     actual_labels = np.array([sample.label for sample in related_samples])
-    execution_results = np.array([execute(token_seq, sample.structured_rep, logical_tokens_mapping, sentence)
+    execution_results = np.array([execute(token_seq, sample.structured_rep, logical_tokens_mapping)
                                   for sample in related_samples])
     prog_compiled = all(res is not None for res in execution_results)
     predicted_labels = [res if res is not None else True for res in execution_results]

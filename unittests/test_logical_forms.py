@@ -13,12 +13,11 @@ import display_images
 from data_manager import *
 from logical_forms import *
 from sentence_processing import clean_sentence
-from seq2seqModel.logical_forms_generation import load_functions
+from data_manager import load_functions
 
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 PARSING_EXAMPLES_PATH = os.path.join(definitions.DATA_DIR, "parsed sentences", "parses for check")
 PARSING_EXAMPLES_TOKENS_ONLY_PATH = os.path.join(definitions.DATA_DIR, "parsed sentences", "parses for check as tokens")
-TOKENS_INVENTORY = os.path.join(definitions.DATA_DIR, "logical forms","token mapping")
 KNOWN_MISTAKES = os.path.join(definitions.ROOT_DIR,'unittests', "wrong labels ids")
 INCORRECT_PARSES = os.path.join(definitions.DATA_DIR, 'incorrect_first_in_beam')
 
@@ -99,7 +98,7 @@ def load_known_mistakes(path):
 
 #load needed data
 
-tokens_dic = load_functions(TOKENS_INVENTORY)
+tokens_dic = load_functions(definitions.LOGICAL_TOKENS_MAPPING_PATH)
 parsed_samples = load_parsed_examples(PARSING_EXAMPLES_PATH) if not TOKENS_ONLY else \
                                         load_parsed_examples(PARSING_EXAMPLES_TOKENS_ONLY_PATH)
 known_mistakes = load_known_mistakes(KNOWN_MISTAKES)

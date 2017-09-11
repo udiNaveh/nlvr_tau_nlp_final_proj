@@ -1,0 +1,3 @@
+model_checkpoint_path: "C:\\Users\\ASUS\\PycharmProjects\\nlvr_tau_nlp_final_proj\\seq2seqModel\\learnedWeightsUns\\weights_2017-09-09_00_50.ckpt-15"
+all_model_checkpoint_paths: "C:\\Users\\ASUS\\PycharmProjects\\nlvr_tau_nlp_final_proj\\seq2seqModel\\learnedWeightsUns\\weights_2017-09-09_00_50.ckpt-14"
+all_model_checkpoint_paths: "C:\\Users\\ASUS\\PycharmProjects\\nlvr_tau_nlp_final_proj\\seq2seqModel\\learnedWeightsUns\\weights_2017-09-09_00_50.ckpt-15"

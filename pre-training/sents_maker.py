@@ -1,16 +1,20 @@
-from copy import deepcopy
+"""
+The methods in this modules were used for generating pairs of english sentences and their logical forms parsings
+from pre-annotated patterns of pairs of sentence-logical forms pairs
+"""
+
 import pickle
-from logical_forms import *
-import  random
+import random
 import os
 import definitions
+from logical_forms import *
 from seq2seqModel.logical_forms_generation import *
 from seq2seqModel.utils import execute
 from data_manager import *
 from sentence_processing import *
 
 
-LOGICAL_TOKENS_MAPPING_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'token mapping_limitations')
+
 PARSED_FORMS_PATH = os.path.join(definitions.ROOT_DIR, 'pre-training', 'temp_sents_new')
 WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
 
@@ -38,26 +42,7 @@ replacements_dic = {'T_SHAPE' : [('square', ['square']),('triangle', ['triangle'
 
 logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
 
-formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
-formalization_file_2 = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'more_replacements.txt')
-
-def get_sentences_formalized(sentences):
-    dict = load_dict_from_txt(formalization_file)
-    for i in range(2,10):
-        dict[str(i)] = 'T_INT'
-    dict["1"] = 'T_ONE'
-    dict["one"] = 'T_ONE'
-    formalized_sentences =  replace_words_by_dictionary(sentences, dict)
-    return formalized_sentences
-
-
-def print_unique_sents_with_counts(sentences):
-    unique = {}
-    for s in sentences.values():
-        increment_count(unique, s)
-    for s, count in sorted(unique.items(), key= lambda kvp : kvp[1], reverse=True):
-        print(s,count)
-
+WORDS_TO_PATTERNS_PATH = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
 
 
 def load_forms(path):
@@ -76,6 +61,7 @@ def load_forms(path):
             else:
                 continue
     return result
+
 
 def generate_eng_log_pairs(engsent, logsent, n_pairs):
     eng_words = engsent.split()
@@ -119,7 +105,7 @@ def generate_eng_log_pairs(engsent, logsent, n_pairs):
     return result
 
 
-def check_generated_forms(forms_dictionary, samples):
+def test_generated_forms(forms_dictionary, samples):
     next_token_probs_getter = lambda pp: (pp.get_possible_continuations(), [0.1 for p in pp.get_possible_continuations()])
 
 
@@ -133,7 +119,8 @@ def check_generated_forms(forms_dictionary, samples):
                 print(i)
                 for word in gen_sent.split():
                     if word not in embeddings_dict:
-                        print (word)
+                        raise ValueError('word {} is not in vocabulary'.format(word))
+
                 for sample in curr_samples:
                     r = execute(gen_log.split(), sample.structured_rep, logical_tokens_mapping)
                     if r is None:
@@ -143,22 +130,20 @@ def check_generated_forms(forms_dictionary, samples):
                         print()
                 if not "filter filter filter" in gen_log:
                     try:
-                        prog = program_from_token_sequence(next_token_probs_getter, gen_log.split(), logical_tokens_mapping,
-                                                    original_sentence=gen_sent)
+                        prog = program_from_token_sequence(next_token_probs_getter, gen_log.split(), logical_tokens_mapping)
                     except ValueError:
 
                         print(gen_sent)
                         print(gen_log)
 
 
-def generate_pairs(forms_doctionary):
+def generate_pairs_for_supervised_learning(forms_dictionary):
     all_pairs =[]
     parsing_dict = {}
-    for engsent, (form_count, logsents) in sorted(forms_doctionary.items(), key=lambda k: - k[1][0]):
+    for engsent, (form_count, logsents) in sorted(forms_dictionary.items(), key=lambda k: - k[1][0]):
         for logsent in logsents:
             num = int(50 *form_count**(0.8)) // len(logsents)
             all_pairs.extend(generate_eng_log_pairs(engsent, logsent, num))
-
 
     for k,v in all_pairs:
         parsing_dict[k] = v
@@ -172,22 +157,6 @@ def generate_pairs(forms_doctionary):
 
     return pairs_train, pairs_validation
 
-def generate_pairs_woth_train_val_separation(forms_doctionary):
-
-    pairs_train = []
-    pairs_validation = []
-    for engsent, (form_count, logsents) in sorted(forms_doctionary.items(), key=lambda k: - k[1][0]):
-        if np.random.rand() <0.25:
-            pairs = pairs_validation
-        else:
-            pairs = pairs_train
-
-        for logsent in logsents:
-            num = 10 *form_count // len(logsents)
-            pairs.extend(generate_eng_log_pairs(engsent, logsent, num))
-
-
-    return pairs_train, pairs_validation
 
 def extract_all_sentences_in_given_patterns(sentences, patterns):
     formalized = get_sentences_formalized(sentences)
@@ -198,115 +167,11 @@ def extract_all_sentences_in_given_patterns(sentences, patterns):
     return result
 
 
-def sents_maker(path = r'temp_sents.txt'):
-
-    fsents = open(path)
-
-
-
-    sents = []
-    for line in fsents:
-        if line.startswith('@'):
-            engsent = line[2:].rstrip()
-        elif line.startswith('~'):
-            logsent = line[2:].rstrip()
-            sents.append([engsent, logsent])
-        else:
-            continue
-
-    print('beginning with ', len(sents), 'sentences')
-
-    # newsents = sents
-    oldsents = []
-    # while newsents != []:
-    while oldsents != sents:
-        oldsents = deepcopy(sents)
-        for sent in sents:
-            engsent = sent[0]
-            logsent = sent[1]
-            engwords = engsent.split()
-            for i, word in enumerate(engwords):
-                if word == word.upper() and word != '1' and word not in ints:
-                    sents.remove(sent)
-                    if 'COLOR' in word:
-                        for color in colors:
-                            newlog = logsent.replace(word, color)
-                            neweng = engwords
-                            neweng[i] = color
-                            neweng = ' '.join(neweng)
-                            sents.append([neweng, newlog])
-                    elif 'SHAPE' in word:
-                        for shape in shapes:
-                            newlog = logsent.replace(word, shape)
-                            neweng = engwords
-                            neweng[i] = shape
-                            neweng = ' '.join(neweng)
-                            sents.append([neweng, newlog])
-                    elif 'INT' in word:
-                        for inty in ints:
-                            newlog = logsent.replace(word, inty)
-                            neweng = engwords
-                            neweng[i] = inty
-                            neweng = ' '.join(neweng)
-                            sents.append([neweng, newlog])
-                    elif 'LOC' in word:
-                        for loc in locs:
-                            newlog = logsent.replace(word, loc[1])
-                            neweng = engwords
-                            neweng[i] = loc[0]
-                            neweng = ' '.join(neweng)
-                            sents.append([neweng, newlog])
-                    elif 'QUANTITY' in word:
-                        for quant in quants:
-                            newlog = logsent.replace(word, quant[1])
-                            neweng = engwords
-                            neweng[i] = quant[0]
-                            neweng = ' '.join(neweng)
-                            sents.append([neweng, newlog])
-                    # elif 'ONE' in word:
-                    #     for one in ones:
-                    #         newlog = logsent
-                    #         neweng = engwords
-                    #         neweng[i] = one
-                    #         neweng = ' '.join(neweng)
-                    #         sents.append([neweng, newlog])
-                    break
-
-        print('so far ', len(sents), 'sentences')
-    print('done! ', len(sents), 'sentences')
-    return sents
-
-
-
-
-
-
-if __name__ == '__main__':
-    parsed_forms = load_forms(PARSED_FORMS_PATH)
-    samples, sentences = build_data(read_data(TRAIN_JSON), preprocessing_type='shallow')
-    #check_generated_forms(parsed_forms, samples)
-    train, validation = generate_pairs(parsed_forms)
-    # train = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train3'), 'rb')
-    # train = pickle.load(train)
-    # validation = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation3'), 'rb')
-    # validation = pickle.load(validation)
-    # train_sep, validation_sep = generate_pairs_woth_train_val_separation(parsed_forms)
-    # train_sep = list(set(train_sep))
-    # validation_sep = list(set(validation_sep))
-    # np.random.shuffle(train_sep)
-    # np.random.shuffle(validation_sep)
-    # train_sep = train_sep[:len(train)]
-    # validation_sep = validation_sep[:len(train)]
-
-
-    # train_sep = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train_sep'), 'rb')
-    # train_sep = pickle.load(train_sep)
-    # validation_sep = open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation_sep'), 'rb')
-    # validation_sep = pickle.load(validation_sep)
-    pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation3'), 'wb'))
-    pickle.dump(train, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_train3'), 'wb'))
-    # pickle.dump(validation, open(os.path.join(definitions.DATA_DIR, 'parsed sentences', 'pairs_validation2'), 'wb'))
-
-
-
-    print("")
+def get_sentences_formalized(sentences):
+    dict = load_dict_from_txt(WORDS_TO_PATTERNS_PATH)
+    for i in range(2,10):
+        dict[str(i)] = 'T_INT'
+    dict["1"] = 'T_ONE'
+    dict["one"] = 'T_ONE'
+    formalized_sentences =  replace_words_by_dictionary(sentences, dict)
+    return formalized_sentences
