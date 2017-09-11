@@ -10,7 +10,8 @@ However, any such set of tokens must be a subset of the functions defined here.
 
 """
 
-from collections import Iterable
+from collections import Iterable, namedtuple
+
 from structured_rep import *
 from structured_rep_enums import *
 
@@ -430,32 +431,25 @@ def run_logical_form(expression, image):
     return result
 
 
-def edit_logical_form_by_sentence(sentence, logical_form):
-    if 'closely' in sentence:
-        logical_form = logical_form.replace('touching_wall', 'closely_touching_wall')
-        logical_form = logical_form.replace('get_touching', 'get_closely_touching')
-    return logical_form
 
 
-def execute(program_tokens,image,token_mapping = DEFAULT_TOKEN_MAPPING, sentence = ''):
+def execute(program_tokens, image, logical_tokens_inventory, sentence =''):
     """
     :param program_tokens: a list of strings that reprsents an executable program
     :param image: an obkect of type Image: the structured representation on which to run the program
-    :param token_mapping: 
-    :param sentence: 
+    :param logical_tokens_inventory: mapping logical tokens to their types, arguments etc.
+    :param sentence [optional]: the sentence from which program_tokens was pares
     :return: 
     """
-    logical_form = process_token_sequence(program_tokens, token_mapping)
-    logical_form = edit_logical_form_by_sentence(sentence, logical_form)
+
+    logical_form = process_token_sequence(program_tokens, logical_tokens_inventory)
     try:
         result = run_logical_form(logical_form,image)
     except (TypeError, SyntaxError, ValueError, AttributeError,
                 RuntimeError, RecursionError, Exception, NotImplementedError) as err:
         result = None
 
-    # if result is None:
-    #     if input("go inside? ") =='y':
-    #         result = run_logical_form(logical_form, image)
     return result
 
 
+TokenTypes = namedtuple('TokenTypes', ['return_type', 'args_types', 'necessity'])

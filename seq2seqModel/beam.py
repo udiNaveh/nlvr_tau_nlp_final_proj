@@ -3,6 +3,7 @@ import time
 import random
 from seq2seqModel.logical_forms_generation import *
 from seq2seqModel.hyper_params import MAX_DECODING_LENGTH, MAX_STEPS, BEAM_SIZE, SKIP_AUTO_TOKENS, INJECT_TO_BEAM
+from seq2seqModel.beam_boosting import *
 
 
 
@@ -37,7 +38,9 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
         # 1. Avoid certain tokens if they are not explicitly suggested from the sentence (e.g. do not allow 'is_yellow'
         #   if the word 'yellow' is not in the original sentence)
         # 2. limit the program length according to the sentence length
-        logical_tokens_mapping = sentence_relevant_logical_tokens(logical_tokens_mapping, original_sentence)
+
+        logical_tokens_mapping = {k: v for k, v in logical_tokens_mapping.items() if
+         (not v.necessity) or any([w in original_sentence.split() for w in v.necessity])}
 
         max_decoding_steps = decoding_steps_from_sentence_length(len(original_sentence.split()))
     else:
@@ -52,7 +55,7 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
 
         try:
             program, (valid_tokens_history, _) = program_from_token_sequence(
-                next_token_probs_getter, decoding, logical_tokens_mapping, original_sentence=original_sentence)
+                next_token_probs_getter, decoding, logical_tokens_mapping)
             if SKIP_AUTO_TOKENS:
                 checkpoints = [i for i in range(len(valid_tokens_history)) if len(valid_tokens_history[i])>1]
             else:
@@ -133,7 +136,7 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
         all_continuations_list = [c for p in continuations.values() for c in p]
         all_continuations_list.sort(key= lambda c: - c.logprob)
         # choose the beam_size continuations for the next step
-        beam = epsilon_greedy_sample(all_continuations_list, BEAM_SIZE, continuations, epsilon)
+        beam = epsilon_greedy_sample(all_continuations_list, BEAM_SIZE, epsilon)
 
         if all([prog.token_seq[-1] == '<EOS>' for prog in beam]):
             break  # if there are already beam_size complete programs in beam, no need to keep searching
@@ -153,7 +156,7 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
     return beam
 
 
-def epsilon_greedy_sample(choices, num_to_sample, prefixes, epsilon):
+def epsilon_greedy_sample(choices, num_to_sample, epsilon):
     """Samples without replacement num_to_sample choices from choices
     where the ith choice is choices[i] with prob 1 - epsilon, and
     uniformly at random with prob epsilon
@@ -186,24 +189,50 @@ def epsilon_greedy_sample(choices, num_to_sample, prefixes, epsilon):
     return sample
 
 
-    # sample = []
-    # index_choices = [j for j in range(len(choices))]
-    # nonempty_prefixes = [conts for pref, conts in prefixes.items() if conts]
-    # choice_index = -1
-    # for i in range(num_to_sample):
-    #     if random.random() <= epsilon or i not in index_choices:
-    #         while True:
-    #             prefix_conts = random.choice(nonempty_prefixes)
-    #             prog = random.choice(prefix_conts)
-    #             choice_index = choices.index(prog)
-    #             if choice_index in index_choices:
-    #                 break
-    #     else:
-    #         choice_index = i
-    #     index_choices.remove(choice_index)
-    #     sample.append(choices[choice_index])
-    # return sample
+def epsilon_greedy_sample_uniform_over_prefixes(choices, num_to_sample, prefixes, epsilon):
+    """Samples without replacement num_to_sample choices from choices
+    where the ith choice is choices[i] with prob 1 - epsilon, and
+    uniformly at random with prob epsilon
+    Args:
+        choices (list[Object]): a list of choices
+        num_to_sample (int): number of things to sample
+        epsilon (float): probability to deviate
+    Returns:
+        list[Object]: list of size num_to_sample choices
+    """
 
+    assert (0 <= epsilon <= 1)
+
+    if (len(choices) <= num_to_sample):
+        return choices
+
+    # Performance
+    if epsilon == 0:
+        return choices[:num_to_sample]
+
+    sample = []
+    index_choices = [j for j in range(len(choices))]
+    nonempty_prefixes = [conts for pref, conts in prefixes.items() if conts]
+    choice_index = -1
+    for i in range(num_to_sample):
+        if random.random() <= epsilon or i not in index_choices:
+            while True:
+                prefix_conts = random.choice(nonempty_prefixes)
+                prog = random.choice(prefix_conts)
+                choice_index = choices.index(prog)
+                if choice_index in index_choices:
+                    break
+        else:
+            choice_index = i
+        index_choices.remove(choice_index)
+        sample.append(choices[choice_index])
+    return sample
+
+
+
+
+
+# sampling programs from the distribution (not using beam search) - not used
 
 def sample_valid_decodings(next_token_probs_getter, n_decodings, logical_tokens_mapping):
     decodings = []

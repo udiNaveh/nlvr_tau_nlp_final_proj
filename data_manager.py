@@ -1,10 +1,13 @@
 import json
-from itertools import permutations
-from structured_rep import *
-import definitions
 import numpy as np
-from sentence_processing import preprocess_sentences, replace_rare_words_with_unk, get_ngrams_counts, write_ngrams
 import pickle
+
+import definitions
+from structured_rep import *
+from logical_forms import TokenTypes
+from sentence_processing import preprocess_sentences, replace_rare_words_with_unk
+
+
 
 
 
@@ -161,6 +164,8 @@ class CNLVRDataSet:
 
     def restart(self):
         self.__ids = [k for k in self.original_sentences.keys()]
+        self._index_in_epoch = 0
+        self.epochs_completed = 0
 
     def next_batch(self,batch_size):
 
@@ -188,7 +193,7 @@ class CNLVRDataSet:
         return batch, self._index_in_epoch == 0
 
 
-class SupervisedParsing:
+class DataSetForSupervised:
 
     def __init__(self, path):
         self.__ids = []
@@ -221,4 +226,37 @@ class SupervisedParsing:
         indices = self.__ids[start : end]
         return [(self.examples[k][0], self.examples[k][1]) for k in indices]
 
+
+
+def load_functions(filename):
+    """
+    loads from file a dictionary of all valid tokens in the formal language we use.
+    each token is is defines by its name, its return types, and its argument types.
+    tokens that represent known entities, like ALL_BOXES, or Color.BLUE are treated as
+    functions that take no arguments, and their return type is their own type, i.e. 
+    set<set<Item>>, and set<Color>, rspectively.
+    """
+    functions_dict = {}
+    with open(filename) as functions_file:
+        for i, line in enumerate(functions_file):
+            if line.isspace():
+                continue
+            line = line.strip()
+            if line.startswith('#'):
+                continue
+            entry = line.split()
+
+            split_idx = entry.index(':') if ':' in entry else len(entry)
+            entry, necessary_words = entry[:split_idx], entry[split_idx:]
+
+            if len(entry) < 3 or not entry[1].isdigit() or int(entry[1]) != len(entry) - 3:
+                print("could not parse function in line  {0}: {1}".format(i, line))
+                # should use Warning instead
+                continue
+            token, return_type, args_types = entry[0], entry[-1], entry[2:-1]
+            functions_dict[token] = TokenTypes(return_type=return_type, args_types=args_types, necessity= necessary_words)
+        functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one', 'a'])
+        functions_dict.update({str(i): TokenTypes(return_type='int', args_types=[], necessity=[str(i)]) for i in range(2, 10)})
+
+    return functions_dict
 
