@@ -21,19 +21,3 @@ def union_dicts(dict1, dict2):
 def union_count_dicts(dict1,dict2):
    all_keys = set(list(dict1.keys()) + list(dict2.keys()))
    return {k : dict1.get(k,0) + dict2.get(k,0) for k in all_keys}
-
-
-
-# words_to_tokens = words_to_tokens_dict(logical_tokens_mapping)
-# dic ={}
-# with open('words_to_tokens.txt', 'r') as f:
-#
-#     for line in f:
-#         l = line.split(':')
-#         k = l[0].strip()
-#         v = []
-#         for s in l[1:]:
-#             v.append(s.strip().split())
-#         dic[k] = v
-#
-# pickle.dump(dic, open(os.path.join(definitions.DATA_DIR, 'logical forms', 'words_to_tokens'), 'wb'))

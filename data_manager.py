@@ -1,15 +1,10 @@
 import json
 import numpy as np
 import pickle
-
 import definitions
 from structured_rep import *
 from logical_forms import TokenTypes
 from sentence_processing import preprocess_sentences, replace_rare_words_with_unk
-
-
-
-
 
 
 class DataSet(Enum):
@@ -45,7 +40,8 @@ def build_data(data, preprocessing_type = None, use_unk = True):
     '''
     
     :param data: a deserialized version of a dataset json file: List[List[List[Dict[str: str]]]]
-    :param preprocess: if True, sentences read from the data are preprocessed for spelling correction etc.
+    :param preprocessing_type: the type of setnece preprocessing to be used
+    :param use)unk : whether to replace rare word words <UNK> tokens
     :return: 
     samples : a list of Sample objects (see structured_rep.py). Each represents in a convenient, OOP way 
     a single line from the data
@@ -72,6 +68,12 @@ def build_data(data, preprocessing_type = None, use_unk = True):
 
 
 class CNLVRDataSet:
+    """
+    A wrapper class for an instance of a data set from CNLVR (i.e. train, dev, or test).
+    This class encapsulates all the processing done for loading the data, and provides
+    functionality for going over the data set one batch after another, as well as some other
+    options.
+    """
 
     def __init__(self, dataset):
         self.__dataset = dataset
@@ -85,7 +87,7 @@ class CNLVRDataSet:
         self.get_data(paths[dataset])
 
     @property
-    def name(self):
+    def name(self): # i.e. 'TRAIN'
         return self.__dataset.name
 
     @property
@@ -96,10 +98,15 @@ class CNLVRDataSet:
         samples_ids = ["{0}-{1}".format(sentence_id, i) for i in range(4)]
         return [self.samples[sample_id] for sample_id in samples_ids if sample_id in self.samples]
 
-    def get_sentence_by_id(self, sentence_id):
+    def get_sentence_by_id(self, sentence_id, original =False):
+        if original:
+            return self.original_sentences[sentence_id]
         return self.processed_sentences[sentence_id]
 
     def get_data(self, path):
+        # this methods handles all loading and processing of the data set and thus is called
+        # at initialization.
+
         data = read_data(path)
         sentences = {}
         for line in data:
@@ -126,15 +133,24 @@ class CNLVRDataSet:
         self.__ids = [k for k in self.original_sentences.keys()]
 
     def use_subset_by_sentnce_condition(self, f_s):
-        ''' f_id is a boolean function on ids'''
+        """
+        limits the dataset to sentences that follow some condition only.
+        :param f_s:  a boolean function on ids
+        """
+
         new_ids = []
         for k, s in self.processed_sentences.items():
             if f_s(s):
                 new_ids.append(k)
         self.__ids = new_ids
 
+
     def use_subset_by_images_condition(self, f_im):
-        ''' f_im is a boolean function on a set of samples'''
+        """
+        limits the dataset to sentences whose related imaes follow some rule
+        :param f_s:  f_im is a boolean function on a set of samples
+        """
+
         new_ids = []
         for k, s in self.processed_sentences.items():
             related_samples = self.get_samples_by_sentence_id(k)
@@ -143,12 +159,18 @@ class CNLVRDataSet:
         self.__ids = new_ids
 
     def ignore_all_true_samples(self):
+        """
+        
+        limits the dataset to sentences that are not true about all their images -
+        should help avoid spurious signal (there are about 10% such sentences in the training set)
+        """
         all_true_filter = lambda s_samples : not all([s.label==True for s in s_samples])
         self.use_subset_by_images_condition(all_true_filter)
 
     def sort_sentences_by_complexity(self, complexity_measure, n_classes):
         '''
-        mock implementation : sort by length
+        sorts the data into n_classes sets by some measure of complexity of the sentences.
+         can be used for curriculum learning
         '''
         self.__ids_by_complexity = []
         ids_sorted_by_sentence_length = sorted(self.processed_sentences.keys(), key=
@@ -163,11 +185,20 @@ class CNLVRDataSet:
         self.__ids = [idx for idx in set(ind for level in levels for ind in self.__ids_by_complexity[level])]
 
     def restart(self):
+        '''
+        restart the state of the data set (the is no need to reload it from disk - just call this method) 
+        '''
         self.__ids = [k for k in self.original_sentences.keys()]
         self._index_in_epoch = 0
         self.epochs_completed = 0
 
+
     def next_batch(self,batch_size):
+        '''
+        
+        return the next batch of  (sentence, related samples) pairs.
+        also habdles the logic of moving between epochs.
+        '''
 
         if batch_size <= 0 or batch_size> self.num_examples:
             raise ValueError("invalid argument for batch size:  {}".format(batch_size))
@@ -194,6 +225,9 @@ class CNLVRDataSet:
 
 
 class DataSetForSupervised:
+    """
+    a simpler version of the class above, used only for the supervised learning
+    """
 
     def __init__(self, path):
         self.__ids = []

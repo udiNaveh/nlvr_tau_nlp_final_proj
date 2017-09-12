@@ -1,3 +1,7 @@
+"""
+this module contatins the functions for pre-processing the sentences in the model, as described on our paper.
+
+"""
 import string
 from nltk.stem import WordNetLemmatizer
 import nltk.tag
@@ -14,6 +18,8 @@ ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 MIN_COUNT = 5
 
 
+
+
 def load_vocabulary(filename):
     vocab = set()
     with open(filename) as vocab_file:
@@ -22,6 +28,7 @@ def load_vocabulary(filename):
 
             vocab.add(word)
     return vocab
+
 
 def load_ngrams(filename, n):
     ngrams = {}
@@ -54,6 +61,7 @@ def load_synonyms(file_name):
                 result[token] = eval(line[sep+1 :])
     return result
 
+
 def load_dict_from_txt(path):
     """
     loads a dictionary from a text file in which every line is in the format
@@ -75,6 +83,7 @@ def load_dict_from_txt(path):
             value = kvp[1].strip()
             reps[key] = value
     return reps
+
 
 def get_ngrams_counts(dataset, max_ngram, include_start_and_stop = False):
     """
@@ -101,16 +110,9 @@ def get_ngrams_counts(dataset, max_ngram, include_start_and_stop = False):
     return all_ngrams
 
 
-def get_distributions(trigram_counts, bigram_counts, unigram_counts, train_token_count):
-
-        tri_q = lambda wi_2, wi_1, wi : trigram_counts.get((wi_2, wi_1, wi), 0) / bigram_counts.get((wi_2, wi_1), 1)
-        bi_q = lambda wi_1, wi : bigram_counts.get((wi_1, wi), 0) / unigram_counts[wi_1]
-        uni_q = lambda wi : unigram_counts[wi] / train_token_count
-
-        return uni_q, bi_q, tri_q
 
 
-def get_sentence_ngram_prob(sentence, p_dict):
+def get_sentence_ngram_logprob(sentence, p_dict):
     """
     return a probability vector over the next tokens given an ngram 'language model' of the
     the logical fforms. this is just a POC for generating plausible logical forms.
@@ -129,7 +131,6 @@ def get_sentence_ngram_prob(sentence, p_dict):
     uni_q = lambda wi: unigram_counts[wi] / all_token_counts
 
     sentence = ["<s>",'<s>'] + sentence
-    #sentence.append("<\s>")
     for i in range(2, len(sentence)):
         wi_2, wi_1, wi = sentence[i - 2: i + 1]
         qLI = lambda1 * tri_q(wi_2, wi_1, wi) + \
@@ -139,10 +140,8 @@ def get_sentence_ngram_prob(sentence, p_dict):
     return sum_of_logs / len(sentence)
 
 
-
 def clean_sentence(sent):
     '''
-    
     :param sent: a string 
     :return: a copy of the original sentence, all in lower-case,
     without punctuation and without redundant whitespaces.  
@@ -158,6 +157,7 @@ def clean_sentence(sent):
 def variants(word, alphabet = ALPHABET):
     """get all possible variants for a word
     borrowed from https://github.com/pirate/spellchecker
+    used for heuristic spelling correction of the dataset sentences
     """
     splits = [(word[:i], word[i:]) for i in range(len(word) + 1)]
     deletes = [a + b[1:] for a, b in splits if b]
@@ -168,11 +168,16 @@ def variants(word, alphabet = ALPHABET):
 
 
 def rank_suggestion(suggested_token, prev_token, next_token, unigram_counts, bigram_counts, p = 0.1):
+    # used for choosing to which word to replace a spelling errors, in case there is more than one suggestion,
+    # using the one with highest ngram probability.
+
        return p * unigram_counts.get(suggested_token, 0) + \
               ((1 - p) / 2) * bigram_counts.get((prev_token, suggested_token),0) + \
               ((1 - p) / 2) * bigram_counts.get((suggested_token, next_token),0)
 
+
 def replace_words_by_dictionary(sentences, dic):
+    # sort by key length in decreasing order, to prevent override of previous changes
     manualy_chosen_replacements = sorted(dic.items(), key = lambda kvp : len(kvp[0].split()), reverse=True)
     manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
     sentences_with_replacements = {}
@@ -197,14 +202,13 @@ def replace_rare_words_with_unk(sentences, tokens_file=None):
 
 
 def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
-    '''
-    preprocesses the input sentences such that each returned sentences is a sequence of
-    tokens that are part of the lexicon (???) seperated by whitespaces.
-    using a hueristic approach for spell checking.
-
-    :param sentences_dic: a dict[str, str] mapping from sentence identifier to sentence 
-    :return: a dict[str, str] mapping from sentence identifier to sentence
-    '''
+    """
+    :param sentences_dic: dict mapping sentence ids to sentences
+    :param mode: 'r' , 'w', or None
+    :param processing_type: the depth of processing used. all processing 
+    phases are done sequentially one after the other.
+    :return: r
+    """
     if processing_type is None:
         return sentences_dic # no processing
 
@@ -213,6 +217,8 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
 
     if processing_type =='shallow': # just superficial processing
         return {k : clean_sentence(s) for k,s in sentences_dic.items()}
+
+    # else continue to spelling correction
 
     tokenized_sentences = {k : str.split(clean_sentence(s)) for k,s in sentences_dic.items()}
     unigrams, bigrams = get_ngrams_counts(tokenized_sentences.values(), 2)
@@ -223,7 +229,7 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     for ch in ALPHABET[1:]:
         vocab.discard(ch)
     for er in ('ad','al','tow','bo','bow','lease','lest', 'thee', 'bellow'):
-        vocab.discard(er) # very bad solution just for now @TODO
+        vocab.discard(er) # word from the English dictionary that are clearly not in our interest
     # add digits
     for dig in range(10):
         vocab.add(str(dig))
@@ -237,12 +243,6 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
         bigrams_filtered = union_count_dicts(bigrams_filtered, load_ngrams(BIGRAM_COUNTS, 2))
 
 
-    if mode == 'w':
-        pass
-        #write_ngrams("tokens_counts.txt", unigrams_filtered)
-        #write_ngrams("bigrams_counts.txt", bigrams_filtered)
-
-    # create an inventory of suggested corrections for invalid tokens from the sentences
     corrections_inventory = {}
 
     for unigram in unigrams:
@@ -288,7 +288,7 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     if processing_type=='spellproof':
         return spellproofed_ss
 
-
+    # else continue to lemmatization
 
     for k, s in spellproofed_sentences.items():
 
@@ -307,31 +307,22 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
             if s[i] in integer_words and s[i]!= 'one':
                 s[i] = integers[integer_words.index(s[i])]
 
-    unigrams_lemmatized, bigrams_lemmatized = get_ngrams_counts(spellproofed_sentences.values(), 2)
-
-    if mode == 'w':
-        pass
-        # write_ngrams("tokens_lemmatized.txt", unigrams_lemmatized)
-        # write_ngrams("bigrams_lemmatized.txt", bigrams_lemmatized)
 
     lemmatized_sentences =  {k: " ".join(s) for k, s in spellproofed_sentences.items()}
     if processing_type == 'lemmatize':
         return lemmatized_sentences
 
-    # move on to replacing words/phrases with others with similar meaning, in order to reduce vocabulary size
+    # else move on to replacing words/phrases with others with similar meaning, in order to reduce vocabulary size
 
-
-    # sort by key length in decreasing order, to prevent override of previous changes
-
-
-    replacements_dic = load_dict_from_txt(SYNONYMS)
+    replacements_dic = load_dict_from_txt(SYNONYMS_PATH)
     lemmatized_sentences_with_replacements = replace_words_by_dictionary(lemmatized_sentences, replacements_dic)
 
-    unigrams_lemmatized, bigrams_lemmatized = get_ngrams_counts(
-        [s.split() for s in lemmatized_sentences_with_replacements.values()], 2)
-    return lemmatized_sentences_with_replacements
-    # notice: to replace rare words with <unk> token, run the 'replace_rare_words_with_unk' methodsh
+
+    # notice: to replace rare words with <unk> token, run the 'replace_rare_words_with_unk' method
     # on the output if this method
+
+    return lemmatized_sentences_with_replacements
+
 
 
 

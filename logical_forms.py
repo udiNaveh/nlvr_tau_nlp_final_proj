@@ -4,7 +4,6 @@ on structured representations of images. In the formalism we used, a logical for
 each represents a value of certain type or a function with predefined arity and argument types.
 Thus, each such valid logical form (after adding brackets and commas to it) is an executable
 line of python code.
-
 Note that the actual syntax of our formalism and the set of allowed tokens is not defined here.
 However, any such set of tokens must be a subset of the functions defined here. 
 
@@ -429,8 +428,6 @@ def run_logical_form(expression, image):
     if type(result) is not bool:
         raise TypeError("parsing returned a non boolean type")
     return result
-
-
 
 
 def execute(program_tokens, image, logical_tokens_inventory, sentence =''):

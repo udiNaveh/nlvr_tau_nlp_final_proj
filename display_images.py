@@ -1,21 +1,18 @@
-import numpy as np
-from PIL import  Image
-
-import definitions
-import os
-
-'''
-Utility functions for displaying images from teh data set easily.
+"""
+Utility functions for displaying images from the data set easily.
 This should be useful for debugging.
 These methods assume that the images are saved in subdirectories under
 images_root. So in order to use it, you should first copy the images from 
 https://github.com/clic-lab/nlvr to the directory nlvr-data.
+"""
 
-'''
+import numpy as np
+from PIL import  Image
+import definitions
+import os
 
 
 ext = '.png'
-
 
 def __image_for_id(identifier, images_root = definitions.TRAIN_IMAGES):
     prefix = os.path.basename(os.path.dirname(images_root))

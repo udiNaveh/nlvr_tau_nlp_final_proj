@@ -1,8 +1,16 @@
+"""
+This module contains the functions for some of the techniques we used to improve the performance of the
+beam search in learning and at test, by utilizing the structure or words of a sentence.
+Specifically ir contains the methods for keeping and using a cache of rewarded programs by their 
+patterns, and to re-rank the programs in the beam according to the tokens they include. 
+"""
+
+
 import definitions
 from sentence_processing import *
 from general_utils import *
 from seq2seqModel.utils import *
-from seq2seqModel.logical_forms_generation import *
+from seq2seqModel.partial_program import *
 
 
 
@@ -13,7 +21,7 @@ log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 
             '7': '7', '1': '1', 'one': '1', 'big' : 'big', 'small' : 'small', 'medium' : 'medium',
             'more than' : 'lt', 'less than' : 'gt', 'on': 'above', 'below': 'below', 'touch' : 'touching'}
 
-# building replacements "dictionary" (it is actually a list of tuples)
+
 formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
 words_to_patterns = load_dict_from_txt(formalization_file)
 for i in range(2, 10):
@@ -88,7 +96,7 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
                 continue
 
             for j, token in enumerate(token_seq):
-                if formalized_words[i] in token and numbers_contained(formalized_words[i]) == numbers_contained(token)\
+                if formalized_words[i] in token and _numbers_contained(formalized_words[i]) == _numbers_contained(token)\
                         and words[i] in log_dict:
                             formalized_token= token_seq[j]
                             rep = str.upper(log_dict[words[i]]) if '.' in formalized_token else log_dict[words[i]]
@@ -105,8 +113,7 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
 
 
 
-def numbers_contained(string):
-
+def _numbers_contained(string):
     nums = []
     for char in string:
         if char.isdigit():
@@ -165,3 +172,34 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
     if total_n_incorrect>0 and (total_n_correct / total_n_incorrect) <3:
         del matching_cached_patterns [formalized_program]
     return
+
+
+def sentence_program_relevance_score(sentence, program, words_to_tokens, recurring = False):
+    relevant_tokens_found = 0
+    relevant_tokens_needed = 0
+    sentence_words = sentence.split()
+    copies = {}
+    for word in sentence_words:
+        if sentence_words.count(word)>1:
+            if word not in copies:
+                copies[word] = program.token_seq.copy()
+    for word in sentence_words:
+        if word in words_to_tokens:
+            relevant_tokens_needed+=1
+            token_seq = copies.get(word, program.token_seq)
+            for l in words_to_tokens[word]:
+                if all(tok in token_seq for tok in l):
+                    relevant_tokens_found+=1
+                    if word in copies and recurring:
+                        for tok in l:
+                            token_seq.remove(tok)
+                    break
+
+    if relevant_tokens_needed == 0:
+        return 0
+    return relevant_tokens_found / relevant_tokens_needed
+
+def beam_reranker(sentence, programs, words_to_tokens):
+    programs_c = [p for p in programs]
+    return sorted(programs_c, key=lambda prog: ( - sentence_program_relevance_score(sentence, prog, words_to_tokens),
+                                              -prog.logprob))

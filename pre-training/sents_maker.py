@@ -8,7 +8,7 @@ import random
 import os
 import definitions
 from logical_forms import *
-from seq2seqModel.logical_forms_generation import *
+from seq2seqModel.partial_program import *
 from seq2seqModel.utils import execute
 from data_manager import *
 from sentence_processing import *

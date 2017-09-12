@@ -1,7 +1,12 @@
+"""
+This module contains the basic code for running the e_greedy_randomized_beam_search that is used in our model.
+"""
+
+
 import numpy as np
 import time
 import random
-from seq2seqModel.logical_forms_generation import *
+from seq2seqModel.partial_program import *
 from seq2seqModel.hyper_params import MAX_DECODING_LENGTH, MAX_STEPS, BEAM_SIZE, SKIP_AUTO_TOKENS, INJECT_TO_BEAM
 from seq2seqModel.beam_boosting import *
 
@@ -232,7 +237,7 @@ def epsilon_greedy_sample_uniform_over_prefixes(choices, num_to_sample, prefixes
 
 
 
-# sampling programs from the distribution (not using beam search) - not used
+# sampling programs from the distribution (not using beam search) - not used in the model
 
 def sample_valid_decodings(next_token_probs_getter, n_decodings, logical_tokens_mapping):
     decodings = []
