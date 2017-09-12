@@ -4,7 +4,7 @@ This repository contains the files and directories, as well as the needed data, 
 
 
 ## Repository structure:
-*a short description of the files and directories. Note that not all are listed here. more elaborate description is to be found
+This is a short description of the files and directories. Note that not all are listed here. more elaborate description is to be found
 in the documentation and in the project assignment paper.
 
 
