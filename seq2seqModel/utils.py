@@ -1,3 +1,7 @@
+'''
+utility methods used by seq2seq.py
+'''
+
 import random
 import numpy as np
 from collections import namedtuple
@@ -25,42 +29,28 @@ def get_program_execution_stats(token_seq, related_samples, logical_tokens_mappi
     return ProgramExecutionStats(prog_compiled, predicted_labels, is_consistent, n_correct, n_incorrect)
 
 
+def save_sentences_test_results(results_by_sentence, dataset, path):
+    with open(path, 'w') as f:
+        for sent_id, stats in results_by_sentence.items():
 
-def beam_reranker(sentence, programs, words_to_tokens):
-    programs_c = [p for p in programs]
-    return sorted(programs_c, key=lambda prog: ( - sentence_program_relevance_score(sentence, prog, words_to_tokens),
-                                              -prog.logprob))
-
-def programs_reranker_3(sentence, programs, words_to_tokens):
-    programs_c = [p for p in programs]
-    return sorted(programs_c, key=lambda prog: ( - sentence_program_relevance_score(sentence, prog, words_to_tokens, recurring=True),
-                                              -prog.logprob))
-
-
-def sentence_program_relevance_score(sentence, program, words_to_tokens, recurring = False):
-    relevant_tokens_found = 0
-    relevant_tokens_needed = 0
-    sentence_words = sentence.split()
-    copies = {}
-    for word in sentence_words:
-        if sentence_words.count(word)>1:
-            if word not in copies:
-                copies[word] = program.token_seq.copy()
-    for word in sentence_words:
-        if word in words_to_tokens:
-            relevant_tokens_needed+=1
-            token_seq = copies.get(word, program.token_seq)
-            for l in words_to_tokens[word]:
-                if all(tok in token_seq for tok in l):
-                    relevant_tokens_found+=1
-                    if word in copies and recurring:
-                        for tok in l:
-                            token_seq.remove(tok)
-                    break
-
-    if relevant_tokens_needed == 0:
-        return 0
-    return relevant_tokens_found / relevant_tokens_needed
+            sentence = dataset.get_sentence_by_id(sent_id, original=True)
+            print("sentence: " + sentence, file=f)
+            predicted_program = stats['top_program_by_reranking']
+            print("model prediction:", file=f)
+            print("log_prob = {0:.2f}, program = {1}".
+                   format(predicted_program.logprob, " ".join(predicted_program.token_seq)), file=f)
+            if stats['top_by_reranking_stats'].is_consistent:
+                print("consistent", file=f)
+            else:
+                print("inconsistent", file=f)
+                if not stats['consistent_programs']:
+                    print ("no consistent programs in beam", file=f)
+                else:
+                    consistent_prog = max(stats['consistent_programs'], key = lambda p : p.logprob)
+                    print("consistent program from beam : ", file=f)
+                    print("log_prob = {0:.2f}, program = {1}".
+                        format(consistent_prog.logprob, " ".join(consistent_prog.token_seq)), file=f)
+            print("##############\n", file=f)
 
 
 
@@ -69,14 +59,13 @@ def one_hot(dim, index):
     v[index] = 1.0
     return v
 
+
 def sparse_vector_from_indices(dim, indices):
     assert (max(indices) < dim and min(indices)>=0 if indices else True)
     v = np.zeros(dim)
     for index in indices:
         v[index] = 1.0
     return v
-
-
 
 def softmax(x, axis=0):
     """Compute the softmax function for each row of the input x.
@@ -98,7 +87,7 @@ def softmax(x, axis=0):
         elif axis == 1:
             v = np.exp(x - np.max(x,0).reshape((1,N)))
             x = v/np.sum(v,0).reshape((1,N))
-        ### END YOUR CODE
+
     else:
         # Vector
         v = np.exp(x - np.max(x))
@@ -109,5 +98,8 @@ def softmax(x, axis=0):
 
 
 def binomial_prob(n_correct, n_incorrect):
+    """
+     return the probability for n_correct or more answers out of n+correct+n_incorrect.
+    """
     n_samples = n_correct+n_incorrect
     return sum(binom.pmf(x, n_samples, 0.5) for x in range(n_correct ,n_samples+1))

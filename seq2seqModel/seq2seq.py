@@ -1,17 +1,23 @@
+"""
+This module contains the TensorFlow model itself, as well as the logic for training and testing
+it in strongly supervised and weakly supervised frameworks.
+"""
+
 import tensorflow as tf
 from tensorflow.contrib.rnn import BasicLSTMCell
 import pickle
 import numpy as np
 import os
 import sys
+import time
 import definitions
 from seq2seqModel.utils import *
-from seq2seqModel.logical_forms_generation import *
+from seq2seqModel.partial_program import *
 from data_manager import CNLVRDataSet, DataSetForSupervised, DataSet, load_functions
-from seq2seqModel.beam import *
+from seq2seqModel.beam_search import *
 from seq2seqModel.hyper_params import *
 from general_utils import increment_count, union_dicts
-import time
+
 
 
 
@@ -239,7 +245,7 @@ cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
 
 
 def run_model(sess, dataset, mode, validation_dataset = None, load_params_path = None, save_model_path = None,
-              save_stats_path=None):
+              return_sentences_results=None):
     """ 
     a method for running the weakly-supervised model
     
@@ -499,8 +505,7 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
                     for param_name in ['EPSILON_FOR_BEAM_SEARCH', 'BETA', 'SKIP_AUTO_TOKENS', 'N_CACHED_PROGRAMS',
                                        'INJECT_TO_BEAM',
                                         'SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH',
-                                       'AVOID_ALL_TRUE_SENTENCES', 'INPUT_WEIGHTS',
-                                       'OUTPUT_WEIGHTS']:
+                                       'AVOID_ALL_TRUE_SENTENCES']:
                         print ("{0} : {1}".format(param_name, eval(param_name)))
                     print("stats for this epoch:")
 
@@ -561,13 +566,14 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
             curr_mode, other_mode = other_mode, curr_mode
             curr_dataset, other_dataset = other_dataset, curr_dataset
 
-    if mode == 'test' and save_stats_path:
-        f = save_stats_path + '_' + curr_dataset.name + '_' + time.strftime("%Y-%m-%d_%H_%M")
-        pickle.dump(stats_for_all_sentences, open(f, 'wb'))
-    return
+    if mode == 'test' and return_sentences_results:
+        # f = save_stats_path + '_' + curr_dataset.name + '_' + time.strftime("%Y-%m-%d_%H_%M")
+        #pickle.dump(stats_for_all_sentences, open(f, 'wb'))
+        return stats_for_all_sentences
+    return {}
 
 
-def run_supervised_training(sess, load_params_path = None, save_params_path = None):
+def run_supervised_training(sess, load_params_path = None, save_params_path = None, num_epochs = MAX_N_EPOCHS):
     """
     a method for training the supervised model using a dataset of sentence-logical form pairs
     :param sess: a tf.Session in the context of which to run
@@ -607,7 +613,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
     current_data_set = train_set
     statistics = {train_set : [], validation_set : []}
 
-    while epoch_num < MAX_N_EPOCHS:
+    while epoch_num < num_epochs:
         if current_data_set.epochs_completed != epoch_num:
             statistics[current_data_set].append((np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens)))
             print("epoch number {0}: mean loss = {1:.3f}, mean accuracy = {2:.3f}, mean accuracy ignore automatic = {3:.3f},"
@@ -689,15 +695,17 @@ if __name__ == '__main__':
     best_weights_so_far = TRAINED_WEIGHTS_BEST
     time_stamp = time.strftime("%Y-%m-%d_%H_%M")
     OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_' + time_stamp + '.ckpt')
+    STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'running logs', 'stats_' + time_stamp + '.txt')
+    SENTENCES_RESULTS_FILE_DEV = os.path.join(SEQ2SEQ_DIR,
+                                              'running logs', 'sentences_results_dev' +
+                                              time_stamp + '.txt')
+    SENTENCES_RESULTS_FILE_TEST = os.path.join(SEQ2SEQ_DIR,
+                                              'running logs', 'sentences_results_test' +
+                                              time_stamp + '.txt')
 
-    STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'running logs', 'stats_' + time.strftime("%Y-%m-%d_%H_%M") + '.txt')
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
-
-    with tf.Session() as sess:
-        run_supervised_training(sess)
-
 
     run_train = False # change to True if you really want to run the whole thing...
 
@@ -708,18 +716,29 @@ if __name__ == '__main__':
         # beam re-reanking, auto-completion of tokens etc.) are all set in hyper_params.py.
         # the results are printed to STATS_FILE after every epoch
 
+
         with tf.Session() as sess:
             run_model(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
                       load_params_path=best_weights_so_far, save_model_path=OUTPUT_WEIGHTS)
 
     # running a test on the dev and test datasets, using the weights that achieved the best accuracy and consistency
-    # rates that were presented in our paper. # the results are printed to STATS_FILE.
-
-    for data_set in (dev_dataset, test_dataset):
-        data_set.restart()
-        with tf.Session() as sess:
-            run_model(sess, data_set, mode='test', validation_dataset=None,
-                      load_params_path=best_weights_so_far, save_model_path=None)
+    # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
+    # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
 
 
-    print("done")
+    dev_results_by_sentence , test_results_by_sentence = {},{}
+
+    dev_dataset.restart()
+    with tf.Session() as sess:
+        dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
+                                            load_params_path=best_weights_so_far, return_sentences_results=True)
+
+    save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
+
+    test_dataset.restart()
+    with tf.Session() as sess:
+        test_results_by_sentence = run_model(sess, test_dataset, mode='test',
+                                            load_params_path=best_weights_so_far, return_sentences_results=True)
+
+    save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
+

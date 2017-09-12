@@ -11,13 +11,9 @@ from sentence_processing import *
 from general_utils import *
 from seq2seqModel.utils import *
 from data_manager import load_functions
+from seq2seqModel.hyper_params import MAX_DECODING_LENGTH
 
 
-PARSED_EXAMPLES_T = os.path.join(definitions.DATA_DIR, 'parsed sentences', 'parses for check as tokens')
-LOGICAL_TOKENS_EMBEDDINGS_PATH = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_embeddings')
-MAX_LENGTH = 25
-
-USE_PARAPHRASING = False
 token_mapping = load_functions(definitions.LOGICAL_TOKENS_MAPPING_PATH)
 
 
@@ -72,13 +68,17 @@ class PartialProgram:
         return np.sum(self.logprobs)
 
     def get_possible_continuations(self):
+        """
+        :return: the set of valid tokens for the next of the program, according to the various constraints 
+        (syntactical, sentence-driven or others) that are used.  
+        """
 
         if len(self.stack) == 0:
             if self.token_seq[-1] == '<EOS>':
                 return []
             return ["<EOS>"]  # end of decoding
 
-        if len(self.token_seq)>=MAX_LENGTH:
+        if len(self.token_seq)>=MAX_DECODING_LENGTH:
             return []
 
         next_type = self.stack[-1]
@@ -116,8 +116,6 @@ class PartialProgram:
         impossible_continuations = []
         if self.token_seq and self.token_seq[-1] in self.logical_tokens_mapping:
             last = self.token_seq[-1]
-            # if str.isdigit(last):
-            # impossible_continuations.extend([str(i) for i in range(10)])
             last_return_type, last_args_types, _ = self.logical_tokens_mapping[last]
             if len(last_args_types) == 1 and last_args_types[0].startswith('set'):
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
@@ -151,17 +149,23 @@ class PartialProgram:
             if last == 'select':
                 impossible_continuations.append([t for t, v in self.logical_tokens_mapping.items() if t not in ('2','3')])
 
-
-
         return impossible_continuations
 
+
     def add_token(self, token, logprob):
+        """
+        :param token: the token to be added to the program. 
+        :param logprob: the lof -probability of that token at that step, according to the model used.
+        :return: True if the token was successfully added, False otherwise.
+        """
+
         if len(self.stack)==0:
             if token == '<EOS>':
                 self.token_seq.append(token)
                 return True
             else:
                 raise ValueError("cannot add token {} to program: stack is empty".format(token))
+
         next_type = self.stack.pop()
         if token.startswith('lambda'):
             self.token_seq.append(token)
@@ -198,30 +202,20 @@ class PartialProgram:
                 if var in self.token_seq:
                     del self.vars_in_use[var]
                 else:
+                    # [rune sentence where a lambda expression on a var appears without that var in it.
                     return False
                 break
 
         self.stack_history.append(tuple(self.stack))
         self.logprobs.append(logprob)
 
+        #
         if len(self.token_seq) >= 3 and all(tok == self.token_seq[-1] for tok in self.token_seq[-3:]):
             return False
-        #
-        # if len(self.stack) >4:
-        #     return False
-
-        bool_scopes = self.boolean_scopes()
 
         bool_scopes_str = [" ".join(self.token_seq[start : end]) for start, end in self.boolean_scopes() if end]
         if len(set(bool_scopes_str)) < len(bool_scopes_str):
             return False
-
-
-
-
-
-
-
 
         return True
 
@@ -263,6 +257,7 @@ class PartialProgram:
 
 
 ## utility methods for PartialProgram
+
 def check_types(required, suggested):
     '''
     utility function to check whether the return type of a candidate token
@@ -288,13 +283,14 @@ def check_types(required, suggested):
 
 
 def disambiguate(typed, nontyped):
-    '''
-    utility function that "reveals" the runtime type of a wildcard '?' for to typed that where checked.
+    """
+    
+    utility function that "reveals" the runtime type of a wildcard '?' for two types that where checked.
     e.g. for set<Item> and set<?> return 'Item'.
     :param typed: a str or a list of strings representing types in the logical forms.
     :param nontyped: a string representing a type in the logical forms
     :return: the type that replaces '?', or None if there is no such matching. 
-    '''
+    """
     if not isinstance(typed, str):
         raise ValueError('{} is not a string'.format(typed))
     if not isinstance(nontyped, str):
@@ -314,10 +310,15 @@ def disambiguate(typed, nontyped):
         return None
 
 
-
-
-
 def program_from_token_sequence(next_token_probs_getter, token_seq, logical_tokens_mapping):
+    """    
+    :param next_token_probs_getter: a function for getting the next valid tokens and their probabilities 
+    :param token_seq: 
+    :param logical_tokens_mapping: 
+    :return: partial_program: a PartialProgram object containing the ginev token sequence
+            valid_tokens_history: which tokens were valid after every step
+            greedy_choices: the next tokens with highest model probability at each step.
+    """
 
     partial_program = PartialProgram(logical_tokens_mapping)
     valid_tokens_history = []
