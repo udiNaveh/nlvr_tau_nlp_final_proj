@@ -501,12 +501,13 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
                 if is_last_batch_in_epoch:
                     print(time.strftime("%Y-%m-%d %H:%M"))
                     print("finished epoch {}.".format(curr_dataset.epochs_completed))
-                    print("parameters used in learning:")
-                    for param_name in ['EPSILON_FOR_BEAM_SEARCH', 'BETA', 'SKIP_AUTO_TOKENS', 'N_CACHED_PROGRAMS',
-                                       'INJECT_TO_BEAM',
-                                        'SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH',
-                                       'AVOID_ALL_TRUE_SENTENCES']:
-                        print ("{0} : {1}".format(param_name, eval(param_name)))
+                    if PRINT_PARAMS:
+                        print("parameters used in learning:")
+                        for param_name in ['EPSILON_FOR_BEAM_SEARCH', 'BETA', 'SKIP_AUTO_TOKENS', 'N_CACHED_PROGRAMS',
+                                           'INJECT_TO_BEAM',
+                                            'SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH',
+                                           'AVOID_ALL_TRUE_SENTENCES']:
+                            print ("{0} : {1}".format(param_name, eval(param_name)))
                     print("stats for this epoch:")
 
 
@@ -694,18 +695,23 @@ if __name__ == '__main__':
     weights_from_supervised_pre_training = PRE_TRAINED_WEIGHTS
     best_weights_so_far = TRAINED_WEIGHTS_BEST
     time_stamp = time.strftime("%Y-%m-%d_%H_%M")
-    OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsUns', 'weights_' + time_stamp + '.ckpt')
+    OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_' + time_stamp + '.ckpt')
     STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'running logs', 'stats_' + time_stamp + '.txt')
     SENTENCES_RESULTS_FILE_DEV = os.path.join(SEQ2SEQ_DIR,
-                                              'running logs', 'sentences_results_dev' +
+                                              'running logs', 'sentences_results_dev_' +
                                               time_stamp + '.txt')
     SENTENCES_RESULTS_FILE_TEST = os.path.join(SEQ2SEQ_DIR,
-                                              'running logs', 'sentences_results_test' +
+                                              'running logs', 'sentences_results_test_' +
                                               time_stamp + '.txt')
+    SENTENCES_RESULTS_FILE_TEST2 = os.path.join(SEQ2SEQ_DIR,
+                                              'running logs', 'sentences_results_test2_' +
+                                              time_stamp + '.txt')
+
 
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
+    test2_dataset = CNLVRDataSet(DataSet.TEST2)
 
     run_train = False # change to True if you really want to run the whole thing...
 
@@ -726,7 +732,7 @@ if __name__ == '__main__':
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
 
 
-    dev_results_by_sentence , test_results_by_sentence = {},{}
+    dev_results_by_sentence , test_results_by_sentence, test2_results_by_sentence = {},{}, {}
 
     dev_dataset.restart()
     with tf.Session() as sess:
@@ -741,4 +747,11 @@ if __name__ == '__main__':
                                             load_params_path=best_weights_so_far, return_sentences_results=True)
 
     save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
+
+    test2_dataset.restart()
+    with tf.Session() as sess:
+        test2_results_by_sentence = run_model(sess, test2_dataset, mode='test',
+                                            load_params_path=best_weights_so_far, return_sentences_results=True)
+
+    save_sentences_test_results(test2_results_by_sentence, test2_dataset, SENTENCES_RESULTS_FILE_TEST2)
 

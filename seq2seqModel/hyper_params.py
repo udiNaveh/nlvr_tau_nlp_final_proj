@@ -48,7 +48,7 @@ AVOID_ALL_TRUE_SENTENCES = False
     # if true, the data set of the trainning will incluse only sentences that have also images labeles false.
 
 PRINT_EVERY = 10
-
+PRINT_PARAMS = False
 
 
 
@@ -72,7 +72,7 @@ INJECT_TO_BEAM = True and USE_CACHED_PROGRAMS
 WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'embeddings_10iters_12dim')
 PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'trained_variables_sup_check_hs4.ckpt')
 TRAINED_WEIGHTS_BEST = \
-    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsUns','weights_cached_auto_inj2017-09-09_10_49.ckpt-15')
+    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj2017-09-09_10_49.ckpt-15')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
 CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',

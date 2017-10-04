@@ -9,6 +9,8 @@ TRAIN_JSON = os.path.join(NLVR_DATA, 'train', 'train.json')
 DEV_JSON = os.path.join(NLVR_DATA, 'dev', 'dev.json')
 TEST_JSON = os.path.join(NLVR_DATA, 'test', 'test.json')
 
+TEST2_JSON = '' # '' # ADD THE PATH TO THE HIDDEN TEST JSON HERE
+
 TRAIN_IMAGES = os.path.join(NLVR_DATA, 'train', 'images')
 DEV_IMAGES = os.path.join(NLVR_DATA, 'dev', 'images')
 TEST_IMAGES = os.path.join(NLVR_DATA, 'test', 'images')
