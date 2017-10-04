@@ -10,12 +10,14 @@ from sentence_processing import preprocess_sentences, replace_rare_words_with_un
 class DataSet(Enum):
     TRAIN = 'train',
     DEV = 'dev',
-    TEST = 'test'
+    TEST = 'test',
+    TEST2 = 'hidden_test'
 
 
 paths = {   DataSet.TRAIN : definitions.TRAIN_JSON,
             DataSet.DEV : definitions.DEV_JSON,
-            DataSet.TEST : definitions.TEST_JSON}
+            DataSet.TEST : definitions.TEST_JSON,
+            DataSet.TEST2 : definitions.TEST2_JSON}
 
 
 def read_data(filename):
