@@ -7,7 +7,7 @@
 ## set<set<Item>>, and set<Color>, respectively.
 ## Question marks are used as 'wildcards'. So for example, 'count' gets an argument of type set<?>,
 ## which means that any set can be given as an argument to 'count'.
-## Note that in order to generate logical forms that complie, all tokens here must correspond to
+## Note that in order to generate logical forms that compile, all tokens here must correspond to
 ## functions defined in logical_forms.py. However, the opposite is not true, which means that we can have here
 ## only a subset of the possible functions defined in logical_forms.py.
 ## The optional list of necessary words is used for sentence driven constraints on the beam search.
@@ -42,7 +42,7 @@ is_black	1	Item	bool	:	black
 
 is_circle	1	Item	bool	:	circle
 
-is_square	1	Item	bool	:	square
+is_square	1	Item	bool	:	square rectangle
 
 is_triangle	1	Item	bool	:	triangle
 
@@ -54,13 +54,13 @@ is_small	1	Item	bool	: small
 
 is_top	1	Item	bool	:	top	first
 
-is_bottom	1	Item	bool	:	bottom	first
+is_bottom	1	Item	bool	:	bottom  first base lower
 
 is_second	1	Item	bool	:	second	middle
 
 is_third	1	Item	bool	: third
 
-is_touching_wall	2	Item	Side	bool	: edge touch
+is_touching_wall	2	Item	Side	bool	: edge touch attach line wall roof
 
 is_touching_corner	2	Item	Side	bool	: corner
 
@@ -68,7 +68,7 @@ query_color	1	Item|set<Item>	set<Color>	: color black yellow blue
 
 query_size	1	Item|set<Item>	set<Size>	: size big small medium
 
-query_shape	1	Item|set<Item>	set<Shape>	: shape square triangle circle
+query_shape	1	Item|set<Item>	set<Shape>	: shape square rectangle triangle circle kind type
 
 le	2	int int	bool
 
@@ -90,7 +90,7 @@ AND	2	bool	bool	bool
 
 OR	2	bool	bool	bool
 
-NOT	1	bool	bool	:  no not none different
+NOT	1	bool	bool	:  no not none different without
 
 
 all_same	1	set<?>	bool
@@ -98,9 +98,9 @@ all_same	1	set<?>	bool
 union_all	1	set<set<Item>>	set<Item>
 
 
-get_above	1	set<Item>|Item	set<Item>	:	on
+get_above	1	set<Item>|Item	set<Item>	:	on top over above
 
-get_below	1	set<Item>|Item	set<Item>	:	below
+get_below	1	set<Item>|Item	set<Item>	:	below under beneath underneath
 
 get_touching	1	set<Item>|Item	set<Item>	:	touch stack
 
@@ -110,7 +110,7 @@ select 2	int	set<?>	set<set<?>>
 
 ALL_ITEMS 	0	set<Item>
 
-ALL_BOXES	0	set<set<Item>>	: box	tower
+ALL_BOXES	0	set<set<Item>>	: box tower grey
 
 Color.BLUE	0	set<Color>	:	blue
 
@@ -120,7 +120,7 @@ Color.YELLOW	0	set<Color>	:	yellow
 
 Shape.TRIANGLE	0	set<Shape>	:	triangle
 
-Shape.SQUARE	0	set<Shape>	:	square
+Shape.SQUARE	0	set<Shape>	:	square rectangle
 
 Shape.CIRCLE	0	set<Shape>	:	circle
 
@@ -128,8 +128,8 @@ Side.RIGHT	0	Side	:	right
 
 Side.LEFT	0	Side	:	left
 
-Side.TOP	0	Side	:	top first
+Side.TOP	0	Side	:	top first roof
 
-Side.BOTTOM	0	Side	:	bottom	first
+Side.BOTTOM	0	Side	:	bottom	first base lower
 
 Side.ANY	0	Side

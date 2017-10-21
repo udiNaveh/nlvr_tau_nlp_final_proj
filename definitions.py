@@ -27,3 +27,6 @@ SUPERVISED_TRAIN_PICKLE_3 = os.path.join(DATA_DIR, 'parsed sentences', 'pairs_tr
 SUPERVISED_VALIDATION_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'pairs_validation_final')
 
 LOGICAL_TOKENS_MAPPING_PATH = os.path.join(DATA_DIR, 'logical forms', 'token mapping.txt')
+
+# archion
+MANUAL_REPLACEMENTS = False     # if this is False, 'lemmatize' and 'deep' modes of pre-processing are the same.

@@ -8,9 +8,9 @@ from data_manager import *
 
 
 # sents_path = None
-EMBED_DIM = 8
+EMBED_DIM = 12
 LR = 0.1
-ITERNUM = 3
+ITERNUM = 10
 
 # def create_dict_from_path(sents_path):
 #     words_list = []
@@ -157,8 +157,10 @@ def word2vec_form_path(trainpath, savepath, embed_dim = EMBED_DIM, iternum = ITE
 #train = definitions.TRAIN_JSON
 
 #embed_dict = word2vec_form_path(train, 'word_embeddings')
-train = definitions.TRAIN_JSON
-data = read_data(train)
-samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
-sents_to_parse = sents_dict.values()
-embed_dict = word2vec(sents_to_parse,'word_embeddings')
+
+if __name__ == "__main__":
+    train = definitions.TRAIN_JSON
+    data = read_data(train)
+    samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
+    sents_to_parse = sents_dict.values()
+    embed_dict = word2vec(sents_to_parse,'new_embeddings_{0}iters_{1}dim'.format(ITERNUM, EMBED_DIM))

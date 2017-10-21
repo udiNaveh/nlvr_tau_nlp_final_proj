@@ -314,15 +314,15 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
 
     # else move on to replacing words/phrases with others with similar meaning, in order to reduce vocabulary size
 
-    replacements_dic = load_dict_from_txt(SYNONYMS_PATH)
-    lemmatized_sentences_with_replacements = replace_words_by_dictionary(lemmatized_sentences, replacements_dic)
-
+    if MANUAL_REPLACEMENTS:
+        replacements_dic = load_dict_from_txt(SYNONYMS_PATH)
+        lemmatized_sentences_with_replacements = replace_words_by_dictionary(lemmatized_sentences, replacements_dic)
+        return lemmatized_sentences_with_replacements
 
     # notice: to replace rare words with <unk> token, run the 'replace_rare_words_with_unk' method
     # on the output if this method
 
-    return lemmatized_sentences_with_replacements
-
+    return lemmatized_sentences
 
 
 
