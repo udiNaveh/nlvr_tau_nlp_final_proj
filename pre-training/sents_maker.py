@@ -30,10 +30,10 @@ shapes = ['triangle', 'circle', 'square', ]
 quants = [('exactly', 'equal_int'), ('at least', 'ge'), ('at most', 'le')]
 ones = ['1']
 
-replacements_dic = {'T_SHAPE' : [('square', ['square']),('triangle', ['triangle']),('circle', ['circle'])],
+replacements_dic = {'T_SHAPE' : [('square', ['square', 'rectangle']),('triangle', ['triangle']),('circle', ['circle'])],
              'T_COLOR' : [('yellow', ['yellow']),('blue', ['blue']),('black', ['black'])],
-             'T_LOC' :  [('top', ['top']),('bottom', ['bottom'])],
-             'T_ONE' : [('1', ['1', 'one'])],
+             'T_LOC' :  [('top', ['top']),('bottom', ['bottom', 'base'])],
+             'T_ONE' : [('1', ['1', 'one'])],   # should I add here 'a single'?
              'T_INT' : [(str(i), [str(i)]) for i in range (2,8)],
              'T_QUANTITY_COMPARE' : [('equal_int', ['exactly']),('le', ['at least']),('ge', ['at most']),
                                      ('lt', ['more than']),('gt', ['less than'])]

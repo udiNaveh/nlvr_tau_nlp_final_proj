@@ -161,6 +161,6 @@ def word2vec_form_path(trainpath, savepath, embed_dim = EMBED_DIM, iternum = ITE
 if __name__ == "__main__":
     train = definitions.TRAIN_JSON
     data = read_data(train)
-    samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
+    samples, sents_dict = build_data(data, preprocessing_type='lemmatize', use_unk=False)
     sents_to_parse = sents_dict.values()
-    embed_dict = word2vec(sents_to_parse,'new_embeddings_{0}iters_{1}dim'.format(ITERNUM, EMBED_DIM))
+    embed_dict = word2vec(sents_to_parse,'new_embeddings_{0}iters_{1}dim_no_unk'.format(ITERNUM, EMBED_DIM))

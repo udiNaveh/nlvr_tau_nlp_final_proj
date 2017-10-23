@@ -145,11 +145,9 @@
 @ there are T_INT T_COLOR item as the T_LOC of a tower  $  18
 ~ equal_int T_INT count filter ALL_ITEMS lambda_x_: AND is_T_COLOR x is_T_LOC x
 
-
 @ there is T_ONE tower with T_INT T_COLOR item stack together  $  17
 ~ equal_int 1 count filter ALL_BOXES lambda_x_: equal_int T_INT count filter get_touching filter x lambda_y_: is_T_COLOR y lambda_z_: is_T_COLOR z
 ~ le 1 count filter ALL_BOXES lambda_x_: equal_int T_INT count filter get_touching filter x lambda_y_: is_T_COLOR y lambda_z_: is_T_COLOR z
-
 
 @ the tower with T_INT item have a T_COLOR item at the T_LOC  $  16
 ~ exist filter ALL_BOXES lambda_x_: AND equal_int T_INT count x exist filter x lambda_y_: AND is_T_LOC y is_T_COLOR y
@@ -257,7 +255,7 @@ there is a T_COLOR_1 item T_COLOR_2 a T_COLOR_3 item  $  10
 ~ exist filter ALL_BOXES lambda_x_: ge 3 count x
 ~ exist filter ALL_BOXES lambda_x_: ge 4 count x
 
-@ there are T_QUANTITY_COMPARE T_INT T_SHAPE not touch a edge $ 9
+@ there are T_QUANTITY_COMPARE T_INT T_SHAPE not touch an edge $ 9
 ~ T_QUANTITY_COMPARE T_INT count filter ALL_ITEMS lambda_x_: AND is_T_SHAPE x NOT is_touching_wall x Side.ANY
 ~ T_QUANTITY_COMPARE T_INT count filter filter ALL_ITEMS lambda_x_: is_T_SHAPE x lambda_y_: NOT is_touching_wall y Side.ANY
 
