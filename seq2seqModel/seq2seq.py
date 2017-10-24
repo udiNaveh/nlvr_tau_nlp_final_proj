@@ -691,6 +691,12 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 
 if __name__ == '__main__':
 
+    Pre_Train = False
+    if Pre_Train:
+        with tf.Session() as sess:
+            run_supervised_training(sess, save_params_path=PRE_TRAINED_WEIGHTS, num_epochs=12)
+        exit()
+
     orig_stdout = sys.stdout
     weights_from_supervised_pre_training = PRE_TRAINED_WEIGHTS
     best_weights_so_far = TRAINED_WEIGHTS_BEST
@@ -726,7 +732,7 @@ if __name__ == '__main__':
 
         with tf.Session() as sess:
             run_model(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
-                      load_params_path=best_weights_so_far, save_model_path=OUTPUT_WEIGHTS)
+                      load_params_path=weights_from_supervised_pre_training, save_model_path=OUTPUT_WEIGHTS)
 
     # running a test on the dev and test datasets, using the weights that achieved the best accuracy and consistency
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,

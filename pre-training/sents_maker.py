@@ -18,9 +18,9 @@ from sentence_processing import *
 PARSED_FORMS_PATH = os.path.join(definitions.ROOT_DIR, 'pre-training', 'temp_sents_new')
 WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
 
-embeddings_file = open(WORD_EMBEDDINGS_PATH, 'rb')
-embeddings_dict = pickle.load(embeddings_file)
-embeddings_file.close()
+# embeddings_file = open(WORD_EMBEDDINGS_PATH, 'rb')
+# embeddings_dict = pickle.load(embeddings_file)
+# embeddings_file.close()
 
 
 colors = ['yellow', 'blue', 'black']
@@ -157,7 +157,6 @@ def generate_pairs_for_supervised_learning(forms_dictionary):
 
     return pairs_train, pairs_validation
 
-
 def extract_all_sentences_in_given_patterns(sentences, patterns):
     formalized = get_sentences_formalized(sentences)
     result = {}
@@ -175,3 +174,11 @@ def get_sentences_formalized(sentences):
     dict["one"] = 'T_ONE'
     formalized_sentences =  replace_words_by_dictionary(sentences, dict)
     return formalized_sentences
+
+if __name__ == '__main__':
+    path = r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
+    pairs_train, pairs_validation = generate_pairs_for_supervised_learning(load_forms(path))
+    print(len(pairs_train))
+    print(len(pairs_validation))
+    pickle.dump(pairs_train, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_cheating_pairs_train_final', 'wb'))
+    pickle.dump(pairs_validation, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_cheating_pairs_validation_final', 'wb'))
