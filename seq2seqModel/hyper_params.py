@@ -70,7 +70,7 @@ INJECT_TO_BEAM = True and USE_CACHED_PROGRAMS
 
 
 WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'new_embeddings_10iters_{}dim_unk3'.format(WORD_EMB_SIZE))
-PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_cheating_trained_variables_sup_check_hs4.ckpt')
+PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_proper_trained_variables_sup_check_hs4.ckpt')
 TRAINED_WEIGHTS_BEST = \
     os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj2017-09-09_10_49.ckpt-15')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')

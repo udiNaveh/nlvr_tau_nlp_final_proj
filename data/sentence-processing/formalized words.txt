@@ -7,6 +7,7 @@
   circle : T_SHAPE
   triangle : T_SHAPE
   square : T_SHAPE
+  rectangle : T_SHAPE
 
 # location_words 
   top : T_LOC
@@ -24,15 +25,19 @@
   exactly : T_QUANTITY_COMPARE
   
 # size_words 
-  medium : T_SIZE
-  small : T_SIZE
-  big : T_SIZE
+#  medium : T_SIZE
+#  small : T_SIZE
+#  big : T_SIZE
 
 # relation words
-    on : T_REL
-    below : T_REL
-    touch : T_REL
+#    on : T_REL
+#    below : T_REL
+#    touch : T_REL
+#    over : T_REL
+#    above : T_REL
+#    beneath : T_REL
 
 # wall words
-    edge : T_EDGE
-    corner : T_EDGE
+#    edge : T_EDGE
+#    corner : T_EDGE
+#    wall : T_EDGE

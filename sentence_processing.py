@@ -15,7 +15,7 @@ shape_words = ["circle", "triangle", "square"]
 integers = [str(i) for i in range(1,10)]
 integer_words = "one two three four five six seven".split()
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
-MIN_COUNT = 5
+MIN_COUNT = 3
 
 
 

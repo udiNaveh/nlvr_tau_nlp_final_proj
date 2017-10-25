@@ -694,7 +694,7 @@ if __name__ == '__main__':
     Pre_Train = False
     if Pre_Train:
         with tf.Session() as sess:
-            run_supervised_training(sess, save_params_path=PRE_TRAINED_WEIGHTS, num_epochs=12)
+            run_supervised_training(sess, save_params_path=PRE_TRAINED_WEIGHTS, num_epochs=20)
         exit()
 
     orig_stdout = sys.stdout

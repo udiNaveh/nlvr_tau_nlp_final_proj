@@ -33,7 +33,7 @@ ones = ['1']
 replacements_dic = {'T_SHAPE' : [('square', ['square', 'rectangle']),('triangle', ['triangle']),('circle', ['circle'])],
              'T_COLOR' : [('yellow', ['yellow']),('blue', ['blue']),('black', ['black'])],
              'T_LOC' :  [('top', ['top']),('bottom', ['bottom', 'base'])],
-             'T_ONE' : [('1', ['1', 'one'])],   # should I add here 'a single'?
+             'T_ONE' : [('1', ['1', 'one', 'a single'])],   # should I add here 'a single'?
              'T_INT' : [(str(i), [str(i)]) for i in range (2,8)],
              'T_QUANTITY_COMPARE' : [('equal_int', ['exactly']),('le', ['at least']),('ge', ['at most']),
                                      ('lt', ['more than']),('gt', ['less than'])]
@@ -172,13 +172,50 @@ def get_sentences_formalized(sentences):
         dict[str(i)] = 'T_INT'
     dict["1"] = 'T_ONE'
     dict["one"] = 'T_ONE'
+    dict["a single"] = 'T_ONE'
     formalized_sentences =  replace_words_by_dictionary(sentences, dict)
     return formalized_sentences
 
+def replaced(s, dict):
+    for item in dict:
+        newitem = ' '+item+' '
+        value = ' '+dict[item]+' '
+        s = s.replace(newitem, value)
+    return s
+
+def create_new_patterns_dict():
+    train = definitions.TRAIN_JSON
+    data = read_data(train)
+    samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
+    formalized_sentences = get_sentences_formalized(sents_dict)
+    patterns_counter = {}
+    for key in formalized_sentences:
+        sent = formalized_sentences[key]
+        if sent not in patterns_counter:
+            patterns_counter[sent] = 1
+        else:
+            patterns_counter[sent] += 1
+    patterns = sorted(patterns_counter.keys(), key=lambda x: patterns_counter[x], reverse=True)
+    counts = [patterns_counter[i] for i in patterns]
+    result = load_forms(definitions.DATA_DIR + r'\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt')
+    replacements_dic = load_dict_from_txt(SYNONYMS_PATH)
+    new_result = {}
+    for i, pattern in enumerate(patterns):
+        replaced_pattern = replaced(pattern, replacements_dic)
+        if replaced_pattern in result:
+            new_result[pattern] = (counts[i],result[replaced_pattern][1])
+    return new_result
+
 if __name__ == '__main__':
-    path = r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
-    pairs_train, pairs_validation = generate_pairs_for_supervised_learning(load_forms(path))
+    # path = r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
+    # pairs_train, pairs_validation = generate_pairs_for_supervised_learning(load_forms(path))
+    # print(len(pairs_train))
+    # print(len(pairs_validation))
+    # pickle.dump(pairs_train, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_cheating_pairs_train_final', 'wb'))
+    # pickle.dump(pairs_validation, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_cheating_pairs_validation_final', 'wb'))
+
+    pairs_train, pairs_validation = generate_pairs_for_supervised_learning(create_new_patterns_dict())
     print(len(pairs_train))
     print(len(pairs_validation))
-    pickle.dump(pairs_train, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_cheating_pairs_train_final', 'wb'))
-    pickle.dump(pairs_validation, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_cheating_pairs_validation_final', 'wb'))
+    pickle.dump(pairs_train, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_proper_pairs_train_final', 'wb'))
+    pickle.dump(pairs_validation, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_proper_pairs_validation_final', 'wb'))
