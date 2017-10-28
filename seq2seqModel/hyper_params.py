@@ -21,7 +21,8 @@ MAX_N_EPOCHS = 15
 
 BATCH_SIZE_UNSUPERVISED = 8
 BATCH_SIZE_SUPERVISED = 10
-
+LEARN_EMBEDDINGS = True
+LEARN_EMBEDDINGS_IN_PRETRAIN = False
 USE_BOW_HISTORY = False
     # if true, a binary vector representing the tokens outputted so far in the program is concatenated
     # to the history embedding
@@ -35,7 +36,7 @@ AUTOMATIC_TOKENS_IN_GRAD = False
 
 HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
 
-USE_CACHED_PROGRAMS = False
+USE_CACHED_PROGRAMS = True
 N_CACHED_PROGRAMS = 10 if USE_CACHED_PROGRAMS else 0
 LOAD_CACHED_PROGRAMS = False
 SAVE_CACHED_PROGRAMS = False
@@ -48,7 +49,7 @@ AVOID_ALL_TRUE_SENTENCES = False
     # if true, the data set of the trainning will incluse only sentences that have also images labeles false.
 
 PRINT_EVERY = 10
-PRINT_PARAMS = False
+PRINT_PARAMS = True
 
 
 
@@ -70,15 +71,13 @@ INJECT_TO_BEAM = True and USE_CACHED_PROGRAMS
 
 
 WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'embeddings_10iters_12dim')
-PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'trained_variables_sup_check_hs4.ckpt')
+PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeightsPreTrain', 'trained_variables_sup_with_embeddings.ckpt')
 TRAINED_WEIGHTS_BEST = \
-    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj2017-09-09_10_49.ckpt-15')
+    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj_with_embeddings.ckpt')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
 CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',
                                         'cached_programs_based_on_pretrain')
 NGRAM_PROBS =  os.path.join(definitions.DATA_DIR, 'sentence-processing', 'ngram_logprobs')
-
-
 
 
