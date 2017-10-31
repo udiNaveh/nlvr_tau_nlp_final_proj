@@ -1,7 +1,7 @@
 """
 This module contains the functions for some of the techniques we used to improve the performance of the
 beam search in learning and at test, by utilizing the structure or words of a sentence.
-Specifically ir contains the methods for keeping and using a cache of rewarded programs by their 
+Specifically it contains the methods for keeping and using a cache of rewarded programs by their
 patterns, and to re-rank the programs in the beam according to the tokens they include. 
 """
 
@@ -12,8 +12,10 @@ from general_utils import *
 from seq2seqModel.utils import *
 from seq2seqModel.partial_program import *
 
-
-
+words_vocabulary = ["1","one","2","3","4","5","6","7","and","below","big","black","blue","bottom","circle","color","corner","different","edge","each","all","many","same","exactly","only","first","less","least","most","medium","middle","both","more","no","none","not","on","or","right","number","second","shape","size","small","square","stack","third","top","touch","triangle","yellow"]
+tokens_vocabulary = ['OR', 'get_touching', 'le', 'All', 'ge', 'is_big', 'is_square', '5', 'Shape.SQUARE', 'Side.TOP', 'Color.BLUE', 'Color.YELLOW', 'get_below', '3', 'query_shape', '2', 'is_blue', '1', 'get_above', 'AND', 'Shape.TRIANGLE', 'Side.BOTTOM', 'query_color', 'count', 'is_third', 'is_black', 'Side.RIGHT', 'lt', 'and', 'all_same', 'is_touching_corner', 'NOT', 'is_small', '4', 'equal', 'select', 'Shape.CIRCLE', 'is_circle', 'is_top', '6', 'is_bottom', 'Color.BLACK', 'equal_int', '7', 'is_touching_wall', 'is_second', 'gt', 'is_yellow', 'is_triangle', 'query_size', 'is_medium']
+words_array = np.array(words_vocabulary)
+tokens_array = np.array(tokens_vocabulary)
 
 log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
             'exactly': 'equal_int', 'at least': 'le', 'at most': 'ge', 'triangle': 'triangle',
@@ -199,7 +201,17 @@ def sentence_program_relevance_score(sentence, program, words_to_tokens, recurri
         return 0
     return relevant_tokens_found / relevant_tokens_needed
 
+
+def get_features(sentence, program):
+    logp = np.array([program.logprob])
+    one_hot_words = np.sum([words_array == x for x in sentence.split()],axis = 0)
+    one_hot_tokens = np.sum([tokens_array == x for x in program.token_seq],axis = 0)
+    all_features = np.concatenate((logp,one_hot_words,one_hot_tokens))
+
+    return all_features
+
 def beam_reranker(sentence, programs, words_to_tokens):
     programs_c = [p for p in programs]
     return sorted(programs_c, key=lambda prog: ( - sentence_program_relevance_score(sentence, prog, words_to_tokens),
                                               -prog.logprob))
+

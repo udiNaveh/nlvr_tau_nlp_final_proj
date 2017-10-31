@@ -17,6 +17,7 @@ from data_manager import CNLVRDataSet, DataSetForSupervised, DataSet, load_funct
 from seq2seqModel.beam_search import *
 from seq2seqModel.hyper_params import *
 from general_utils import increment_count, union_dicts
+from seq2seqModel.beam_classification import *
 
 
 
@@ -219,6 +220,8 @@ def get_feed_dicts_from_program(program, logical_tokens_embeddings_dict, program
 
 
 # build the computaional graph:
+g_1 = tf.Graph()
+#with g_1.as_default():
 # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
 # and returns the lstm outputs.
 sentence_placeholder, sent_lengths_placeholder, h, e_m = build_sentence_encoder()
@@ -245,7 +248,7 @@ cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
 
 
 def run_model(sess, dataset, mode, validation_dataset = None, load_params_path = None, save_model_path = None,
-              return_sentences_results=None):
+              return_sentences_results=None, beam_classifier=False, beam_classifier_test=False, clf_params_path=None):
     """ 
     a method for running the weakly-supervised model
     
@@ -298,9 +301,12 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
     n_consistent_top_by_reranking = []
     n_ccorrect_top_by_model = []
     n_correct_top_by_reranking= []
+    n_consistent_top_by_classifier = []
+    n_correct_top_by_classifier = []
     timer = []
     epochs_completed, num_have_pattern, iter, n_samples = 0, 0, 0, 0
     batch_num_in_epoch = 1
+    classifier_ran_already = False
 
     # a dictionary for cached programs
     if USE_CACHED_PROGRAMS and LOAD_CACHED_PROGRAMS and mode=='train':
@@ -318,7 +324,8 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
 
     stats_for_all_sentences = {}
 
-
+    all_features = []
+    all_labels = []
 
     while dataset.epochs_completed < n_epochs and not stopping_criterion_met:
 
@@ -345,7 +352,7 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
             decodings_from_cache = []
             if USE_CACHED_PROGRAMS and curr_mode == 'train':
                 # find the N top-rated candidate programs for parsing the given sentence.
-                # the rating is based on previous rewards of these programs om sentences that
+                # the rating is based on previous rewards of these programs on sentences that
                 # are similar in pattern to the current sentence.
                 decodings_from_cache = get_programs_for_sentence_by_pattern(sentence, all_cached_programs)
                 decodings_from_cache = [token_seq.split() for token_seq in decodings_from_cache][:N_CACHED_PROGRAMS]
@@ -438,7 +445,29 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
 
                 top_by_model_stats = programs_execution_results[top_program_by_model]
                 top_by_reranking_stats = programs_execution_results[top_program_by_reranking]
+                top_by_classifier_stats = None
 
+                if beam_classifier:
+                    features = []
+                    labels = []
+                    for prog in beam:
+                        feat_vector = get_features(sentence, prog)
+                        label = programs_execution_results[prog].is_consistent
+                        features.append(feat_vector)
+                        labels.append(label)
+                    all_features.append(features)
+                    all_labels.append(labels)
+
+                    if beam_classifier_test:
+                        with tf.Session(graph=g_2) as sess2:
+
+                            classifier_best_index = run_beam_classification(sess2,[features],[labels],BEAM_SIZE,inference=True,load_params_path=clf_params_path,reuse=classifier_ran_already)
+                            classifier_ran_already = True
+                            if classifier_best_index >= len(beam):
+                                top_program_by_classifier = beam[0]
+                            else:
+                                top_program_by_classifier = beam[classifier_best_index]
+                            top_by_classifier_stats = programs_execution_results[top_program_by_classifier]
 
 
             if not beam: # no valid program was found by the beam - default is to guess 'True' for all images
@@ -450,15 +479,18 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
                                                         'top_by_reranking_stats' : top_by_reranking_stats,
                                                         'top_program_by_model' : top_program_by_model,
                                                         'top_by_model_stats' : top_by_model_stats,
+                                                        'top_program_by_classifier': top_program_by_classifier,
+                                                        'top_by_classifier_stats': top_by_classifier_stats,
                                                         'consistent_programs' : consistent_programs,
                                                         'beam_reranked' : beam_reranked,
                                                         'samples' : samples}
 
             n_consistent_top_by_model.append(top_by_model_stats.is_consistent)
-            n_consistent_top_by_reranking.append(top_by_reranking_stats.is_consistent,
-                                                  )
+            n_consistent_top_by_reranking.append(top_by_reranking_stats.is_consistent)
+            n_consistent_top_by_classifier.append(top_by_classifier_stats.is_consistent)
             n_ccorrect_top_by_model.append(top_by_model_stats.n_correct)
             n_correct_top_by_reranking.append(top_by_reranking_stats.n_correct)
+            n_correct_top_by_classifier.append(top_by_classifier_stats.n_correct)
 
 
 
@@ -480,7 +512,7 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
 
 
         if batch_num_in_epoch % PRINT_EVERY == 0 or is_last_batch_in_epoch:
-            # print the resukt every PRINT_EVERY minibatches, and in addition print
+            # print the result every PRINT_EVERY minibatches, and in addition print
             # to a .txt file after every epoch
 
             stats_file = open(STATS_FILE, 'a')
@@ -540,6 +572,15 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
                                                                         sum(n_consistent_top_by_reranking),
                                                                         iter,
                                                                         (sum(n_consistent_top_by_reranking) / iter) * 100))
+                print('top programs by classifier had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
+                      '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_classifier),
+                                                                                     n_samples,
+                                                                                     (sum(
+                                                                                         n_correct_top_by_classifier) / n_samples) * 100,
+                                                                                     sum(n_consistent_top_by_classifier),
+                                                                                     iter,
+                                                                                     (sum(
+                                                                                         n_consistent_top_by_classifier) / iter) * 100))
                 print("##############################")
 
             sys.stdout = orig_stdout
@@ -571,6 +612,10 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
         # f = save_stats_path + '_' + curr_dataset.name + '_' + time.strftime("%Y-%m-%d_%H_%M")
         #pickle.dump(stats_for_all_sentences, open(f, 'wb'))
         return stats_for_all_sentences
+
+    if beam_classifier and not beam_classifier_test :
+        return all_features, all_labels
+
     return {}
 
 
@@ -692,6 +737,8 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 if __name__ == '__main__':
 
     orig_stdout = sys.stdout
+    #with tf.Session() as sess:
+    #    run_supervised_training(sess,save_params_path=PRE_TRAINED_WEIGHTS)
     weights_from_supervised_pre_training = PRE_TRAINED_WEIGHTS
     best_weights_so_far = TRAINED_WEIGHTS_BEST
     time_stamp = time.strftime("%Y-%m-%d_%H_%M")
@@ -711,7 +758,7 @@ if __name__ == '__main__':
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
-    test2_dataset = CNLVRDataSet(DataSet.TEST2)
+    #test2_dataset = CNLVRDataSet(DataSet.TEST2)
 
     run_train = False # change to True if you really want to run the whole thing...
 
@@ -731,6 +778,25 @@ if __name__ == '__main__':
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
 
+    run_beam_reranking = True
+    beam_reranking_train = False
+    if run_beam_reranking:
+        beam_classifier_weights_path = os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights' + time_stamp + '.ckpt')
+        #tf.reset_default_graph() # set as comment for inference
+        with tf.Session() as sess:
+            if beam_reranking_train:
+                #features, labels = run_model(sess, train_dataset, mode='test',
+                            #load_params_path=best_weights_so_far, beam_classifier=True)
+                #pickle.dump(features,open(os.path.join(SEQ2SEQ_DIR,'features_for_beam_reranking'), 'wb'))
+                #pickle.dump(labels, open(os.path.join(SEQ2SEQ_DIR,'labels_for_beam_reranking'), 'wb'))
+                features = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'features_for_beam_reranking'), 'rb'))
+                labels = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'labels_for_beam_reranking'), 'rb'))
+                run_beam_classification(sess,features,labels,BEAM_SIZE,save_path=beam_classifier_weights_path)
+            else:
+                run_model(sess, test_dataset, mode='test',
+                          load_params_path=best_weights_so_far, return_sentences_results=True,beam_classifier=True,
+                          beam_classifier_test=True, clf_params_path=os.path.join(SEQ2SEQ_DIR,'beamClassificationWeights2017-10-30_21_21.ckpt'))
+        exit(0)
 
     dev_results_by_sentence , test_results_by_sentence, test2_results_by_sentence = {},{}, {}
 
@@ -748,10 +814,10 @@ if __name__ == '__main__':
 
     save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
 
-    test2_dataset.restart()
-    with tf.Session() as sess:
-        test2_results_by_sentence = run_model(sess, test2_dataset, mode='test',
-                                            load_params_path=best_weights_so_far, return_sentences_results=True)
+    #test2_dataset.restart()
+    #with tf.Session() as sess:
+    #    test2_results_by_sentence = run_model(sess, test2_dataset, mode='test',
+    #                                        load_params_path=best_weights_so_far, return_sentences_results=True)
 
-    save_sentences_test_results(test2_results_by_sentence, test2_dataset, SENTENCES_RESULTS_FILE_TEST2)
+    #save_sentences_test_results(test2_results_by_sentence, test2_dataset, SENTENCES_RESULTS_FILE_TEST2)
 
