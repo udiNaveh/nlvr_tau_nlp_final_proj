@@ -137,7 +137,7 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
                     # not to be considered for selection to the next beam.
                     del continuations[partial_program]
 
-        # stack together all possible continuations and soet them by model probability
+        # stack together all possible continuations and sort them by model probability
         all_continuations_list = [c for p in continuations.values() for c in p]
         all_continuations_list.sort(key= lambda c: - c.logprob)
         # choose the beam_size continuations for the next step
