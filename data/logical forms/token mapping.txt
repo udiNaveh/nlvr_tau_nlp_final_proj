@@ -7,7 +7,7 @@
 ## set<set<Item>>, and set<Color>, respectively.
 ## Question marks are used as 'wildcards'. So for example, 'count' gets an argument of type set<?>,
 ## which means that any set can be given as an argument to 'count'.
-## Note that in order to generate logical forms that compile, all tokens here must correspond to
+## Note that in order to generate logical forms that complie, all tokens here must correspond to
 ## functions defined in logical_forms.py. However, the opposite is not true, which means that we can have here
 ## only a subset of the possible functions defined in logical_forms.py.
 ## The optional list of necessary words is used for sentence driven constraints on the beam search.
