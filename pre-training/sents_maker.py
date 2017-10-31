@@ -177,13 +177,15 @@ def get_sentences_formalized(sentences):
     return formalized_sentences
 
 def replaced(s, dict):
+    s = ' '+s+' '
     for item in dict:
         newitem = ' '+item+' '
         value = ' '+dict[item]+' '
         s = s.replace(newitem, value)
+    s = s.strip()
     return s
 
-def create_new_patterns_dict():
+def get_new_patterns():
     train = definitions.TRAIN_JSON
     data = read_data(train)
     samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
@@ -195,16 +197,32 @@ def create_new_patterns_dict():
             patterns_counter[sent] = 1
         else:
             patterns_counter[sent] += 1
-    patterns = sorted(patterns_counter.keys(), key=lambda x: patterns_counter[x], reverse=True)
-    counts = [patterns_counter[i] for i in patterns]
-    result = load_forms(definitions.DATA_DIR + r'\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt')
-    replacements_dic = load_dict_from_txt(SYNONYMS_PATH)
-    new_result = {}
-    for i, pattern in enumerate(patterns):
-        replaced_pattern = replaced(pattern, replacements_dic)
-        if replaced_pattern in result:
-            new_result[pattern] = (counts[i],result[replaced_pattern][1])
-    return new_result
+    return patterns_counter
+
+def create_new_patterns_dict():
+    patterns_counter = get_new_patterns()
+    old_patterns_dict = load_forms(definitions.DATA_DIR + r'\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt')
+    replacements_dict = load_dict_from_txt(SYNONYMS_PATH)
+    new_patterns_dict = {}
+    for pattern in patterns_counter:
+        replaced_pattern = replaced(pattern, replacements_dict)
+        if replaced_pattern in old_patterns_dict:
+            new_patterns_dict[pattern] = (patterns_counter[pattern], old_patterns_dict[replaced_pattern][1])
+    for pattern in old_patterns_dict:
+        if pattern not in new_patterns_dict:
+            new_patterns_dict[pattern] = old_patterns_dict[pattern]
+    return new_patterns_dict
+
+    # new_patterns = sorted(patterns_counter.keys(), key=lambda x: patterns_counter[x], reverse=True)
+    # counts = [patterns_counter[i] for i in new_patterns]
+    # result = load_forms(definitions.DATA_DIR + r'\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt')
+    # replacements_dict = load_dict_from_txt(SYNONYMS_PATH)
+    # new_result = {}
+    # for i, pattern in enumerate(new_patterns):
+    #     replaced_pattern = replaced(pattern, replacements_dict)
+    #     if replaced_pattern in result:
+    #         new_result[pattern] = (counts[i],result[replaced_pattern][1])
+    # return new_result
 
 if __name__ == '__main__':
     # path = r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
@@ -213,9 +231,23 @@ if __name__ == '__main__':
     # print(len(pairs_validation))
     # pickle.dump(pairs_train, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_cheating_pairs_train_final', 'wb'))
     # pickle.dump(pairs_validation, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_cheating_pairs_validation_final', 'wb'))
+    path = r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt'
+    old_dict = load_forms(path)
+    new_dict = create_new_patterns_dict()
 
-    pairs_train, pairs_validation = generate_pairs_for_supervised_learning(create_new_patterns_dict())
+    # print(sum([i[0] for i in old_dict.values()]))
+    # print(sum([i[0] for i in new_dict.values()]))
+    # print(len(new_dict))
+    # print(len(old_dict))
+    # diff = []
+    # for p in old_dict:
+    #     if p not in new_dict:
+    #         new_dict[p] = old_dict[p]
+    #         # print(p, old_dict[p])
+    #         diff.append(p)
+    # print(len(diff))
+    pairs_train, pairs_validation = generate_pairs_for_supervised_learning(new_dict)
     print(len(pairs_train))
     print(len(pairs_validation))
-    pickle.dump(pairs_train, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_proper_pairs_train_final', 'wb'))
-    pickle.dump(pairs_validation, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_proper_pairs_validation_final', 'wb'))
+    # pickle.dump(pairs_train, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_proper_pairs_train_final', 'wb'))
+    # pickle.dump(pairs_validation, open(r'C:\Users\omergo\Documents\is it a paper\nlvr_tau_nlp_final_proj\data\parsed sentences\new_proper_pairs_validation_final', 'wb'))

@@ -694,8 +694,7 @@ if __name__ == '__main__':
     Pre_Train = False
     if Pre_Train:
         with tf.Session() as sess:
-            run_supervised_training(sess, save_params_path=PRE_TRAINED_WEIGHTS, num_epochs=20)
-        exit()
+            run_supervised_training(sess, save_params_path=PRE_TRAINED_WEIGHTS)
 
     orig_stdout = sys.stdout
     weights_from_supervised_pre_training = PRE_TRAINED_WEIGHTS
@@ -746,14 +745,14 @@ if __name__ == '__main__':
         dev_dataset.restart()
         with tf.Session() as sess:
             dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
-                                                load_params_path=best_weights_so_far, return_sentences_results=True)
+                                                load_params_path=PRE_TRAINED_WEIGHTS, return_sentences_results=True)
 
         save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
 
         test_dataset.restart()
         with tf.Session() as sess:
             test_results_by_sentence = run_model(sess, test_dataset, mode='test',
-                                                load_params_path=best_weights_so_far, return_sentences_results=True)
+                                                load_params_path=PRE_TRAINED_WEIGHTS, return_sentences_results=True)
 
         save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
 

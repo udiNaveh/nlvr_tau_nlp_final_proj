@@ -35,7 +35,7 @@ AUTOMATIC_TOKENS_IN_GRAD = False
 
 HISTORY_EMB_SIZE = HISTORY_LENGTH * LOG_TOKEN_EMB_SIZE
 
-USE_CACHED_PROGRAMS = False
+USE_CACHED_PROGRAMS = True
 N_CACHED_PROGRAMS = 10 if USE_CACHED_PROGRAMS else 0
 LOAD_CACHED_PROGRAMS = False
 SAVE_CACHED_PROGRAMS = False
@@ -70,11 +70,12 @@ INJECT_TO_BEAM = True and USE_CACHED_PROGRAMS
 
 
 WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'new_embeddings_10iters_{}dim_unk3'.format(WORD_EMB_SIZE))
-PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_proper_trained_variables_sup_check_hs4.ckpt')
+# PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_proper_trained_variables_sup_check_hs4.ckpt')
+PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'nisayon_trained_variables_sup_check_hs4.ckpt')
 TRAINED_WEIGHTS_BEST = \
     os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj2017-09-09_10_49.ckpt-15')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
-CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
+# CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
 CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',
                                         'cached_programs_based_on_pretrain')
 NGRAM_PROBS =  os.path.join(definitions.DATA_DIR, 'sentence-processing', 'ngram_logprobs')
