@@ -29,6 +29,10 @@ def load_meta_data():
     embeddings_dict = pickle.load(embeddings_file)
     embeddings_file.close()
     assert WORD_EMB_SIZE == np.size(embeddings_dict['blue'])
+    vocab_size = len(embeddings_dict)
+    vocab_list = [k for k in sorted(embeddings_dict.keys())]
+    one_hot_dict = {w : one_hot(vocab_size, i) for i,w in enumerate(vocab_list)}
+    embeddings_matrix = np.stack([embeddings_dict[k] for k in vocab_list])
 
     # load logical tokens inventory
     logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
@@ -39,9 +43,9 @@ def load_meta_data():
         logical_tokens.extend([var, 'lambda_{}_:'.format(var) ])
     logical_tokens.extend(['<s>', '<EOS>'])
     logical_tokens_ids = {lt: i for i, lt in enumerate(logical_tokens)}
-    return  logical_tokens_ids, logical_tokens_mapping, embeddings_dict
+    return  logical_tokens_ids, logical_tokens_mapping, embeddings_dict, one_hot_dict, embeddings_matrix
 
-logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict = load_meta_data()
+logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
 words_to_tokens = pickle.load(open(os.path.join(definitions.DATA_DIR, 'logical forms', 'words_to_tokens'), 'rb'))
 
 
@@ -52,14 +56,16 @@ if USE_BOW_HISTORY:
     HISTORY_EMB_SIZE += n_logical_tokens
 
 
-def build_sentence_encoder():
+def build_sentence_encoder(vocabulary_size):
     """
     build the computational graph for the lstm sentence encoder. Return only the palceholders and tensors
     that are called from other methods
     """
-
+    sentence_oh_placeholder = tf.placeholder(shape=[None, vocabulary_size], dtype=tf.float32, name="sentence_placeholder")
+    word_embeddings_matrix = tf.get_variable("W_we", #shape=[vocabulary_size, WORD_EMB_SIZE]
+                                             initializer=tf.constant(embeddings_matrix, dtype=tf.float32))
+    sentence_embedded = tf.expand_dims(tf.matmul(sentence_oh_placeholder, word_embeddings_matrix), 0)
     # placeholders for sentence and it's length
-    sentence_placeholder = tf.placeholder(shape = [None, None, WORD_EMB_SIZE], dtype = tf.float32, name ="sentence_placeholder")
     sent_lengths = tf.placeholder(dtype = tf.int32,name = "sent_length_placeholder")
 
     # Forward cell
@@ -67,18 +73,18 @@ def build_sentence_encoder():
     # Backward cell
     lstm_bw_cell = BasicLSTMCell(LSTM_HIDDEN_SIZE, forget_bias=1.0)
     # stack cells together in RNN
-    outputs, _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell, lstm_bw_cell, sentence_placeholder,sent_lengths,dtype=tf.float32)
+    outputs, _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell, lstm_bw_cell, sentence_embedded,sent_lengths,dtype=tf.float32)
     #    outputs: A tuple (output_fw, output_bw) containing the forward and the backward rnn output `Tensor`.
     #    both output_fw, output_bw will be a `Tensor` shaped: [batch_size, max_time, cell_fw.output_size]`
 
     # outputs is a (output_forward,output_backwards) tuple. concat them together to receive h vector
     lstm_outputs = tf.concat(outputs,2)[0]    # shape: [max_time, 2 * hidden_layer_size ]
-
-
     final_fw = outputs[0][:,-1,:]
     final_bw = outputs[1][:,0,:]
 
-    return sentence_placeholder, sent_lengths, lstm_outputs, tf.concat((final_fw, final_bw), axis=1)
+    return sentence_oh_placeholder, sent_lengths, lstm_outputs, tf.concat((final_fw, final_bw), axis=1)
+
+
 
 
 def build_decoder(lstm_outputs, final_utterance_embedding):
@@ -111,7 +117,7 @@ def build_batchGrad():
     """
     :return: a list with the placeholders for the gradients of all trained variables in the model 
     """
-
+    words_embeddings_grad = tf.placeholder(tf.float32, name="words_embeddings_grad")
     lstm_fw_weights_grad = tf.placeholder(tf.float32, name="lstm_fw_weights_grad")
     lstm_fw_bias_grad = tf.placeholder(tf.float32, name="lstm_fw_bias_grad")
     lstm_bw_weights_grad = tf.placeholder(tf.float32, name="lstm_bw_weights_grad")
@@ -120,7 +126,7 @@ def build_batchGrad():
     wa_grad = tf.placeholder(tf.float32, name="wa_grad")
     ws_grad = tf.placeholder(tf.float32, name="ws_grad")
     logical_tokens_grad = tf.placeholder(tf.float32, name="logical_tokens_grad")
-    batchGrad = [lstm_fw_weights_grad, lstm_fw_bias_grad, lstm_bw_weights_grad, lstm_bw_bias_grad,
+    batchGrad = [words_embeddings_grad, lstm_fw_weights_grad, lstm_fw_bias_grad, lstm_bw_weights_grad, lstm_bw_bias_grad,
                  wq_grad, wa_grad, ws_grad, logical_tokens_grad]
     return batchGrad
 
@@ -171,19 +177,23 @@ def get_gradient_weights_for_programs(beam_rewarded_programs):
     return np.power(q_mml, BETA) / np.sum(np.power(q_mml, BETA))
 
 
-def get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, encoder_output_tensors):
+def get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, encoder_output_tensors, learn_embeddings=False):
     """
     creates the values needed and feed-dicts that depend on the sentence.
     these feed dicts are used to run or to compute gradients.
     """
 
-    sentence_embedding = np.reshape([word_embeddings_dict.get(w, word_embeddings_dict['<UNK>']) for w in sentence.split()],
-                                    [1, len(sentence.split()), WORD_EMB_SIZE])
+    sentence_matrix = np.stack([one_hot_dict.get(w, one_hot_dict['<UNK>']) for w in sentence.split()])
+
     length = [len(sentence.split())]
-    encoder_feed_dict = {sentence_placeholder: sentence_embedding, sent_lengths_placeholder: length}
+    encoder_feed_dict = {sentence_placeholder: sentence_matrix, sent_lengths_placeholder: length}
     sentence_encoder_outputs = sess.run(encoder_output_tensors, feed_dict= encoder_feed_dict)
     decoder_feed_dict = {encoder_output_tensors[i] : sentence_encoder_outputs[i]
                          for i in range(len(encoder_output_tensors))}
+
+    if not learn_embeddings:
+        W_we = tf.get_default_graph().get_tensor_by_name('W_we:0')
+        encoder_feed_dict = union_dicts(encoder_feed_dict, {W_we : embeddings_matrix})
     return encoder_feed_dict, decoder_feed_dict
 
 
@@ -224,7 +234,9 @@ g_1 = tf.Graph()
 #with g_1.as_default():
 # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
 # and returns the lstm outputs.
-sentence_placeholder, sent_lengths_placeholder, h, e_m = build_sentence_encoder()
+
+sentence_placeholder, sent_lengths_placeholder, h, e_m = build_sentence_encoder(vocabulary_size=len(one_hot_dict))
+
 # ff decoder - given the outputs of the encoder, and an embedding of the decoding history,
 # computes a probability distribution over the tokens.
 history_embedding_placeholder, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
@@ -363,7 +375,7 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
             # This time-consuming operation is executed only once, and doesn't need to be
             # repeated at each step during the beam search.
             encoder_feed_dict, decoder_feed_dict = \
-                get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, (h, e_m))
+                get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, (h, e_m), LEARN_EMBEDDINGS)
 
             # define a method for getting token probabilities, given a partial program and the
             # current state of the nn.
@@ -684,7 +696,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
         for step in range(batch_size):
             sentence = sentences[step]
             encoder_feed_dict, decoder_feed_dict = \
-                get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, (h, e_m))
+                get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, (h, e_m), LEARN_EMBEDDINGS_IN_PRETRAIN)
 
             next_token_probs_getter = lambda pp :  get_next_token_probs_from_nn(pp, logical_tokens_embeddings_dict,
                                                                                 decoder_feed_dict,
@@ -772,7 +784,7 @@ if __name__ == '__main__':
 
         with tf.Session() as sess:
             run_model(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
-                      load_params_path=best_weights_so_far, save_model_path=OUTPUT_WEIGHTS)
+                      load_params_path=weights_from_supervised_pre_training, save_model_path=OUTPUT_WEIGHTS)
 
     # running a test on the dev and test datasets, using the weights that achieved the best accuracy and consistency
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
