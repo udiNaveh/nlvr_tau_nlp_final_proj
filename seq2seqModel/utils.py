@@ -6,7 +6,7 @@ import random
 import numpy as np
 from collections import namedtuple
 from logical_forms import *
-from scipy.stats import binom
+#from scipy.stats import binom
 from general_utils import increment_count
 
 
