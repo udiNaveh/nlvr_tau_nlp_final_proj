@@ -1,0 +1,78 @@
+# this document maps some words from the sentence vocabulary to tokens or sets of tokens
+# in our logical formalism. This helps reranking the beam programs by favoring programs that include
+# tokens referring to more of the words.
+
+
+1 : 1
+one : 1
+single : 1
+2 : 2
+3 : 3 
+4 : 4 
+5 : 5 
+6 : 6 
+7 : 7
+and : and
+but : and
+below : get_below
+under : get_below
+underneath : get_below
+beneath : get_below
+big : is_big
+black : is_black : equal Color.BLACK query_color
+blue : is_blue : equal Color.BLUE query_color
+bottom : is_bottom Side.BOTTOM
+base : is_bottom Side.BOTTOM
+lower : is_bottom Side.BOTTOM
+circle : is_circle : equal query_shape Shape.CIRCLE
+color : query_color 
+corner : is_touching_corner 
+different : NOT equal : NOT equal_int : Not all_same select
+edge : is_touching_wall
+wall : is_touching_wall
+line : is_touching_wall
+each : get_touching : All
+every : get_touching : All
+all : All : all_same
+many : ge 2
+multiple : ge 2
+some : ge 2
+lot : ge 2
+same : all_same select : equal
+exactly : equal_int
+only : equal_int : All : all_same
+just : equal_int : All : all_same
+first : is_bottom : is_top : Side.BOTTOM
+less : gt
+least : le
+most : ge
+medium : is_medium
+middle : is_second
+both : 2
+more : lt
+no : NOT 
+none : NOT 
+not : NOT
+without : NOT
+on : get_above : is_top
+above : get_above : is_top
+over : get_above : is_top
+or : AND : OR
+right : Side.RIGHT : get_touching
+number : count
+count : count
+second : is_second 
+shape : query_shape
+kind : query_shape
+type : query_shape
+size : query_size 
+small : is_small
+square : is_square : equal Shape.SQUARE query_shape : ALL_BOXES
+rectangle : is_square : equal Shape.SQUARE query_shape
+stack : get_touching 
+third : is_third 
+top : is_top : Side.TOP : get_above
+touch : get_touching : is_touching_wall :is_touching_corner
+attach : get_touching : is_touching_wall :is_touching_corner
+triangle : is_triangle : equal  Shape.TRIANGLE query_shape
+yellow :  is_yellow : equal query_color Color.YELLOW

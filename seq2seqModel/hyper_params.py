@@ -17,12 +17,12 @@ HISTORY_LENGTH = 4
 LEARNING_RATE = 0.001
 BETA = 0.5
 EPSILON_FOR_BEAM_SEARCH = 0
-MAX_N_EPOCHS = 15
+MAX_N_EPOCHS = 20
 
 BATCH_SIZE_UNSUPERVISED = 8
 BATCH_SIZE_SUPERVISED = 10
 LEARN_EMBEDDINGS = True
-LEARN_EMBEDDINGS_IN_PRETRAIN = False
+LEARN_EMBEDDINGS_IN_PRETRAIN = True
 USE_BOW_HISTORY = False
     # if true, a binary vector representing the tokens outputted so far in the program is concatenated
     # to the history embedding
@@ -69,9 +69,13 @@ INJECT_TO_BEAM = True and USE_CACHED_PROGRAMS
 
 #paths
 
+if definitions.MANUAL_REPLACEMENTS:
+    WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'embeddings_10iters_12dim')
+    PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeightsPreTrain', 'trained_variables_sup_with_embeddings.ckpt')
+else:
+    WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'new_embeddings_10iters_12dim_unk3')
+    PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_trained_variables_sup_with_embeddings.ckpt')
 
-WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'embeddings_10iters_12dim')
-PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeightsPreTrain', 'trained_variables_sup_with_embeddings.ckpt')
 TRAINED_WEIGHTS_BEST = \
     os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj_with_embeddings.ckpt')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')

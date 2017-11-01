@@ -120,13 +120,23 @@ class CNLVRDataSet:
         self.original_sentences = preprocess_sentences(sentences, processing_type='shallow')
 
         if self.__dataset == DataSet.TRAIN:
-            self.processed_sentences = \
-                replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='deep'))
+            if definitions.MANUAL_REPLACEMENTS:
+                self.processed_sentences = \
+                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='deep'))
+            else:
+                self.processed_sentences = \
+                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='lemmatize'))
+
 
         else:
-            self.processed_sentences = \
-                replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='deep'),
-                                            definitions.TOKEN_COUNTS_PROCESSED)
+            if definitions.MANUAL_REPLACEMENTS:
+                self.processed_sentences = \
+                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='deep'),
+                                                definitions.TOKEN_COUNTS_PROCESSED)
+            else:
+                self.processed_sentences = \
+                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='lemmatize'),
+                                                definitions.TOKEN_COUNTS_PROCESSED)
 
         for s in self.samples.values():
             s_index = int(str.split(s.identifier, "-")[0])
