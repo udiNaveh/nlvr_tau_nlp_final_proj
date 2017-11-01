@@ -1,0 +1,38 @@
+##############################
+current mode = test
+current dataset = TRAIN
+2017-11-01 12:04
+finished epoch 1.
+parameters used in learning:
+EPSILON_FOR_BEAM_SEARCH : 0
+BETA : 0.5
+SKIP_AUTO_TOKENS : True
+N_CACHED_PROGRAMS : 10
+INJECT_TO_BEAM : True
+SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH : True
+AVOID_ALL_TRUE_SENTENCES : False
+stats for this epoch:
+1921 out of 3163 sentences had consistent programs in beam
+mean consistent parses for sentence = 4.37, mean beam size for sentence = 19.10,  mean prog length = 14.56
+top programs by model had so far 9120 correct answers out of 12410 samples (73.49%), and 1296 consistent parses out of 3163 sentences (40.97%)
+top programs by reranking had so far 9225 correct answers out of 12410 samples (74.34%), and 1355 consistent parses out of 3163 sentences (42.84%)
+##############################
+##############################
+current mode = test
+current dataset = DEV
+2017-11-01 12:06
+finished epoch 1.
+parameters used in learning:
+EPSILON_FOR_BEAM_SEARCH : 0
+BETA : 0.5
+SKIP_AUTO_TOKENS : True
+N_CACHED_PROGRAMS : 10
+INJECT_TO_BEAM : True
+SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH : True
+AVOID_ALL_TRUE_SENTENCES : False
+stats for this epoch:
+146 out of 267 sentences had consistent programs in beam
+mean consistent parses for sentence = 3.12, mean beam size for sentence = 12.98,  mean prog length = 14.71
+top programs by model had so far 697 correct answers out of 989 samples (70.48%), and 100 consistent parses out of 267 sentences (37.45%)
+top programs by reranking had so far 705 correct answers out of 989 samples (71.28%), and 110 consistent parses out of 267 sentences (41.20%)
+##############################
