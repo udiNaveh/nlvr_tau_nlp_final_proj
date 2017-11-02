@@ -28,10 +28,13 @@ if MANUAL_REPLACEMENTS:
     SUPERVISED_TRAIN_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'pairs_train_final')
     SUPERVISED_TRAIN_PICKLE_3 = os.path.join(DATA_DIR, 'parsed sentences', 'pairs_train_3')
     SUPERVISED_VALIDATION_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'pairs_validation_final')
+    LOGICAL_TOKENS_MAPPING_PATH = os.path.join(DATA_DIR, 'logical forms', 'token mapping.txt')
 else:
     SUPERVISED_TRAIN_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'new_proper_pairs_train_final')
     SUPERVISED_VALIDATION_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'new_proper_pairs_validation_final')
+    LOGICAL_TOKENS_MAPPING_PATH = os.path.join(DATA_DIR, 'logical forms', 'new token mapping.txt')
 
 
+# LOGICAL_TOKENS_MAPPING_PATH was set to the version suited for manual replacements only (changed it @udi)
 
-LOGICAL_TOKENS_MAPPING_PATH = os.path.join(DATA_DIR, 'logical forms', 'token mapping.txt')
+

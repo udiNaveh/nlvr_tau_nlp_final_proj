@@ -13,15 +13,14 @@ from seq2seqModel.utils import *
 from seq2seqModel.partial_program import *
 
 
-
-
+# TODO this dictionary (log_dict )is suited only to the version with manual replacements
 log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
             'exactly': 'equal_int', 'at least': 'le', 'at most': 'ge', 'triangle': 'triangle',
             'circle': 'circle', 'square': 'square', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
             '7': '7', '1': '1', 'one': '1', 'big' : 'big', 'small' : 'small', 'medium' : 'medium',
             'more than' : 'lt', 'less than' : 'gt', 'on': 'above', 'below': 'below', 'touch' : 'touching'}
 
-
+# TODO this file (formalized words.txt)is suited only to the version with manual replacements
 formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
 words_to_patterns = load_dict_from_txt(formalization_file)
 for i in range(2, 10):
@@ -31,7 +30,7 @@ words_to_patterns["one"] = 'T_ONE'
 
 
 
-
+# TODO look inside the implementations of the following methods, maybe some things need to be changed to the version without manual replacements
 def get_formalized_sentence(sentence):
     '''
     same as the one below but only for a sentence
