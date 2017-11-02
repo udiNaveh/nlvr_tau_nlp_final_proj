@@ -110,7 +110,7 @@ select 2	int	set<?>	set<set<?>>
 
 ALL_ITEMS 	0	set<Item>
 
-ALL_BOXES	0	set<set<Item>>	: box tower square grey
+ALL_BOXES	0	set<set<Item>>	: box tower grey
 
 Color.BLUE	0	set<Color>	:	blue
 
