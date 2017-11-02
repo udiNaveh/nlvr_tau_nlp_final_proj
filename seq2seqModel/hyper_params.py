@@ -41,7 +41,7 @@ N_CACHED_PROGRAMS = 10 if USE_CACHED_PROGRAMS else 0
 LOAD_CACHED_PROGRAMS = False
 SAVE_CACHED_PROGRAMS = False
 
-SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
+SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = False
     # if true, the set of logical tokens that can be used in a parogram is reduced to tokens
     # that can relate to the content of the sentence ()
 
@@ -72,12 +72,14 @@ INJECT_TO_BEAM = True and USE_CACHED_PROGRAMS
 
 WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'embeddings_10iters_12dim')
 PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeightsPreTrain', 'trained_variables_sup_with_embeddings.ckpt')
-TRAINED_WEIGHTS_BEST = \
-    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj_with_embeddings.ckpt')
+#TRAINED_WEIGHTS_BEST = \
+#    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj_with_embeddings.ckpt')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
 CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',
                                         'cached_programs_based_on_pretrain')
 NGRAM_PROBS =  os.path.join(definitions.DATA_DIR, 'sentence-processing', 'ngram_logprobs')
+TRAINED_WEIGHTS_BEST = \
+    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_2017-11-02_01_06.ckpt-15')
 
 

@@ -81,8 +81,11 @@ def build_sentence_encoder(vocabulary_size):
     lstm_outputs = tf.concat(outputs,2)[0]    # shape: [max_time, 2 * hidden_layer_size ]
     final_fw = outputs[0][:,-1,:]
     final_bw = outputs[1][:,0,:]
+    e_m = tf.concat((final_fw, final_bw), axis=1)
+    sentence_words_bow = tf.placeholder(tf.float32, [None, len(words_vocabulary)], name="sentence_words_bow")
+    e_m_with_bow = tf.concat([e_m, sentence_words_bow], axis=1)
 
-    return sentence_oh_placeholder, sent_lengths, lstm_outputs, tf.concat((final_fw, final_bw), axis=1)
+    return sentence_oh_placeholder, sent_lengths, sentence_words_bow, lstm_outputs, e_m_with_bow
 
 
 
@@ -97,7 +100,7 @@ def build_decoder(lstm_outputs, final_utterance_embedding):
     num_rows = tf.shape(history_embedding)[0]
     e_m_tiled = tf.tile(final_utterance_embedding, ([num_rows, 1]))
     decoder_input = tf.concat([e_m_tiled, history_embedding], axis=1)
-    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE + HISTORY_EMB_SIZE],
+    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE + HISTORY_EMB_SIZE + len(words_vocabulary)],
                           initializer=tf.contrib.layers.xavier_initializer())
     q_t = tf.nn.relu(tf.matmul(W_q, tf.transpose(decoder_input)))
     W_a = tf.get_variable("W_a", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE],
@@ -177,16 +180,17 @@ def get_gradient_weights_for_programs(beam_rewarded_programs):
     return np.power(q_mml, BETA) / np.sum(np.power(q_mml, BETA))
 
 
-def get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, encoder_output_tensors, learn_embeddings=False):
+def get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, sentence_words_bow, encoder_output_tensors, learn_embeddings=False):
     """
     creates the values needed and feed-dicts that depend on the sentence.
     these feed dicts are used to run or to compute gradients.
     """
 
     sentence_matrix = np.stack([one_hot_dict.get(w, one_hot_dict['<UNK>']) for w in sentence.split()])
+    bow_words = np.reshape(np.sum([words_array == x for x in sentence.split()], axis=0),[1,len(words_vocabulary)])
 
     length = [len(sentence.split())]
-    encoder_feed_dict = {sentence_placeholder: sentence_matrix, sent_lengths_placeholder: length}
+    encoder_feed_dict = {sentence_placeholder: sentence_matrix, sent_lengths_placeholder: length, sentence_words_bow: bow_words}
     sentence_encoder_outputs = sess.run(encoder_output_tensors, feed_dict= encoder_feed_dict)
     decoder_feed_dict = {encoder_output_tensors[i] : sentence_encoder_outputs[i]
                          for i in range(len(encoder_output_tensors))}
@@ -235,7 +239,7 @@ g_1 = tf.Graph()
 # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
 # and returns the lstm outputs.
 
-sentence_placeholder, sent_lengths_placeholder, h, e_m = build_sentence_encoder(vocabulary_size=len(one_hot_dict))
+sentence_placeholder, sent_lengths_placeholder, sentence_words_bow, h, e_m = build_sentence_encoder(vocabulary_size=len(one_hot_dict))
 
 # ff decoder - given the outputs of the encoder, and an embedding of the decoding history,
 # computes a probability distribution over the tokens.
@@ -260,7 +264,7 @@ cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
 
 
 def run_model(sess, dataset, mode, validation_dataset = None, load_params_path = None, save_model_path = None,
-              return_sentences_results=None, beam_classifier=False, beam_classifier_test=False, clf_params_path=None):
+              return_sentences_results=None, beam_classifier=False, beam_classifier_test=False, clf_params_path=None,beam_reranking_train=False):
     """ 
     a method for running the weakly-supervised model
     
@@ -319,6 +323,9 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
     epochs_completed, num_have_pattern, iter, n_samples = 0, 0, 0, 0
     batch_num_in_epoch = 1
     classifier_ran_already = False
+    top_program_by_classifier = 0
+    top_by_classifier_stats = 0
+
 
     # a dictionary for cached programs
     if USE_CACHED_PROGRAMS and LOAD_CACHED_PROGRAMS and mode=='train':
@@ -375,7 +382,7 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
             # This time-consuming operation is executed only once, and doesn't need to be
             # repeated at each step during the beam search.
             encoder_feed_dict, decoder_feed_dict = \
-                get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, (h, e_m), LEARN_EMBEDDINGS)
+                get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, sentence_words_bow, (h, e_m), LEARN_EMBEDDINGS)
 
             # define a method for getting token probabilities, given a partial program and the
             # current state of the nn.
@@ -486,7 +493,7 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
                 top_by_model_stats = top_by_reranking_stats = get_program_execution_stats(
                     ["ERR"], related_samples, logical_tokens_mapping)
 
-            if mode == 'test':
+            if mode == 'test' and not beam_reranking_train:
                 stats_for_all_sentences[sentence_id] = {'top_program_by_reranking' : top_program_by_reranking,
                                                         'top_by_reranking_stats' : top_by_reranking_stats,
                                                         'top_program_by_model' : top_program_by_model,
@@ -499,10 +506,11 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
 
             n_consistent_top_by_model.append(top_by_model_stats.is_consistent)
             n_consistent_top_by_reranking.append(top_by_reranking_stats.is_consistent)
-            n_consistent_top_by_classifier.append(top_by_classifier_stats.is_consistent)
             n_ccorrect_top_by_model.append(top_by_model_stats.n_correct)
             n_correct_top_by_reranking.append(top_by_reranking_stats.n_correct)
-            n_correct_top_by_classifier.append(top_by_classifier_stats.n_correct)
+            if beam_classifier and not beam_reranking_train:
+                n_correct_top_by_classifier.append(top_by_classifier_stats.n_correct)
+                n_consistent_top_by_classifier.append(top_by_classifier_stats.is_consistent)
 
 
 
@@ -696,7 +704,7 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
         for step in range(batch_size):
             sentence = sentences[step]
             encoder_feed_dict, decoder_feed_dict = \
-                get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, (h, e_m), LEARN_EMBEDDINGS_IN_PRETRAIN)
+                get_feed_dicts_from_sentence(sentence, sentence_placeholder,  sent_lengths_placeholder, sentence_words_bow, (h, e_m), LEARN_EMBEDDINGS_IN_PRETRAIN)
 
             next_token_probs_getter = lambda pp :  get_next_token_probs_from_nn(pp, logical_tokens_embeddings_dict,
                                                                                 decoder_feed_dict,
@@ -785,29 +793,34 @@ if __name__ == '__main__':
         with tf.Session() as sess:
             run_model(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
                       load_params_path=weights_from_supervised_pre_training, save_model_path=OUTPUT_WEIGHTS)
-
+        best_weights_so_far = OUTPUT_WEIGHTS
     # running a test on the dev and test datasets, using the weights that achieved the best accuracy and consistency
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
 
-    run_beam_reranking = True
+    run_beam_reranking = False
     beam_reranking_train = False
     if run_beam_reranking:
         beam_classifier_weights_path = os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights' + time_stamp + '.ckpt')
         #tf.reset_default_graph() # set as comment for inference
         with tf.Session() as sess:
             if beam_reranking_train:
+                tf.reset_default_graph()
                 #features, labels = run_model(sess, train_dataset, mode='test',
                             #load_params_path=best_weights_so_far, beam_classifier=True)
-                #pickle.dump(features,open(os.path.join(SEQ2SEQ_DIR,'features_for_beam_reranking'), 'wb'))
-                #pickle.dump(labels, open(os.path.join(SEQ2SEQ_DIR,'labels_for_beam_reranking'), 'wb'))
-                features = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'features_for_beam_reranking'), 'rb'))
-                labels = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'labels_for_beam_reranking'), 'rb'))
+                #pickle.dump(features,open(os.path.join(SEQ2SEQ_DIR,'features_for_beam_reranking'+time_stamp), 'wb'))
+                #pickle.dump(labels, open(os.path.join(SEQ2SEQ_DIR,'labels_for_beam_reranking'+time_stamp), 'wb'))
+                features = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'features_for_beam_reranking2017-11-01_01_27'), 'rb'))
+                labels = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'labels_for_beam_reranking2017-11-01_01_27'), 'rb'))
                 run_beam_classification(sess,features,labels,BEAM_SIZE,save_path=beam_classifier_weights_path)
+                #run_model(sess, test_dataset, mode='test',
+                          #load_params_path=best_weights_so_far, return_sentences_results=True, beam_classifier=True,
+                          #beam_classifier_test=True,
+                          #clf_params_path=beam_classifier_weights_path,beam_reranking_train=True)
             else:
                 run_model(sess, test_dataset, mode='test',
                           load_params_path=best_weights_so_far, return_sentences_results=True,beam_classifier=True,
-                          beam_classifier_test=True, clf_params_path=os.path.join(SEQ2SEQ_DIR,'beamClassificationWeights2017-10-30_21_21.ckpt'))
+                          beam_classifier_test=True, clf_params_path=os.path.join(SEQ2SEQ_DIR,'beamClassificationWeights2017-11-01_09_04.ckpt'))
         exit(0)
 
     dev_results_by_sentence , test_results_by_sentence, test2_results_by_sentence = {},{}, {}

@@ -39,7 +39,10 @@ def run_beam_classification(sess,features,labels,beam_size,save_path=None,infere
 
 
         # loss function
-        theta = tf.trainable_variables()[:6]
+        if inference:
+            theta = tf.trainable_variables()[:6]
+        else:
+            theta = tf.trainable_variables()[-6:]
         saver = tf.train.Saver(theta)
         logits = tf.reshape(logits,(1,beam_size))
         labels_cur = tf.reshape(labels_placeholder,(1,40))

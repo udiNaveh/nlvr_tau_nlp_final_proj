@@ -12,7 +12,8 @@ from general_utils import *
 from seq2seqModel.utils import *
 from seq2seqModel.partial_program import *
 
-words_vocabulary = ["1","one","2","3","4","5","6","7","and","below","big","black","blue","bottom","circle","color","corner","different","edge","each","all","many","same","exactly","only","first","less","least","most","medium","middle","both","more","no","none","not","on","or","right","number","second","shape","size","small","square","stack","third","top","touch","triangle","yellow"]
+#words_vocabulary = ["1","one","2","3","4","5","6","7","and","below","big","black","blue","bottom","circle","color","corner","different","edge","each","all","many","same","exactly","only","first","less","least","most","medium","middle","both","more","no","none","not","on","or","right","number","second","shape","size","small","square","stack","third","top","touch","triangle","yellow"]
+words_vocabulary = ["there","is","a","circle","closely","touch","corner","of","box","are","2","yellow","block","<UNK>","blue","item","at","least","one","tower","with","exactly","3","1","5","black","and","only","square","it","the","wall","triangle","its","side","grey","object","top","not","edge","above","contain","as","4","first","from","base","which","have","over","no","bottom","attach","to","6","color","more","than","on","each","all","different","that","most","right","single","7","same","in","other","another","any","less","big","number","roof","both","where","medium","size","second","or","nearly","line","include","none","stack","together","third","contains","they","multiple","an","every","beneath","many","either","middle","small","height","set","shape","but","between","position","below","lot"]
 tokens_vocabulary = ['OR', 'get_touching', 'le', 'All', 'ge', 'is_big', 'is_square', '5', 'Shape.SQUARE', 'Side.TOP', 'Color.BLUE', 'Color.YELLOW', 'get_below', '3', 'query_shape', '2', 'is_blue', '1', 'get_above', 'AND', 'Shape.TRIANGLE', 'Side.BOTTOM', 'query_color', 'count', 'is_third', 'is_black', 'Side.RIGHT', 'lt', 'and', 'all_same', 'is_touching_corner', 'NOT', 'is_small', '4', 'equal', 'select', 'Shape.CIRCLE', 'is_circle', 'is_top', '6', 'is_bottom', 'Color.BLACK', 'equal_int', '7', 'is_touching_wall', 'is_second', 'gt', 'is_yellow', 'is_triangle', 'query_size', 'is_medium']
 words_array = np.array(words_vocabulary)
 tokens_array = np.array(tokens_vocabulary)
@@ -204,9 +205,9 @@ def sentence_program_relevance_score(sentence, program, words_to_tokens, recurri
 
 def get_features(sentence, program):
     logp = np.array([program.logprob])
-    one_hot_words = np.sum([words_array == x for x in sentence.split()],axis = 0)
-    one_hot_tokens = np.sum([tokens_array == x for x in program.token_seq],axis = 0)
-    all_features = np.concatenate((logp,one_hot_words,one_hot_tokens))
+    bow_words = np.sum([words_array == x for x in sentence.split()],axis = 0)
+    bow_tokens = np.sum([tokens_array == x for x in program.token_seq],axis = 0)
+    all_features = np.concatenate((logp,bow_words,bow_tokens))
 
     return all_features
 
