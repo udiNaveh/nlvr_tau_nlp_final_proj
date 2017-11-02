@@ -14,13 +14,19 @@ from seq2seqModel.partial_program import *
 
 
 
-
-log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
-            'exactly': 'equal_int', 'at least': 'le', 'at most': 'ge', 'triangle': 'triangle',
-            'circle': 'circle', 'square': 'square', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
-            '7': '7', '1': '1', 'one': '1', 'big' : 'big', 'small' : 'small', 'medium' : 'medium',
-            'more than' : 'lt', 'less than' : 'gt', 'on': 'above', 'below': 'below', 'touch' : 'touching'}
-
+if MANUAL_REPLACEMENTS:
+    log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
+                'exactly': 'equal_int', 'at least': 'le', 'at most': 'ge', 'triangle': 'triangle',
+                'circle': 'circle', 'square': 'square', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
+                '7': '7', '1': '1', 'one': '1', 'big' : 'big', 'small' : 'small', 'medium' : 'medium',
+                'more than' : 'lt', 'less than' : 'gt', 'on': 'above', 'below': 'below', 'touch' : 'touching'}
+else:
+    log_dict = {'yellow': 'yellow', 'blue': 'blue', 'black': 'black', 'top': 'top', 'bottom': 'bottom',
+                'exactly': 'equal_int', 'at least': 'le', 'at most': 'ge', 'triangle': 'triangle',
+                'circle': 'circle', 'square': 'square', 'rectangle': 'square', '2': '2', '3': '3', '4': '4', '5': '5',
+                '6': '6', '7': '7', '1': '1', 'one': '1', 'single': '1', 'big': 'big', 'small': 'small', 'medium': 'medium',
+                'more than': 'lt', 'less than': 'gt', 'over': 'above', 'above': 'above', 'on': 'above','below': 'below',
+                'beneath': 'below', 'under': 'below', 'underneath': 'below', 'touch': 'touching', 'attach': 'touching'}
 
 formalization_file = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'formalized words.txt')
 words_to_patterns = load_dict_from_txt(formalization_file)
@@ -28,6 +34,8 @@ for i in range(2, 10):
     words_to_patterns[str(i)] = 'T_INT'
 words_to_patterns["1"] = 'T_ONE'
 words_to_patterns["one"] = 'T_ONE'
+if not MANUAL_REPLACEMENTS:
+    words_to_patterns['a single'] = 'T_ONE'
 
 
 

@@ -1,0 +1,2 @@
+model_checkpoint_path: "C:\\Users\\omergo\\Documents\\master-NLP\\nlvr_tau_nlp_final_proj\\seq2seqModel\\learnedWeights\\new_trained_variables_sup_with_embeddings.ckpt"
+all_model_checkpoint_paths: "C:\\Users\\omergo\\Documents\\master-NLP\\nlvr_tau_nlp_final_proj\\seq2seqModel\\learnedWeights\\new_trained_variables_sup_with_embeddings.ckpt"
