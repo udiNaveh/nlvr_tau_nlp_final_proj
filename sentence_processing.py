@@ -15,8 +15,10 @@ shape_words = ["circle", "triangle", "square"]
 integers = [str(i) for i in range(1,10)]
 integer_words = "one two three four five six seven".split()
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
-MIN_COUNT = 5
-
+if MANUAL_REPLACEMENTS:
+    MIN_COUNT = 5
+else:
+    MIN_COUNT = 3
 
 
 
@@ -142,9 +144,9 @@ def get_sentence_ngram_logprob(sentence, p_dict):
 
 def clean_sentence(sent):
     '''
-    :param sent: a string 
+    :param sent: a string
     :return: a copy of the original sentence, all in lower-case,
-    without punctuation and without redundant whitespaces.  
+    without punctuation and without redundant whitespaces.
     '''
     s = str.lower(sent).strip()
 
@@ -205,7 +207,7 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     """
     :param sentences_dic: dict mapping sentence ids to sentences
     :param mode: 'r' , 'w', or None
-    :param processing_type: the depth of processing used. all processing 
+    :param processing_type: the depth of processing used. all processing
     phases are done sequentially one after the other.
     :return: r
     """
@@ -322,7 +324,6 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     # on the output if this method
 
     return lemmatized_sentences_with_replacements
-
 
 
 

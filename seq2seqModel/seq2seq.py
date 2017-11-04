@@ -837,7 +837,7 @@ if __name__ == '__main__':
 
         train_dataset.restart()
         with tf.Session() as sess:
-            dev_results_by_sentence = run_model(sess, train_dataset, mode='test',
+            train_results_by_sentence = run_model(sess, train_dataset, mode='test',
                                                 load_params_path=weights, return_sentences_results=False)
 
         dev_dataset.restart()

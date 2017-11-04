@@ -14,10 +14,10 @@ class DataSet(Enum):
     TEST2 = 'hidden_test'
 
 
-paths = {   DataSet.TRAIN : definitions.TRAIN_JSON,
-            DataSet.DEV : definitions.DEV_JSON,
-            DataSet.TEST : definitions.TEST_JSON,
-            DataSet.TEST2 : definitions.TEST2_JSON}
+paths = {DataSet.TRAIN: definitions.TRAIN_JSON,
+         DataSet.DEV: definitions.DEV_JSON,
+         DataSet.TEST: definitions.TEST_JSON,
+         DataSet.TEST2: definitions.TEST2_JSON}
 
 
 def read_data(filename):
@@ -33,19 +33,19 @@ def rewrite_data(filename, data, mapping):
         for sample in data:
             s_index = int(str.split(sample["identifier"], "-")[0])
             sample["sentence"] = mapping[s_index]
-            line = json.dump(sample,output_file)
+            line = json.dump(sample, output_file)
             output_file.write('\n')
     return
 
 
-def build_data(data, preprocessing_type = None, use_unk = True):
+def build_data(data, preprocessing_type=None, use_unk=True):
     '''
-    
+
     :param data: a deserialized version of a dataset json file: List[List[List[Dict[str: str]]]]
     :param preprocessing_type: the type of setnece preprocessing to be used
     :param use)unk : whether to replace rare word words <UNK> tokens
-    :return: 
-    samples : a list of Sample objects (see structured_rep.py). Each represents in a convenient, OOP way 
+    :return:
+    samples : a list of Sample objects (see structured_rep.py). Each represents in a convenient, OOP way
     a single line from the data
     sentences : a dictionary that maps sentence ids to the sentences, where each unique sentence appears only once
     '''
@@ -63,8 +63,8 @@ def build_data(data, preprocessing_type = None, use_unk = True):
         sentences = replace_rare_words_with_unk(sentences)
 
     for s in samples:
-       s_index = int(str.split(s.identifier, "-")[0])
-       s.sentence = sentences[s_index]
+        s_index = int(str.split(s.identifier, "-")[0])
+        s.sentence = sentences[s_index]
 
     return samples, sentences
 
@@ -89,7 +89,7 @@ class CNLVRDataSet:
         self.get_data(paths[dataset])
 
     @property
-    def name(self): # i.e. 'TRAIN'
+    def name(self):  # i.e. 'TRAIN'
         return self.__dataset.name
 
     @property
@@ -100,7 +100,7 @@ class CNLVRDataSet:
         samples_ids = ["{0}-{1}".format(sentence_id, i) for i in range(4)]
         return [self.samples[sample_id] for sample_id in samples_ids if sample_id in self.samples]
 
-    def get_sentence_by_id(self, sentence_id, original =False):
+    def get_sentence_by_id(self, sentence_id, original=False):
         if original:
             return self.original_sentences[sentence_id]
         return self.processed_sentences[sentence_id]
@@ -120,13 +120,23 @@ class CNLVRDataSet:
         self.original_sentences = preprocess_sentences(sentences, processing_type='shallow')
 
         if self.__dataset == DataSet.TRAIN:
-            self.processed_sentences = \
-                replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='deep'))
+            if definitions.MANUAL_REPLACEMENTS:
+                self.processed_sentences = \
+                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='deep'))
+            else:
+                self.processed_sentences = \
+                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='lemmatize'))
+
 
         else:
-            self.processed_sentences = \
-                replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='deep'),
-                                            definitions.TOKEN_COUNTS_PROCESSED)
+            if definitions.MANUAL_REPLACEMENTS:
+                self.processed_sentences = \
+                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='deep'),
+                                                definitions.TOKEN_COUNTS_PROCESSED)
+            else:
+                self.processed_sentences = \
+                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='lemmatize'),
+                                                definitions.TOKEN_COUNTS_PROCESSED)
 
         for s in self.samples.values():
             s_index = int(str.split(s.identifier, "-")[0])
@@ -146,7 +156,6 @@ class CNLVRDataSet:
                 new_ids.append(k)
         self.__ids = new_ids
 
-
     def use_subset_by_images_condition(self, f_im):
         """
         limits the dataset to sentences whose related imaes follow some rule
@@ -162,11 +171,11 @@ class CNLVRDataSet:
 
     def ignore_all_true_samples(self):
         """
-        
+
         limits the dataset to sentences that are not true about all their images -
         should help avoid spurious signal (there are about 10% such sentences in the training set)
         """
-        all_true_filter = lambda s_samples : not all([s.label==True for s in s_samples])
+        all_true_filter = lambda s_samples: not all([s.label == True for s in s_samples])
         self.use_subset_by_images_condition(all_true_filter)
 
     def sort_sentences_by_complexity(self, complexity_measure, n_classes):
@@ -176,11 +185,12 @@ class CNLVRDataSet:
         '''
         self.__ids_by_complexity = []
         ids_sorted_by_sentence_length = sorted(self.processed_sentences.keys(), key=
-                                                    lambda key : complexity_measure(self.processed_sentences[key]))
+        lambda key: complexity_measure(self.processed_sentences[key]))
         class_size = len(self.processed_sentences) // n_classes
         for i in range(n_classes):
             self.__ids_by_complexity.append(ids_sorted_by_sentence_length[
-                                            class_size*i : min(class_size*i + class_size, len(self.processed_sentences))])
+                                            class_size * i: min(class_size * i + class_size,
+                                                                len(self.processed_sentences))])
         return
 
     def choose_levels_for_curriculum_learning(self, levels):
@@ -188,24 +198,23 @@ class CNLVRDataSet:
 
     def restart(self):
         '''
-        restart the state of the data set (the is no need to reload it from disk - just call this method) 
+        restart the state of the data set (the is no need to reload it from disk - just call this method)
         '''
         self.__ids = [k for k in self.original_sentences.keys()]
         self._index_in_epoch = 0
         self.epochs_completed = 0
 
-
-    def next_batch(self,batch_size):
+    def next_batch(self, batch_size):
         '''
-        
+
         return the next batch of  (sentence, related samples) pairs.
         also habdles the logic of moving between epochs.
         '''
 
-        if batch_size <= 0 or batch_size> self.num_examples:
+        if batch_size <= 0 or batch_size > self.num_examples:
             raise ValueError("invalid argument for batch size:  {}".format(batch_size))
 
-        if self._index_in_epoch  == 0:
+        if self._index_in_epoch == 0:
             np.random.shuffle(self.__ids)  # shuffle index
 
         start = self._index_in_epoch
@@ -215,13 +224,12 @@ class CNLVRDataSet:
 
         self._index_in_epoch += batch_size
         end = self._index_in_epoch
-        indices = self.__ids[start : end]
+        indices = self.__ids[start: end]
         batch = {k: (self.processed_sentences[k], self.get_samples_by_sentence_id(k)) for k in indices}
 
         if end == self.num_examples:
-            self.epochs_completed +=1
+            self.epochs_completed += 1
             self._index_in_epoch = 0
-
 
         return batch, self._index_in_epoch == 0
 
@@ -240,12 +248,12 @@ class DataSetForSupervised:
         self.get_supervised_data(path)
 
     def get_supervised_data(self, path):
-        sents = pickle.load(open(path,'rb'))
+        sents = pickle.load(open(path, 'rb'))
         self.num_examples = len(sents)
         self.__ids = [x for x in range(len(sents))]
         self.examples = sents
 
-    def next_batch(self,batch_size):
+    def next_batch(self, batch_size):
         start = self._index_in_epoch
         if start == 0:
             np.random.shuffle(self.__ids)  # shuffle index
@@ -253,15 +261,13 @@ class DataSetForSupervised:
         # go to the next batch
         elif start + batch_size > self.num_examples:
             self.epochs_completed += 1
-            self._index_in_epoch=0
-            return  self.next_batch(batch_size)
-
+            self._index_in_epoch = 0
+            return self.next_batch(batch_size)
 
         self._index_in_epoch += batch_size
         end = self._index_in_epoch
-        indices = self.__ids[start : end]
+        indices = self.__ids[start: end]
         return [(self.examples[k][0], self.examples[k][1]) for k in indices]
-
 
 
 def load_functions(filename):
@@ -269,7 +275,7 @@ def load_functions(filename):
     loads from file a dictionary of all valid tokens in the formal language we use.
     each token is is defines by its name, its return types, and its argument types.
     tokens that represent known entities, like ALL_BOXES, or Color.BLUE are treated as
-    functions that take no arguments, and their return type is their own type, i.e. 
+    functions that take no arguments, and their return type is their own type, i.e.
     set<set<Item>>, and set<Color>, rspectively.
     """
     functions_dict = {}
@@ -290,9 +296,10 @@ def load_functions(filename):
                 # should use Warning instead
                 continue
             token, return_type, args_types = entry[0], entry[-1], entry[2:-1]
-            functions_dict[token] = TokenTypes(return_type=return_type, args_types=args_types, necessity= necessary_words)
+            functions_dict[token] = TokenTypes(return_type=return_type, args_types=args_types,
+                                               necessity=necessary_words)
         functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one', 'a'])
-        functions_dict.update({str(i): TokenTypes(return_type='int', args_types=[], necessity=[str(i)]) for i in range(2, 10)})
+        functions_dict.update(
+            {str(i): TokenTypes(return_type='int', args_types=[], necessity=[str(i)]) for i in range(2, 10)})
 
     return functions_dict
-

@@ -151,7 +151,7 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
         elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') not in temp_dict.values():
             temp_dict[exp] = replacement.rstrip() + '_$ '
         elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') in temp_dict.values():
-            temp_dict[exp] = replacement.rstrip() + '_2 '
+            temp_dict[exp] = replacement.rstrip() + '_^ '
     temp_dict = [(k, temp_dict[k]) for k in temp_dict]
 
 
@@ -159,10 +159,12 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
         exp = exp.strip()
         if exp in log_dict: #
             formalized_program = formalized_program.replace(" {} ".format(log_dict[exp]), replacement)
-            formalized_program = formalized_program.replace(str.upper(log_dict[exp]), replacement.strip())
+            if log_dict[exp] is not 'le':
+                formalized_program = formalized_program.replace(str.upper(log_dict[exp]),replacement.strip())
             formalized_program = formalized_program.replace("_{}".format(log_dict[exp]), '_'+replacement.strip())
     formalized_program = formalized_program.strip()
     formalized_program = formalized_program.replace('$', '1')
+    formalized_program = formalized_program.replace('^', '2')
 
     if formalized_program not in matching_cached_patterns:
         matching_cached_patterns[formalized_program] = [0,0]
