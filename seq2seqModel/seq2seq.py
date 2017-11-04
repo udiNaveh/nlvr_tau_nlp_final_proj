@@ -46,8 +46,10 @@ def load_meta_data():
     return  logical_tokens_ids, logical_tokens_mapping, embeddings_dict, one_hot_dict, embeddings_matrix
 
 logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
-words_to_tokens = pickle.load(open(os.path.join(definitions.DATA_DIR, 'logical forms', 'words_to_tokens'), 'rb'))
-
+if definitions.MANUAL_REPLACEMENTS:
+    words_to_tokens = pickle.load(open(os.path.join(definitions.DATA_DIR, 'logical forms', 'words_to_tokens'), 'rb'))
+else:
+    words_to_tokens = pickle.load(open(os.path.join(definitions.DATA_DIR, 'logical forms', 'new_words_to_tokens'), 'rb'))
 
 
 n_logical_tokens = len(logical_tokens_ids)
@@ -234,8 +236,6 @@ def get_feed_dicts_from_program(program, logical_tokens_embeddings_dict, program
 
 
 # build the computaional graph:
-g_1 = tf.Graph()
-#with g_1.as_default():
 # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
 # and returns the lstm outputs.
 
@@ -778,7 +778,11 @@ if __name__ == '__main__':
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
-    #test2_dataset = CNLVRDataSet(DataSet.TEST2)
+
+    run_pre_train = False
+    if run_pre_train:
+        with tf.Session() as sess:
+            run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training)
 
     run_train = False # change to True if you really want to run the whole thing...
 
@@ -825,24 +829,27 @@ if __name__ == '__main__':
 
     dev_results_by_sentence , test_results_by_sentence, test2_results_by_sentence = {},{}, {}
 
-    dev_dataset.restart()
-    with tf.Session() as sess:
-        dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
-                                            load_params_path=best_weights_so_far, return_sentences_results=True)
+    run_test = True
+    if run_test:
+        dev_results_by_sentence, test_results_by_sentence, test2_results_by_sentence = {}, {}, {}
 
-    save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
+        weights = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_2017-11-01_12_21.ckpt-13')
 
-    test_dataset.restart()
-    with tf.Session() as sess:
-        test_results_by_sentence = run_model(sess, test_dataset, mode='test',
-                                            load_params_path=best_weights_so_far, return_sentences_results=True)
+        train_dataset.restart()
+        with tf.Session() as sess:
+            dev_results_by_sentence = run_model(sess, train_dataset, mode='test',
+                                                load_params_path=weights, return_sentences_results=False)
 
-    save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
+        dev_dataset.restart()
+        with tf.Session() as sess:
+            dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
+                                                load_params_path=weights, return_sentences_results=False)
 
-    #test2_dataset.restart()
-    #with tf.Session() as sess:
-    #    test2_results_by_sentence = run_model(sess, test2_dataset, mode='test',
-    #                                        load_params_path=best_weights_so_far, return_sentences_results=True)
+            # save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
 
-    #save_sentences_test_results(test2_results_by_sentence, test2_dataset, SENTENCES_RESULTS_FILE_TEST2)
-
+        # test_dataset.restart()
+        # with tf.Session() as sess:
+        #     test_results_by_sentence = run_model(sess, test_dataset, mode='test',
+        #                                         load_params_path=best_weights_so_far, return_sentences_results=False)
+        #
+        # save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
