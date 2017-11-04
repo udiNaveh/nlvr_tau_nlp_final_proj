@@ -22,7 +22,7 @@ MAX_N_EPOCHS = 20
 BATCH_SIZE_UNSUPERVISED = 8
 BATCH_SIZE_SUPERVISED = 10
 LEARN_EMBEDDINGS = True
-LEARN_EMBEDDINGS_IN_PRETRAIN = True
+LEARN_EMBEDDINGS_IN_PRETRAIN = True #TODO check False
 USE_BOW_HISTORY = False
     # if true, a binary vector representing the tokens outputted so far in the program is concatenated
     # to the history embedding
@@ -30,7 +30,7 @@ USE_BOW_HISTORY = False
 IRRELEVANT_TOKENS_IN_GRAD = True
     # if false, a masking is used so that invalid tokens do not affect the gradient.
 
-AUTOMATIC_TOKENS_IN_GRAD = False
+AUTOMATIC_TOKENS_IN_GRAD = False #TODO what is that?
     # if false, tokens that are added automatically to a program (when they are the only valid options,
     # are not used when taking the gradient.
 
@@ -41,7 +41,7 @@ N_CACHED_PROGRAMS = 10 if USE_CACHED_PROGRAMS else 0
 LOAD_CACHED_PROGRAMS = False
 SAVE_CACHED_PROGRAMS = False
 
-SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
+SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = False
     # if true, the set of logical tokens that can be used in a parogram is reduced to tokens
     # that can relate to the content of the sentence ()
 

@@ -779,12 +779,23 @@ if __name__ == '__main__':
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
 
-    run_pre_train = False
+    run_pre_train = True
     if run_pre_train:
+        # run supervised pre-training
         with tf.Session() as sess:
             run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training)
+        # evaluate supervised pre-training
+        dev_dataset.restart()
+        with tf.Session() as sess:
+            dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
+                                                load_params_path=weights_from_supervised_pre_training, return_sentences_results=False)
 
-    run_train = False # change to True if you really want to run the whole thing...
+        test_dataset.restart()
+        with tf.Session() as sess:
+            test_results_by_sentence = run_model(sess, test_dataset, mode='test',
+                                                 load_params_path=weights_from_supervised_pre_training, return_sentences_results=False)
+
+    run_train = True # change to True if you really want to run the whole thing...
 
     if run_train:
         # training the weakly supervised model with weights initialized to the values learned in the supervises learning.
@@ -797,7 +808,7 @@ if __name__ == '__main__':
         with tf.Session() as sess:
             run_model(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
                       load_params_path=weights_from_supervised_pre_training, save_model_path=OUTPUT_WEIGHTS)
-        best_weights_so_far = OUTPUT_WEIGHTS
+            best_weights_so_far = OUTPUT_WEIGHTS + '-' + str(MAX_N_EPOCHS)
     # running a test on the dev and test datasets, using the weights that achieved the best accuracy and consistency
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
@@ -833,23 +844,23 @@ if __name__ == '__main__':
     if run_test:
         dev_results_by_sentence, test_results_by_sentence, test2_results_by_sentence = {}, {}, {}
 
-        weights = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_2017-11-01_12_21.ckpt-13')
+        #weights = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_2017-11-01_12_21.ckpt-13')
 
-        train_dataset.restart()
-        with tf.Session() as sess:
-            train_results_by_sentence = run_model(sess, train_dataset, mode='test',
-                                                load_params_path=weights, return_sentences_results=False)
+        #train_dataset.restart()
+        #with tf.Session() as sess:
+        #    train_results_by_sentence = run_model(sess, train_dataset, mode='test',
+        #                                        load_params_path=weights, return_sentences_results=False)
 
         dev_dataset.restart()
         with tf.Session() as sess:
             dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
-                                                load_params_path=weights, return_sentences_results=False)
+                                                load_params_path=best_weights_so_far, return_sentences_results=False)
 
             # save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
 
-        # test_dataset.restart()
-        # with tf.Session() as sess:
-        #     test_results_by_sentence = run_model(sess, test_dataset, mode='test',
-        #                                         load_params_path=best_weights_so_far, return_sentences_results=False)
-        #
+        test_dataset.restart()
+        with tf.Session() as sess:
+             test_results_by_sentence = run_model(sess, test_dataset, mode='test',
+                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
+
         # save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
