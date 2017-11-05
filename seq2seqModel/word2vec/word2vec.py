@@ -8,9 +8,9 @@ from data_manager import *
 
 
 # sents_path = None
-EMBED_DIM = 8
+EMBED_DIM = 20
 LR = 0.1
-ITERNUM = 3
+ITERNUM = 10
 
 # def create_dict_from_path(sents_path):
 #     words_list = []
@@ -94,8 +94,6 @@ def word2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR)
     z = tf.matmul(h, Wout)
     # yt = tf.placeholder(tf.float32, [None, len(words_list)])
     yt = tf.placeholder(tf.int32, [1,])
-    print(yt)
-    print(z)
 
     # yaxol lihiyot shehu mecape levector im indexim velo le-one-hot-im
     loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=yt, logits=z)
@@ -154,11 +152,9 @@ def word2vec_form_path(trainpath, savepath, embed_dim = EMBED_DIM, iternum = ITE
     embed_dict = word2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR)
     return embed_dict
 
-#train = definitions.TRAIN_JSON
-
-#embed_dict = word2vec_form_path(train, 'word_embeddings')
-train = definitions.TRAIN_JSON
-data = read_data(train)
-samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
-sents_to_parse = sents_dict.values()
-embed_dict = word2vec(sents_to_parse,'word_embeddings')
+if __name__=='__main__':
+    train = definitions.TRAIN_JSON
+    data = read_data(train)
+    samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
+    sents_to_parse = sents_dict.values()
+    embed_dict = word2vec(sents_to_parse,'new_word_embeddings_20dim_unk3')
