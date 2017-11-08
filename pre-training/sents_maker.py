@@ -16,11 +16,11 @@ from sentence_processing import *
 
 
 PARSED_FORMS_PATH = os.path.join(definitions.ROOT_DIR, 'pre-training', 'temp_sents_new')
-WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
-
-embeddings_file = open(WORD_EMBEDDINGS_PATH, 'rb')
-embeddings_dict = pickle.load(embeddings_file)
-embeddings_file.close()
+# WORD_EMBEDDINGS_PATH = os.path.join(definitions.ROOT_DIR, 'word2vec', 'embeddings_10iters_12dim')
+#
+# embeddings_file = open(WORD_EMBEDDINGS_PATH, 'rb')
+# embeddings_dict = pickle.load(embeddings_file)
+# embeddings_file.close()
 
 
 colors = ['yellow', 'blue', 'black']
@@ -173,5 +173,87 @@ def get_sentences_formalized(sentences):
         dict[str(i)] = 'T_INT'
     dict["1"] = 'T_ONE'
     dict["one"] = 'T_ONE'
+    dict["a single"] = 'T_ONE'
     formalized_sentences =  replace_words_by_dictionary(sentences, dict)
     return formalized_sentences
+
+def replaced(s, dict):
+    s = ' '+s+' '
+    for item in dict:
+        newitem = ' '+item+' '
+        value = ' '+dict[item]+' '
+        s = s.replace(newitem, value)
+    s = s.strip()
+    return s
+
+def get_new_patterns():
+    train = definitions.TRAIN_JSON
+    data = read_data(train)
+    samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
+    formalized_sentences = get_sentences_formalized(sents_dict)
+    patterns_counter = {}
+    for key in formalized_sentences:
+        sent = formalized_sentences[key]
+        if sent not in patterns_counter:
+            patterns_counter[sent] = 1
+        else:
+            patterns_counter[sent] += 1
+    return patterns_counter
+
+def create_new_patterns_dict():
+    patterns_counter = get_new_patterns()
+    old_patterns_dict = load_forms(definitions.DATA_DIR + r'\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt')
+    replacements_dict = load_dict_from_txt(SYNONYMS_PATH)
+    new_patterns_dict = {}
+    for pattern in patterns_counter:
+        replaced_pattern = replaced(pattern, replacements_dict)
+        if replaced_pattern in old_patterns_dict:
+            new_patterns_dict[pattern] = (patterns_counter[pattern], old_patterns_dict[replaced_pattern][1])
+    for pattern in old_patterns_dict:
+        if pattern not in new_patterns_dict:
+            new_patterns_dict[pattern] = old_patterns_dict[pattern]
+    return new_patterns_dict
+
+
+if __name__ == '__main__':
+    path = r'C:\Users\omergo\Documents\master-NLP\nlvr_tau_nlp_final_proj\data\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt'
+    newpath = r'C:\Users\omergo\Documents\master-NLP\nlvr_tau_nlp_final_proj\data\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
+    old_dict = load_forms(path)
+    new_dict = load_forms(newpath)
+
+    # newpath = r'C:\Users\omergo\Documents\master-NLP\nlvr_tau_nlp_final_proj\data\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
+    # with open(newpath, 'w') as f:
+    #     for item in new_dict:
+    #         tup = new_dict[item]
+    #         f.write('\n@ ' + item + ' $ ' + str(tup[0]) + '\n')
+    #         for prog in tup[1]:
+    #             f.write('~ ' + prog + '\n')
+
+    train = definitions.TRAIN_JSON
+    data = read_data(train)
+    _, new_sents_dict = build_data(data, preprocessing_type='lemmatize')
+    _, sents_dict = build_data(data, preprocessing_type='deep')
+
+    old_include = 0
+    for sent in sents_dict.values():
+        tempdict = {'1': sent}
+        formalized_sent = get_sentences_formalized(tempdict)['1']
+        if formalized_sent in old_dict:
+            old_include += 1
+
+    new_include = 0
+    for sent in new_sents_dict.values():
+        tempdict = {'1': sent}
+        formalized_sent = get_sentences_formalized(tempdict)['1']
+        if formalized_sent in new_dict:
+            new_include += 1
+
+
+    print('old:', old_include, 'out of: ', len(sents_dict))
+    print('new:', new_include, 'out of: ', len(new_sents_dict))
+
+
+
+
+
+

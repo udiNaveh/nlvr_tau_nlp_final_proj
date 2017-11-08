@@ -2,7 +2,8 @@
 This module contains the TensorFlow model itself, as well as the logic for training and testing
 it in strongly supervised and weakly supervised frameworks.
 """
-
+import sys
+sys.path.append('../')
 import tensorflow as tf
 from tensorflow.contrib.rnn import BasicLSTMCell
 import pickle
@@ -558,7 +559,7 @@ def run_model(sess, dataset, mode, validation_dataset = None, load_params_path =
                         for param_name in ['EPSILON_FOR_BEAM_SEARCH', 'BETA', 'SKIP_AUTO_TOKENS', 'N_CACHED_PROGRAMS',
                                            'INJECT_TO_BEAM',
                                             'SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH',
-                                           'AVOID_ALL_TRUE_SENTENCES']:
+                                           'AVOID_ALL_TRUE_SENTENCES','definitions.MANUAL_REPLACEMENTS']:
                             print ("{0} : {1}".format(param_name, eval(param_name)))
                     print("stats for this epoch:")
 
@@ -757,11 +758,13 @@ def run_supervised_training(sess, load_params_path = None, save_params_path = No
 if __name__ == '__main__':
 
     orig_stdout = sys.stdout
+    time_stamp = time.strftime("%Y-%m-%d_%H_%M")
     #with tf.Session() as sess:
     #    run_supervised_training(sess,save_params_path=PRE_TRAINED_WEIGHTS)
-    weights_from_supervised_pre_training = PRE_TRAINED_WEIGHTS
+    #weights_from_supervised_pre_training = PRE_TRAINED_WEIGHTS
+    weights_from_supervised_pre_training = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsPreTrain', 'weights_' + time_stamp + '.ckpt')
     best_weights_so_far = TRAINED_WEIGHTS_BEST
-    time_stamp = time.strftime("%Y-%m-%d_%H_%M")
+    
     OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_' + time_stamp + '.ckpt')
     STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'running logs', 'stats_' + time_stamp + '.txt')
     SENTENCES_RESULTS_FILE_DEV = os.path.join(SEQ2SEQ_DIR,
@@ -783,7 +786,7 @@ if __name__ == '__main__':
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
-            run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training)
+            run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training, num_epochs=7)
         # evaluate supervised pre-training
         dev_dataset.restart()
         with tf.Session() as sess:
@@ -794,7 +797,10 @@ if __name__ == '__main__':
         with tf.Session() as sess:
             test_results_by_sentence = run_model(sess, test_dataset, mode='test',
                                                  load_params_path=weights_from_supervised_pre_training, return_sentences_results=False)
-
+	
+        with tf.Session() as sess:
+            train_results_by_sentence = run_model(sess, train_dataset, mode='test',
+                                                 load_params_path=weights_from_supervised_pre_training, return_sentences_results=False)
     run_train = True # change to True if you really want to run the whole thing...
 
     if run_train:
@@ -856,7 +862,7 @@ if __name__ == '__main__':
             dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
 
-            # save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
+        # save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
 
         test_dataset.restart()
         with tf.Session() as sess:
