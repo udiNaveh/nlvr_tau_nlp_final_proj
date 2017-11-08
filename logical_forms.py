@@ -438,15 +438,23 @@ def execute(program_tokens, image, logical_tokens_inventory, sentence =''):
     :param sentence [optional]: the sentence from which program_tokens was pares
     :return: 
     """
-
+    import sys
     logical_form = process_token_sequence(program_tokens, logical_tokens_inventory)
-    try:
-        result = run_logical_form(logical_form,image)
-    except (TypeError, SyntaxError, ValueError, AttributeError,
-                RuntimeError, RecursionError, Exception, NotImplementedError) as err:
-        result = None
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
+        try:
+            result = run_logical_form(logical_form,image)
+        except (TypeError, SyntaxError, ValueError, AttributeError,
+                    RuntimeError, RecursionError, Exception, NotImplementedError) as err:
+            result = None
+        return result
+    else:
+        try:
+            result = run_logical_form(logical_form,image)
+        except (TypeError, SyntaxError, ValueError, AttributeError,
+                    RuntimeError, Exception, NotImplementedError) as err:
+            result = None
 
-    return result
+        return result
 
 
 TokenTypes = namedtuple('TokenTypes', ['return_type', 'args_types', 'necessity'])

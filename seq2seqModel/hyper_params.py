@@ -17,12 +17,12 @@ HISTORY_LENGTH = 4
 LEARNING_RATE = 0.001
 BETA = 0.5
 EPSILON_FOR_BEAM_SEARCH = 0
-MAX_N_EPOCHS = 20
+MAX_N_EPOCHS = 15
 
 BATCH_SIZE_UNSUPERVISED = 8
 BATCH_SIZE_SUPERVISED = 10
 LEARN_EMBEDDINGS = True
-LEARN_EMBEDDINGS_IN_PRETRAIN = True #TODO check False
+LEARN_EMBEDDINGS_IN_PRETRAIN = False #TODO check False
 USE_BOW_HISTORY = False
     # if true, a binary vector representing the tokens outputted so far in the program is concatenated
     # to the history embedding
@@ -41,7 +41,7 @@ N_CACHED_PROGRAMS = 10 if USE_CACHED_PROGRAMS else 0
 LOAD_CACHED_PROGRAMS = False
 SAVE_CACHED_PROGRAMS = False
 
-SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = False
+SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
     # if true, the set of logical tokens that can be used in a parogram is reduced to tokens
     # that can relate to the content of the sentence ()
 
