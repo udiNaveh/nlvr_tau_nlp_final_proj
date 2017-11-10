@@ -1,0 +1,13 @@
+### this dictionary specify a dictionary of words that are mapped to their 'synonyms'
+### in the context of the CNLVR data set sentences.
+### This were chosen manually from the tokens left after spellpfoofing and lemmatization.
+
+but : and
+an : a
+contains : contain
+beneath : below
+multiple : many
+attach with : touch
+single : 1
+a single : 1
+attach : touch

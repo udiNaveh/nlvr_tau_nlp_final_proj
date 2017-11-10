@@ -21,6 +21,7 @@ MAX_N_EPOCHS = 20
 
 BATCH_SIZE_UNSUPERVISED = 8
 BATCH_SIZE_SUPERVISED = 10
+WORD_EMBEDDINGS_CBOW = True    # notice: if this and the next 2 are all false, the word embeddings will stay random
 LEARN_EMBEDDINGS = True
 LEARN_EMBEDDINGS_IN_PRETRAIN = True #TODO check False
 USE_BOW_HISTORY = False
@@ -71,10 +72,13 @@ INJECT_TO_BEAM = True and USE_CACHED_PROGRAMS
 
 if definitions.MANUAL_REPLACEMENTS:
     WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'embeddings_10iters_12dim')
-    PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeightsPreTrain', 'trained_variables_sup_with_embeddings.ckpt')
+    PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeightsPreTrain', 'temp_trained_variables.ckpt')
+elif definitions.SEMI_MANUAL_REPLACEMENTS:
+    WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'temp_embeddings_10iters_12dim_unk3')
+    PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'temp_trained_variables.ckpt')
 else:
     WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'new_embeddings_10iters_12dim_unk3')
-    PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_trained_variables_sup_with_embeddings.ckpt')
+    PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_trained_variables_sup_with_embeddings.ckpt.ckpt')
 
 TRAINED_WEIGHTS_BEST = \
     os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj_with_embeddings.ckpt')

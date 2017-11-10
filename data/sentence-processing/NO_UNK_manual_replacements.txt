@@ -1,0 +1,23 @@
+### this dictionary specify a dictionary of words that are mapped to their 'synonyms'
+### in the context of the CNLVR data set sentences.
+### This were chosen manually from the tokens left after spellpfoofing and lemmatization.
+
+attach to : touch
+but : and
+an : a
+contains : contain
+on top of : on
+object : item
+multiple : many
+over : on
+any : a
+block : item
+wall : edge
+attach with : touch
+base: bottom
+above : on
+single : 1
+a single : 1
+grey square : box
+attach : touch
+grey box : box

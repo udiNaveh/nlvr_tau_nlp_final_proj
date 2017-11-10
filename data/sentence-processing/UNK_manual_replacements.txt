@@ -1,0 +1,22 @@
+### this dictionary specify a dictionary of words that are mapped to their 'synonyms'
+### in the context of the CNLVR data set sentences.
+### This were chosen manually from the tokens left after spellpfoofing and lemmatization.
+
+just : only
+nearly : closely
+a lot of : many
+line : edge
+under : below
+first : bottom
+kind : shape
+beneath : below
+rectangle : square
+count : number
+some : many
+underneath : below
+almost : closely
+without : with no
+roof : top wall
+type : shape
+every : each
+lower : bottom

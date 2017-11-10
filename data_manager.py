@@ -120,7 +120,7 @@ class CNLVRDataSet:
         self.original_sentences = preprocess_sentences(sentences, processing_type='shallow')
 
         if self.__dataset == DataSet.TRAIN:
-            if definitions.MANUAL_REPLACEMENTS:
+            if definitions.MANUAL_REPLACEMENTS or definitions.SEMI_MANUAL_REPLACEMENTS:
                 self.processed_sentences = \
                     replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='deep'))
             else:
@@ -129,7 +129,7 @@ class CNLVRDataSet:
 
 
         else:
-            if definitions.MANUAL_REPLACEMENTS:
+            if definitions.MANUAL_REPLACEMENTS or definitions.SEMI_MANUAL_REPLACEMENTS:
                 self.processed_sentences = \
                     replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='deep'),
                                                 definitions.TOKEN_COUNTS_PROCESSED)

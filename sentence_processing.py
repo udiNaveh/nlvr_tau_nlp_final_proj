@@ -19,7 +19,7 @@ if MANUAL_REPLACEMENTS:
     MIN_COUNT = 5
 else:
     MIN_COUNT = 3
-
+MIN_COUNT = 5
 
 
 def load_vocabulary(filename):

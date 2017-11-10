@@ -64,8 +64,12 @@ def build_sentence_encoder(vocabulary_size):
     that are called from other methods
     """
     sentence_oh_placeholder = tf.placeholder(shape=[None, vocabulary_size], dtype=tf.float32, name="sentence_placeholder")
-    word_embeddings_matrix = tf.get_variable("W_we", #shape=[vocabulary_size, WORD_EMB_SIZE]
-                                             initializer=tf.constant(embeddings_matrix, dtype=tf.float32))
+    if WORD_EMBEDDINGS_CBOW:
+        word_embeddings_matrix = tf.get_variable("W_we", #shape=[vocabulary_size, WORD_EMB_SIZE]
+                                                 initializer=tf.constant(embeddings_matrix, dtype=tf.float32))
+    else:
+        word_embeddings_matrix = tf.get_variable("W_we", #shape=[vocabulary_size, WORD_EMB_SIZE]
+                                                 shape = embeddings_matrix.shape ,initializer=tf.random_uniform_initializer(0, 1))
     sentence_embedded = tf.expand_dims(tf.matmul(sentence_oh_placeholder, word_embeddings_matrix), 0)
     # placeholders for sentence and it's length
     sent_lengths = tf.placeholder(dtype = tf.int32,name = "sent_length_placeholder")
@@ -779,21 +783,28 @@ if __name__ == '__main__':
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
 
-    run_pre_train = True
+    run_pre_train = False
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
-            run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training)
+            run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training, num_epochs = 15)
+
         # evaluate supervised pre-training
         dev_dataset.restart()
         with tf.Session() as sess:
             dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
                                                 load_params_path=weights_from_supervised_pre_training, return_sentences_results=False)
-
-        test_dataset.restart()
+        train_dataset.restart()
         with tf.Session() as sess:
-            test_results_by_sentence = run_model(sess, test_dataset, mode='test',
-                                                 load_params_path=weights_from_supervised_pre_training, return_sentences_results=False)
+            train_results_by_sentence = run_model(sess, train_dataset, mode='test',
+                                                  load_params_path=weights_from_supervised_pre_training,
+                                                  return_sentences_results=False)
+
+
+                # test_dataset.restart()
+        # with tf.Session() as sess:
+        #     test_results_by_sentence = run_model(sess, test_dataset, mode='test',
+        #                                          load_params_path=weights_from_supervised_pre_training, return_sentences_results=False)
 
     run_train = True # change to True if you really want to run the whole thing...
 
@@ -858,9 +869,9 @@ if __name__ == '__main__':
 
             # save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
 
-        test_dataset.restart()
-        with tf.Session() as sess:
-             test_results_by_sentence = run_model(sess, test_dataset, mode='test',
-                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
+        # test_dataset.restart()
+        # with tf.Session() as sess:
+        #      test_results_by_sentence = run_model(sess, test_dataset, mode='test',
+        #                                          load_params_path=best_weights_so_far, return_sentences_results=False)
 
         # save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)

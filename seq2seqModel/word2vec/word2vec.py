@@ -5,12 +5,13 @@ import json
 import pickle
 import definitions
 from data_manager import *
-
+from seq2seqModel.hyper_params import *
 
 # sents_path = None
-EMBED_DIM = 20
+EMBED_DIM = 12
 LR = 0.1
 ITERNUM = 10
+WIN_SIZE = 4
 
 # def create_dict_from_path(sents_path):
 #     words_list = []
@@ -61,18 +62,64 @@ def convert_words_to_indices(sents, words_list):
     return newsents
 
 
-def get_env(k, sent):
-    if k == 0:
-        env = [sent[1], sent[2]]
-    elif k == 1:
-        env = [sent[0], sent[2], sent[3]]
-    elif k == len(sent) - 1:
-        env = [sent[k - 2], sent[k - 1]]
-    elif k == len(sent) - 2:
-        env = [sent[k - 2], sent[k - 1], sent[k + 1]]
-    else:
-        env = [sent[k - 2], sent[k - 1], sent[k + 1], sent[k + 2]]
+# def get_env(k, sent):     # that's for window size 4
+#     if k == 0:
+#         env = [sent[1], sent[2]]
+#     elif k == 1:
+#         env = [sent[0], sent[2], sent[3]]
+#     elif k == len(sent) - 1:
+#         env = [sent[k - 2], sent[k - 1]]
+#     elif k == len(sent) - 2:
+#         env = [sent[k - 2], sent[k - 1], sent[k + 1]]
+#     else:
+#         env = [sent[k - 2], sent[k - 1], sent[k + 1], sent[k + 2]]
+#     return env
+
+def get_env(k, sent, window_size = WIN_SIZE):       # that's for window size 8
+    try:
+        one_before = sent[k - 1]
+    except:
+        one_before = None
+    try:
+        two_before = sent[k - 2]
+    except:
+        two_before = None
+    try:
+        three_before = sent[k - 3]
+    except:
+        three_before = None
+    try:
+        four_before = sent[k - 4]
+    except:
+        four_before = None
+    try:
+        one_after = sent[k + 1]
+    except:
+        one_after = None
+    try:
+        two_after = sent[k + 2]
+    except:
+        two_after = None
+    try:
+        three_after = sent[k + 3]
+    except:
+        three_after = None
+    try:
+        four_after = sent[k + 4]
+    except:
+        four_after = None
+
+    if window_size == 8:
+        env = [four_before, three_before, two_before, one_before, one_after, two_after, three_after, four_after]
+    if window_size == 6:
+        env = [three_before, two_before, one_before, one_after, two_after, three_after]
+    elif window_size == 4:
+        env = [two_before, one_before, one_after, two_after]
+    elif window_size == 2:
+        env = [one_before, one_after]
+
     return env
+
 
 def word2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
     # takes a **list of sentences** and hyper-parameters
@@ -98,7 +145,7 @@ def word2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR)
     # yaxol lihiyot shehu mecape levector im indexim velo le-one-hot-im
     loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=yt, logits=z)
 
-    opt = tf.train.GradientDescentOptimizer(lr).minimize(loss)
+    opt = tf.train.AdamOptimizer(lr).minimize(loss)
 
     newsents = convert_words_to_indices(sents, words_list)
 
@@ -115,6 +162,8 @@ def word2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR)
                     env = get_env(k, currsent)
                     envvec = np.zeros((len(words_list),))
                     for l in env:
+                        if l is None:
+                            continue
                         onevec = index_to_one_hot(l, words_list)
                         envvec = np.add(envvec, onevec)
                     # envvec = np.add([index_to_one_hot(l, words_list) for l in env])
@@ -127,11 +176,12 @@ def word2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR)
     for i, embed in enumerate(embeds):
         embed_dict[words_list[i]] = embed
 
-    file = open(savepath,'wb')
-    pickle.dump(embed_dict,file)
-    file.close()
+    if savepath:
+        file = open(savepath,'wb')
+        pickle.dump(embed_dict,file)
+        file.close()
 
-    return embed_dict
+    return embed_dict, embeds
 
 def word2vec_form_path(trainpath, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR):
     # takes a **path of train data** (in the form of train.json) and hyper-parameters
@@ -152,9 +202,40 @@ def word2vec_form_path(trainpath, savepath, embed_dim = EMBED_DIM, iternum = ITE
     embed_dict = word2vec(sents, savepath, embed_dim = EMBED_DIM, iternum = ITERNUM, lr = LR)
     return embed_dict
 
+from sklearn.neighbors import KNeighborsClassifier
+def check_word2vec(embed_dict, embeds, key_words = ['base', 'bottom', 'item', 'object', 'block', 'box', 'tower', 'edge', 'wall']):
+
+    KN = KNeighborsClassifier(n_neighbors=5)
+
+    KN.fit(embeds, [1]*len(embeds))
+    inds = KN.kneighbors(embeds, return_distance=False)
+    # print(inds)
+
+    embeds_list = embeds.tolist()
+    for word in key_words:
+        req_words = []
+        ind = embeds_list.index(embed_dict[word].tolist())
+        req_inds = inds[ind]
+        for idx in req_inds:
+            for w in embed_dict:
+                if (embed_dict[w] == embeds[idx]).all()==True:
+                    req_words.append(w)
+        print('for:', word, ', the 4nn are:', req_words)
+
 if __name__=='__main__':
     train = definitions.TRAIN_JSON
     data = read_data(train)
-    samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
+    samples, sents_dict = build_data(data, preprocessing_type='deep')
     sents_to_parse = sents_dict.values()
-    embed_dict = word2vec(sents_to_parse,'new_word_embeddings_20dim_unk3')
+    embed_dict, embeds = word2vec(sents_to_parse, WORD_EMBEDDINGS_PATH)
+
+
+
+    # pickle.dump((embed_dict, embeds), open('temp_pickle', 'wb'))
+    #
+    # embed_dict, embeds = pickle.load(open('temp_pickle', 'rb'))
+    # keys = ['nearly', 'closely', 'attach', 'touch', 'base', 'bottom', 'item', 'object', 'block', 'box', 'tower', 'grey',
+    #         'edge', 'wall', 'line', 'roof', 'but', 'and', 'a','any', 'an', 'below', 'beneath', 'multiple', 'many',
+    #         'over', 'on', 'above', 'single', '1', 'every', 'each',
+    #         'contain', 'contains']
+    # check_word2vec(embed_dict, embeds, key_words= keys)
