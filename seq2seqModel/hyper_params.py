@@ -5,6 +5,7 @@ import definitions
 ###hyperparameters
 ####
 
+
 #dimensions
 WORD_EMB_SIZE = 12
 LOG_TOKEN_EMB_SIZE = 12
@@ -41,9 +42,6 @@ N_CACHED_PROGRAMS = 10 if USE_CACHED_PROGRAMS else 0
 LOAD_CACHED_PROGRAMS = False
 SAVE_CACHED_PROGRAMS = False
 
-SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
-    # if true, the set of logical tokens that can be used in a parogram is reduced to tokens
-    # that can relate to the content of the sentence ()
 
 AVOID_ALL_TRUE_SENTENCES = False
     # if true, the data set of the trainning will incluse only sentences that have also images labeles false.
@@ -64,8 +62,12 @@ SKIP_AUTO_TOKENS = True
 INJECT_TO_BEAM = True and USE_CACHED_PROGRAMS
     # if true, the prefixes of suggested cached programs are injected to the beam at each step, if not in th beam already.
 
-
-
+if definitions.version1:
+    SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = False
+    # if true, the set of logical tokens that can be used in a parogram is reduced to tokens
+    # that can relate to the content of the sentence ()
+else:
+    SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
 
 #paths
 

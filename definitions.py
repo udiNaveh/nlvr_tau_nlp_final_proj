@@ -10,6 +10,9 @@ DEV_JSON = os.path.join(NLVR_DATA, 'dev', 'dev.json')
 TEST_JSON = os.path.join(NLVR_DATA, 'test', 'test.json')
 
 TEST2_JSON = '' # '' # ADD THE PATH TO THE HIDDEN TEST JSON HERE
+version1 = True
+## PLEASE RUN ONCE WITH TRUE AND ONCE WITH FALSE ##
+TEST2_JSON = TEST_JSON
 
 TRAIN_IMAGES = os.path.join(NLVR_DATA, 'train', 'images')
 DEV_IMAGES = os.path.join(NLVR_DATA, 'dev', 'images')
@@ -22,8 +25,11 @@ TOKEN_COUNTS_PROCESSED = os.path.join(DATA_DIR, 'sentence-processing', 'tokens_p
 BIGRAM_COUNTS_PROCESSED = os.path.join(DATA_DIR, 'sentence-processing', 'bigrams_processed.txt')
 
 
+if version1:
+    MANUAL_REPLACEMENTS = False
+else:
+    MANUAL_REPLACEMENTS = True
 
-MANUAL_REPLACEMENTS = False
 if MANUAL_REPLACEMENTS:
     SUPERVISED_TRAIN_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'pairs_train_final')
     SUPERVISED_TRAIN_PICKLE_3 = os.path.join(DATA_DIR, 'parsed sentences', 'pairs_train_3')
