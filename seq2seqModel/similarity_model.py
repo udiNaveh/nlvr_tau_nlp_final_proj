@@ -10,7 +10,6 @@ from tensorflow.contrib.rnn import BasicLSTMCell
 import pickle
 import numpy as np
 import os
-import sys
 import time
 import definitions
 from seq2seqModel.utils import *
@@ -162,7 +161,7 @@ def get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_pl
     return encoder_feed_dict, decoder_feed_dict
 
 
-def get_feed_dicts_from_program(program, logical_tokens_embeddings_dict, program_dependent_placeholders,
+def get_feed_dicts_from_program(program, logical_tokens_embeddings_dict, program_dependent_placeholders, label,
                                 skipped_indices=[]):
     """
     creates the values needed and feed-dicts that depend on the program. (these include the history embeddings
@@ -190,7 +189,8 @@ def get_feed_dicts_from_program(program, logical_tokens_embeddings_dict, program
     histories_stacked = np.squeeze(np.stack(histories), axis=1)
     return {
         program_dependent_placeholders[0]: histories_stacked,
-        program_dependent_placeholders[1]: one_hot_stacked
+        program_dependent_placeholders[1]: one_hot_stacked,
+        labels_placeholder: label
     }
 
 
@@ -251,7 +251,7 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
     if load_params_path:
         tf.train.Saver(var_list=theta).restore(sess, load_params_path)
     if save_model_path:
-        saver2 = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
+        saver = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
 
     # initialize gradient buffers to zero
     gradList = sess.run(theta)
@@ -294,7 +294,7 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
                                              sentence_words_bow, (h, e_m), LEARN_EMBEDDINGS)
 
             program_dependent_feed_dict = get_feed_dicts_from_program(
-                program, logical_tokens_embeddings_dict, program_dependent_placeholders)
+                program, logical_tokens_embeddings_dict, program_dependent_placeholders, label)
             program_grad, ce = sess.run([compute_program_grads,loss], feed_dict=union_dicts(encoder_feed_dict, program_dependent_feed_dict))
             for i, grad in enumerate(program_grad):
                 gradBuffer[i] += grad[0]
@@ -308,8 +308,8 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
                     gradBuffer[i] = gradBuffer[i] * 0
                 sum_loss = 0
                 total = 0
-
-
+    time_stamp = time.strftime("%Y-%m-%d_%H_%M")
+    saver.save(sess,open('beamClassificationWeights'+time_stamp+'.ckpt','wb'))
 
     return {}
 
