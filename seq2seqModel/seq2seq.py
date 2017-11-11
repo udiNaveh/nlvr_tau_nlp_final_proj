@@ -761,9 +761,9 @@ if __name__ == '__main__':
     time_stamp = time.strftime("%Y-%m-%d_%H_%M")
     #with tf.Session() as sess:
     #    run_supervised_training(sess,save_params_path=PRE_TRAINED_WEIGHTS)
-    #weights_from_supervised_pre_training = PRE_TRAINED_WEIGHTS
-    weights_from_supervised_pre_training = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsPreTrain', 'weights_' + time_stamp + '.ckpt')
-    best_weights_so_far = TRAINED_WEIGHTS_BEST
+    weights_from_supervised_pre_training = PRE_TRAINED_WEIGHTS
+    #weights_from_supervised_pre_training = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsPreTrain', 'weights_' + time_stamp + '.ckpt')
+    #best_weights_so_far = TRAINED_WEIGHTS_BEST
     
     OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_' + time_stamp + '.ckpt')
     STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'running logs', 'stats_' + time_stamp + '.txt')
@@ -782,7 +782,7 @@ if __name__ == '__main__':
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
 
-    run_pre_train = True
+    run_pre_train = False
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
@@ -801,7 +801,7 @@ if __name__ == '__main__':
         with tf.Session() as sess:
             train_results_by_sentence = run_model(sess, train_dataset, mode='test',
                                                  load_params_path=weights_from_supervised_pre_training, return_sentences_results=False)
-    run_train = True # change to True if you really want to run the whole thing...
+    run_train = False # change to True if you really want to run the whole thing...
 
     if run_train:
         # training the weakly supervised model with weights initialized to the values learned in the supervises learning.
@@ -819,29 +819,33 @@ if __name__ == '__main__':
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
 
-    run_beam_reranking = False
-    beam_reranking_train = False
+    run_beam_reranking = True
+    beam_reranking_train = True
+    best_weights_so_far = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_2017-11-07_18_00.ckpt-15')
     if run_beam_reranking:
         beam_classifier_weights_path = os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights' + time_stamp + '.ckpt')
-        #tf.reset_default_graph() # set as comment for inference
-        with tf.Session() as sess:
-            if beam_reranking_train:
-                tf.reset_default_graph()
+        if beam_reranking_train:
+            with tf.Session() as sess:    
                 #features, labels = run_model(sess, train_dataset, mode='test',
-                            #load_params_path=best_weights_so_far, beam_classifier=True)
+                            #load_params_path=best_weights_so_far, beam_classifier=True,beam_reranking_train=True)
                 #pickle.dump(features,open(os.path.join(SEQ2SEQ_DIR,'features_for_beam_reranking'+time_stamp), 'wb'))
                 #pickle.dump(labels, open(os.path.join(SEQ2SEQ_DIR,'labels_for_beam_reranking'+time_stamp), 'wb'))
-                features = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'features_for_beam_reranking2017-11-01_01_27'), 'rb'))
-                labels = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'labels_for_beam_reranking2017-11-01_01_27'), 'rb'))
+                #print(features[0],labels[0])
+                features = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'features_for_beam_reranking2017-11-10_20_31'), 'rb'))
+                labels = pickle.load(open(os.path.join(SEQ2SEQ_DIR,'labels_for_beam_reranking2017-11-10_20_31'), 'rb'))
+                #exit(0)
+            tf.reset_default_graph()
+            with tf.Session() as sess:        
                 run_beam_classification(sess,features,labels,BEAM_SIZE,save_path=beam_classifier_weights_path)
                 #run_model(sess, test_dataset, mode='test',
                           #load_params_path=best_weights_so_far, return_sentences_results=True, beam_classifier=True,
                           #beam_classifier_test=True,
                           #clf_params_path=beam_classifier_weights_path,beam_reranking_train=True)
-            else:
+        else:
+            with tf.Session() as sess:
                 run_model(sess, test_dataset, mode='test',
                           load_params_path=best_weights_so_far, return_sentences_results=True,beam_classifier=True,
-                          beam_classifier_test=True, clf_params_path=os.path.join(SEQ2SEQ_DIR,'beamClassificationWeights2017-11-01_09_04.ckpt'))
+                          beam_classifier_test=True, clf_params_path=os.path.join(SEQ2SEQ_DIR,'beamClassificationWeights2017-11-11_00_57.ckpt'))
         exit(0)
 
     dev_results_by_sentence , test_results_by_sentence, test2_results_by_sentence = {},{}, {}
