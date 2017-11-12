@@ -10,9 +10,8 @@ DEV_JSON = os.path.join(NLVR_DATA, 'dev', 'dev.json')
 TEST_JSON = os.path.join(NLVR_DATA, 'test', 'test.json')
 
 TEST2_JSON = '' # '' # ADD THE PATH TO THE HIDDEN TEST JSON HERE
-version1 = True
+version1 = False
 ## PLEASE RUN ONCE WITH TRUE AND ONCE WITH FALSE ##
-TEST2_JSON = TEST_JSON
 
 TRAIN_IMAGES = os.path.join(NLVR_DATA, 'train', 'images')
 DEV_IMAGES = os.path.join(NLVR_DATA, 'dev', 'images')

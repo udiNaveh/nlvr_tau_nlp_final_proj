@@ -21,6 +21,8 @@ from seq2seqModel.hyper_params import *
 from general_utils import increment_count, union_dicts
 from seq2seqModel.beam_classification import *
 
+tf.set_random_seed(1)
+np.random.seed(1)
 
 def load_meta_data():
     # load word embeddings
@@ -89,7 +91,8 @@ def build_sentence_encoder(vocabulary_size):
     sentence_words_bow = tf.placeholder(tf.float32, [None, len(words_vocabulary)], name="sentence_words_bow")
     e_m_with_bow = tf.concat([e_m, sentence_words_bow], axis=1)
 
-    return sentence_oh_placeholder, sent_lengths, sentence_words_bow, lstm_outputs, e_m_with_bow
+    #return sentence_oh_placeholder, sent_lengths, sentence_words_bow, lstm_outputs, e_m_with_bow
+    return sentence_oh_placeholder, sent_lengths, sentence_words_bow, lstm_outputs, e_m
 
 
 def build_decoder(lstm_outputs, final_utterance_embedding):
@@ -102,7 +105,7 @@ def build_decoder(lstm_outputs, final_utterance_embedding):
     num_rows = tf.shape(history_embedding)[0]
     e_m_tiled = tf.tile(final_utterance_embedding, ([num_rows, 1]))
     decoder_input = tf.concat([e_m_tiled, history_embedding], axis=1)
-    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE + HISTORY_EMB_SIZE + len(words_vocabulary)],
+    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE + HISTORY_EMB_SIZE ],#+ len(words_vocabulary)],
                           initializer=tf.contrib.layers.xavier_initializer())
     q_t = tf.nn.relu(tf.matmul(W_q, tf.transpose(decoder_input)))
     W_a = tf.get_variable("W_a", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE],
@@ -794,9 +797,9 @@ if __name__ == '__main__':
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
-    test_dataset2 = CNLVRDataSet(DataSet.TEST2)
+    #test_dataset2 = CNLVRDataSet(DataSet.TEST2)
 
-    run_pre_train = False
+    run_pre_train = True
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
@@ -818,7 +821,7 @@ if __name__ == '__main__':
             train_results_by_sentence = run_model(sess, train_dataset, mode='test',
                                                   load_params_path=weights_from_supervised_pre_training,
                                                   return_sentences_results=False)
-    run_train = False  # change to True if you really want to run the whole thing...
+    run_train = True  # change to True if you really want to run the whole thing...
 
     if run_train:
         # training the weakly supervised model with weights initialized to the values learned in the supervises learning.
@@ -894,11 +897,11 @@ if __name__ == '__main__':
             dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
 
-        # save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
+        save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
 
-        test_dataset2.restart()
+        test_dataset.restart()
         with tf.Session() as sess:
-            test_results_by_sentence = run_model(sess, test_dataset2, mode='test',
+            test_results_by_sentence = run_model(sess, test_dataset, mode='test',
                                                  load_params_path=best_weights_so_far, return_sentences_results=False)
 
-            # save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
+            save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
