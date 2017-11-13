@@ -6,6 +6,7 @@ from structured_rep import *
 from logical_forms import TokenTypes
 from sentence_processing import preprocess_sentences, replace_rare_words_with_unk
 
+np.random.seed(1)
 
 class DataSet(Enum):
     TRAIN = 'train',
