@@ -27,7 +27,8 @@ BIGRAM_COUNTS_PROCESSED = os.path.join(DATA_DIR, 'sentence-processing', 'bigrams
 if version1:
     MANUAL_REPLACEMENTS = False
 else:
-    MANUAL_REPLACEMENTS = True
+    MANUAL_REPLACEMENTS = False
+    # MANUAL_REPLACEMENTS true means ~40 replacements. MANUAL_REPLACEMENTS false means only 8 replacements
 
 if MANUAL_REPLACEMENTS:
     SUPERVISED_TRAIN_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'pairs_train_final')

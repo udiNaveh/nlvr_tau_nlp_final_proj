@@ -75,7 +75,7 @@ if definitions.MANUAL_REPLACEMENTS:
     WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'embeddings_10iters_12dim')
     PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeightsPreTrain', 'trained_variables_sup_with_embeddings.ckpt')
 else:
-    WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'new_embeddings_10iters_12dim_unk3')
+    WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'new_embeddings')
     PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_trained_variables_sup_with_embeddings.ckpt')
 
 TRAINED_WEIGHTS_BEST = \
