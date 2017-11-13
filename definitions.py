@@ -11,7 +11,6 @@ TEST_JSON = os.path.join(NLVR_DATA, 'test', 'test.json')
 
 TEST2_JSON = '' # '' # ADD THE PATH TO THE HIDDEN TEST JSON HERE
 version1 = False
-## PLEASE RUN ONCE WITH TRUE AND ONCE WITH FALSE ##
 
 TRAIN_IMAGES = os.path.join(NLVR_DATA, 'train', 'images')
 DEV_IMAGES = os.path.join(NLVR_DATA, 'dev', 'images')
@@ -25,7 +24,7 @@ BIGRAM_COUNTS_PROCESSED = os.path.join(DATA_DIR, 'sentence-processing', 'bigrams
 
 
 if version1:
-    MANUAL_REPLACEMENTS = False
+    MANUAL_REPLACEMENTS = True
 else:
     MANUAL_REPLACEMENTS = False
     # MANUAL_REPLACEMENTS true means ~40 replacements. MANUAL_REPLACEMENTS false means only 8 replacements
