@@ -36,6 +36,8 @@ if MANUAL_REPLACEMENTS:
     LOGICAL_TOKENS_MAPPING_PATH = os.path.join(DATA_DIR, 'logical forms', 'token mapping.txt')
     SYNONYMS_PATH = os.path.join(DATA_DIR, 'sentence-processing', 'manual_replacements.txt')
 else:
-    SUPERVISED_TRAIN_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'new_proper_pairs_train_final')
-    SUPERVISED_VALIDATION_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'new_proper_pairs_validation_final')
+    SUPERVISED_TRAIN_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'new_pairs_train_final')
+    SUPERVISED_VALIDATION_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'new_pairs_validation_final')
     LOGICAL_TOKENS_MAPPING_PATH = os.path.join(DATA_DIR, 'logical forms', 'new token mapping.txt')
+    SYNONYMS_PATH = os.path.join(DATA_DIR, 'sentence-processing', 'new_manual_replacements.txt')
+    OLD_SYNONYMS_PATH = os.path.join(DATA_DIR, 'sentence-processing', 'manual_replacements.txt')

@@ -189,7 +189,7 @@ def replaced(s, dict):
 def get_new_patterns():
     train = definitions.TRAIN_JSON
     data = read_data(train)
-    samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
+    samples, sents_dict = build_data(data, preprocessing_type='deep')
     formalized_sentences = get_sentences_formalized(sents_dict)
     patterns_counter = {}
     for key in formalized_sentences:
@@ -203,7 +203,7 @@ def get_new_patterns():
 def create_new_patterns_dict():
     patterns_counter = get_new_patterns()
     old_patterns_dict = load_forms(definitions.DATA_DIR + r'\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt')
-    replacements_dict = load_dict_from_txt(SYNONYMS_PATH)
+    replacements_dict = load_dict_from_txt(OLD_SYNONYMS_PATH)
     new_patterns_dict = {}
     for pattern in patterns_counter:
         replaced_pattern = replaced(pattern, replacements_dict)
@@ -216,42 +216,55 @@ def create_new_patterns_dict():
 
 
 if __name__ == '__main__':
-    path = r'C:\Users\omergo\Documents\master-NLP\nlvr_tau_nlp_final_proj\data\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt'
-    newpath = r'C:\Users\omergo\Documents\master-NLP\nlvr_tau_nlp_final_proj\data\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
-    old_dict = load_forms(path)
-    new_dict = load_forms(newpath)
-
+    # path = r'C:\Users\omergo\Documents\master-NLP\nlvr_tau_nlp_final_proj\data\parsed sentences\formalized_parsed_sentences_for_supervised_training.txt'
     # newpath = r'C:\Users\omergo\Documents\master-NLP\nlvr_tau_nlp_final_proj\data\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
-    # with open(newpath, 'w') as f:
-    #     for item in new_dict:
-    #         tup = new_dict[item]
-    #         f.write('\n@ ' + item + ' $ ' + str(tup[0]) + '\n')
-    #         for prog in tup[1]:
-    #             f.write('~ ' + prog + '\n')
+    # old_dict = load_forms(path)
+    # new_dict = load_forms(newpath)
+    #
+    # # newpath = r'C:\Users\omergo\Documents\master-NLP\nlvr_tau_nlp_final_proj\data\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
+    # # with open(newpath, 'w') as f:
+    # #     for item in new_dict:
+    # #         tup = new_dict[item]
+    # #         f.write('\n@ ' + item + ' $ ' + str(tup[0]) + '\n')
+    # #         for prog in tup[1]:
+    # #             f.write('~ ' + prog + '\n')
+    #
+    # train = definitions.TRAIN_JSON
+    # data = read_data(train)
+    # _, new_sents_dict = build_data(data, preprocessing_type='lemmatize')
+    # _, sents_dict = build_data(data, preprocessing_type='deep')
+    #
+    # old_include = 0
+    # for sent in sents_dict.values():
+    #     tempdict = {'1': sent}
+    #     formalized_sent = get_sentences_formalized(tempdict)['1']
+    #     if formalized_sent in old_dict:
+    #         old_include += 1
+    #
+    # new_include = 0
+    # for sent in new_sents_dict.values():
+    #     tempdict = {'1': sent}
+    #     formalized_sent = get_sentences_formalized(tempdict)['1']
+    #     if formalized_sent in new_dict:
+    #         new_include += 1
+    #
+    #
+    # print('old:', old_include, 'out of: ', len(sents_dict))
+    # print('new:', new_include, 'out of: ', len(new_sents_dict))
 
-    train = definitions.TRAIN_JSON
-    data = read_data(train)
-    _, new_sents_dict = build_data(data, preprocessing_type='lemmatize')
-    _, sents_dict = build_data(data, preprocessing_type='deep')
+    new_dict = create_new_patterns_dict()
+    pairs_train, pairs_validation = generate_pairs_for_supervised_learning(new_dict)
 
-    old_include = 0
-    for sent in sents_dict.values():
-        tempdict = {'1': sent}
-        formalized_sent = get_sentences_formalized(tempdict)['1']
-        if formalized_sent in old_dict:
-            old_include += 1
+    pickle.dump(pairs_train, open(definitions.SUPERVISED_TRAIN_PICKLE, 'wb'))
+    pickle.dump(pairs_validation, open(definitions.SUPERVISED_VALIDATION_PICKLE, 'wb'))
 
-    new_include = 0
-    for sent in new_sents_dict.values():
-        tempdict = {'1': sent}
-        formalized_sent = get_sentences_formalized(tempdict)['1']
-        if formalized_sent in new_dict:
-            new_include += 1
-
-
-    print('old:', old_include, 'out of: ', len(sents_dict))
-    print('new:', new_include, 'out of: ', len(new_sents_dict))
-
+    newpath = definitions.DATA_DIR + r'\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
+    with open(newpath, 'w') as f:
+        for item in new_dict:
+            tup = new_dict[item]
+            f.write('\n@ ' + item + ' $ ' + str(tup[0]) + '\n')
+            for prog in tup[1]:
+                f.write('~ ' + prog + '\n')
 
 
 
