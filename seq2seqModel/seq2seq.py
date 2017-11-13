@@ -894,19 +894,19 @@ if __name__ == '__main__':
         #    train_results_by_sentence = run_model(sess, train_dataset, mode='test',
         #                                        load_params_path=weights, return_sentences_results=False)
 
-        dev_dataset.restart()
-        with tf.Session() as sess:
-            dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
-                                                load_params_path=best_weights_so_far, return_sentences_results=False)
-
-        save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
-
-        test_dataset.restart()
-        with tf.Session() as sess:
-            test_results_by_sentence = run_model(sess, test_dataset, mode='test',
-                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
-
-            save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
+        # dev_dataset.restart()
+        # with tf.Session() as sess:
+        #     dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
+        #                                         load_params_path=best_weights_so_far, return_sentences_results=False)
+        #
+        # save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
+        #
+        # test_dataset.restart()
+        # with tf.Session() as sess:
+        #     test_results_by_sentence = run_model(sess, test_dataset, mode='test',
+        #                                          load_params_path=best_weights_so_far, return_sentences_results=False)
+        #
+        #     save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
 
         test_dataset2.restart()
         with tf.Session() as sess:
