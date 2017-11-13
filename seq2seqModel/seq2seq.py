@@ -91,8 +91,8 @@ def build_sentence_encoder(vocabulary_size):
     sentence_words_bow = tf.placeholder(tf.float32, [None, len(words_vocabulary)], name="sentence_words_bow")
     e_m_with_bow = tf.concat([e_m, sentence_words_bow], axis=1)
 
-    #return sentence_oh_placeholder, sent_lengths, sentence_words_bow, lstm_outputs, e_m_with_bow
-    return sentence_oh_placeholder, sent_lengths, sentence_words_bow, lstm_outputs, e_m
+    return sentence_oh_placeholder, sent_lengths, sentence_words_bow, lstm_outputs, e_m_with_bow
+    # TODO return sentence_oh_placeholder, sent_lengths, sentence_words_bow, lstm_outputs, e_m
 
 
 def build_decoder(lstm_outputs, final_utterance_embedding):
@@ -105,8 +105,10 @@ def build_decoder(lstm_outputs, final_utterance_embedding):
     num_rows = tf.shape(history_embedding)[0]
     e_m_tiled = tf.tile(final_utterance_embedding, ([num_rows, 1]))
     decoder_input = tf.concat([e_m_tiled, history_embedding], axis=1)
-    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE + HISTORY_EMB_SIZE ],#+ len(words_vocabulary)],
+    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE + HISTORY_EMB_SIZE + len(words_vocabulary)],
                           initializer=tf.contrib.layers.xavier_initializer())
+    # TODO W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE + HISTORY_EMB_SIZE],# + len(words_vocabulary)],
+    #                       initializer=tf.contrib.layers.xavier_initializer())
     q_t = tf.nn.relu(tf.matmul(W_q, tf.transpose(decoder_input)))
     W_a = tf.get_variable("W_a", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE],
                           initializer=tf.contrib.layers.xavier_initializer())
@@ -797,9 +799,9 @@ if __name__ == '__main__':
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
-    #test_dataset2 = CNLVRDataSet(DataSet.TEST2)
+    # test_dataset2 = CNLVRDataSet(DataSet.TEST2)
 
-    run_pre_train = True
+    run_pre_train = False
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
@@ -821,7 +823,7 @@ if __name__ == '__main__':
             train_results_by_sentence = run_model(sess, train_dataset, mode='test',
                                                   load_params_path=weights_from_supervised_pre_training,
                                                   return_sentences_results=False)
-    run_train = True  # change to True if you really want to run the whole thing...
+    run_train = False  # change to True if you really want to run the whole thing...
 
     if run_train:
         # training the weakly supervised model with weights initialized to the values learned in the supervises learning.
@@ -843,7 +845,7 @@ if __name__ == '__main__':
     else:
         run_beam_reranking = False
     beam_reranking_train = False
-    if version1:
+    if definitions.version1:
         best_weights_so_far = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised',
                                            'weights_2017-11-07_18_00.ckpt-15')
     if run_beam_reranking:
@@ -868,7 +870,7 @@ if __name__ == '__main__':
                 # clf_params_path=beam_classifier_weights_path,beam_reranking_train=True)
         else:
             with tf.Session() as sess:
-                run_model(sess, test_dataset2, mode='test',
+                run_model(sess, test_dataset, mode='test',
                           load_params_path=best_weights_so_far, return_sentences_results=True, beam_classifier=True,
                           beam_classifier_test=True,
                           clf_params_path=os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights2017-11-11_13_27.ckpt'))
@@ -905,3 +907,10 @@ if __name__ == '__main__':
                                                  load_params_path=best_weights_so_far, return_sentences_results=False)
 
             save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
+
+        test_dataset2.restart()
+        with tf.Session() as sess:
+            test_results_by_sentence = run_model(sess, test_dataset2, mode='test',
+                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
+
+            save_sentences_test_results(test_results_by_sentence, test_dataset2, SENTENCES_RESULTS_FILE_TEST2)

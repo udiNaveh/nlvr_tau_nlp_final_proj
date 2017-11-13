@@ -79,7 +79,7 @@ else:
     PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_trained_variables_sup_with_embeddings.ckpt')
 
 TRAINED_WEIGHTS_BEST = \
-    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj_with_embeddings.ckpt')
+    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_best_8_replacements')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
 CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',
