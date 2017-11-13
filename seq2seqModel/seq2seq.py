@@ -799,7 +799,7 @@ if __name__ == '__main__':
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
-    # test_dataset2 = CNLVRDataSet(DataSet.TEST2)
+    test_dataset2 = CNLVRDataSet(DataSet.TEST2)
 
     run_pre_train = False
     if run_pre_train:
