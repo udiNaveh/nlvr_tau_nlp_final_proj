@@ -152,8 +152,8 @@ def generate_pairs_for_supervised_learning(forms_dictionary):
 
     n = len(pairs)
     np.random.shuffle(pairs)
-    pairs_train = pairs[: int( 0.75 * n)]
-    pairs_validation = pairs[int( 0.75 * n): ]
+    pairs_train = pairs[: int( 0.9 * n)]
+    pairs_validation = pairs[int( 0.1 * n): ]
 
     return pairs_train, pairs_validation
 
@@ -214,6 +214,24 @@ def create_new_patterns_dict():
             new_patterns_dict[pattern] = old_patterns_dict[pattern]
     return new_patterns_dict
 
+def pairs_for_abstract_supervised_learning(new_dict):
+    '''
+    :param new_dict: {abs_sent(str): (freq(int), [abs_prog(str)])}
+    :return: [(abs_sent(str), abs_prog(str))]
+    '''
+
+    pairs = []
+    for abs_sent in new_dict:
+        for abs_prog in new_dict[abs_sent][1]:
+            pairs.append((abs_sent, abs_prog))
+
+    # TODO still need to decide what's the best way to divide. right now the same abs_sent can appear in both train and validation
+    n = len(pairs)
+    np.random.shuffle(pairs)
+    pairs_train = pairs[: int( 0.9 * n)]
+    pairs_validation = pairs[int( 0.1 * n) :]
+
+    return pairs_train, pairs_validation
 
 if __name__ == '__main__':
 
@@ -223,28 +241,44 @@ if __name__ == '__main__':
     # datas = (definitions.TRAIN_JSON,definitions.DEV_JSON,definitions.TEST_JSON)
     # for d in datas:
     #     data = read_data(d)
-    #     _, sents_dict = build_data(data, preprocessing_type='deep')
+    #     samples, _ = build_data(data, preprocessing_type='deep')
     #     include = 0
-    #     for sent in sents_dict.values():
+    #     quads = {}
+    #     for sample in samples:
+    #         idx = sample.identifier.split('-')[0]
+    #         if (idx, sample.sentence) not in quads:
+    #             quads[(idx, sample.sentence)] = [sample]
+    #         else:
+    #             quads[(idx, sample.sentence)].append(sample)
+    #     for quad in quads:
+    #         sent = quad[1]
+    #         labels = [s.label for s in quads[quad]]
     #         tempdict = {'1': sent}
     #         formalized_sent = get_sentences_formalized(tempdict)['1']
     #         if formalized_sent in new_dict:
     #             include += 1
-    #     print(len(sents_dict), include)
+    #         elif all(labels) == True:
+    #             include +=1
+    #     print(len(quads), include)
+    #     print(include/len(quads))
 
     new_dict = create_new_patterns_dict()
-    pairs_train, pairs_validation = generate_pairs_for_supervised_learning(new_dict)
+    if ABSTRACTION:
+        pairs_train, pairs_validation = pairs_for_abstract_supervised_learning(new_dict)
+    else:
+        pairs_train, pairs_validation = generate_pairs_for_supervised_learning(new_dict)
 
-    pickle.dump(pairs_train, open(definitions.SUPERVISED_TRAIN_PICKLE, 'wb'))
-    pickle.dump(pairs_validation, open(definitions.SUPERVISED_VALIDATION_PICKLE, 'wb'))
+        # pickle.dump(pairs_train, open(definitions.SUPERVISED_TRAIN_PICKLE, 'wb'))
+        # pickle.dump(pairs_validation, open(definitions.SUPERVISED_VALIDATION_PICKLE, 'wb'))
+        pass
 
-    newpath = definitions.DATA_DIR + r'\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
-    with open(newpath, 'w') as f:
-        for item in new_dict:
-            tup = new_dict[item]
-            f.write('\n@ ' + item + ' $ ' + str(tup[0]) + '\n')
-            for prog in tup[1]:
-                f.write('~ ' + prog + '\n')
+    # newpath = definitions.DATA_DIR + r'\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
+    # with open(newpath, 'w') as f:
+    #     for item in new_dict:
+    #         tup = new_dict[item]
+    #         f.write('\n@ ' + item + ' $ ' + str(tup[0]) + '\n')
+    #         for prog in tup[1]:
+    #             f.write('~ ' + prog + '\n')
 
 
 

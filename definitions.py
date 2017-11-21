@@ -41,3 +41,5 @@ else:
     LOGICAL_TOKENS_MAPPING_PATH = os.path.join(DATA_DIR, 'logical forms', 'new token mapping.txt')
     SYNONYMS_PATH = os.path.join(DATA_DIR, 'sentence-processing', 'new_manual_replacements.txt')
     OLD_SYNONYMS_PATH = os.path.join(DATA_DIR, 'sentence-processing', 'manual_replacements.txt')
+
+ABSTRACTION = False

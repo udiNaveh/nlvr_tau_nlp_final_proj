@@ -208,10 +208,12 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     phases are done sequentially one after the other.
     :return: r
     """
+    # TODO right now it's either 'abstraction' *or* 'deep'. nee to amend here if we want both
+
     if processing_type is None:
         return sentences_dic # no processing
 
-    if processing_type not in ("shallow", "spellproof", "lemmatize", "deep"):
+    if processing_type not in ("shallow", "spellproof", "lemmatize", "deep", "abstraction"):
         raise ValueError("Invalid processing type: {}".format(processing_type))
 
     if processing_type =='shallow': # just superficial processing
@@ -313,6 +315,13 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
 
     # else move on to replacing words/phrases with others with similar meaning, in order to reduce vocabulary size
 
+    if processing_type == 'abstraction':
+        abstract_sentences = abstract(lemmatized_sentences)
+        # lemmatized_sentences is of type {idx: sent}
+        # abstract_sentences is of type {idx: (sent, rep_dict)}
+        # rep_dict is of the form {'T_COLOR': 'yellow'}
+        return abstract_sentences
+
     if SYNONYMS_PATH:
         replacements_dic = load_dict_from_txt(SYNONYMS_PATH)
         lemmatized_sentences_with_replacements = replace_words_by_dictionary(lemmatized_sentences, replacements_dic)
@@ -325,4 +334,40 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
 
     return lemmatized_sentences
 
+def abstract(sent_dict):
+    '''
+    :param sent_dict: {idx: sent}
+    :return: {idx: (sent, {'T_COLOR': 'yellow"}}
+    '''
+    formalization_file = os.path.join(DATA_DIR, 'sentence-processing', 'formalized words.txt')
+    words_to_patterns = load_dict_from_txt(formalization_file)
+    for i in range(2, 9):
+        words_to_patterns[str(i)] = 'T_INT'
+    words_to_patterns["1"] = 'T_ONE'
+    words_to_patterns["one"] = 'T_ONE'
+    words_to_patterns['a single'] = 'T_ONE'
 
+    for idx in sent_dict:
+        rep_dict = {}
+        sent = sent_dict[idx]
+        for key in words_to_patterns.keys():
+            if key in sent:
+                if words_to_patterns[key] not in rep_dict.values():
+                    sent = sent.replace(key, words_to_patterns[key])
+                    rep_dict[words_to_patterns[key]] = key
+                elif words_to_patterns[key] in rep_dict.values() and words_to_patterns[key]+'_1' not in rep_dict.values():
+                    rep = words_to_patterns[key] + '_1'
+                    sent = sent.replace(key, rep)
+                    rep_dict[rep] = key
+                elif words_to_patterns[key]+'_1' in rep_dict.values() and words_to_patterns[key]+'_2' not in rep_dict.values():
+                    rep = words_to_patterns[key] + '_2'
+                    sent = sent.replace(key, rep)
+                    rep_dict[rep] = key
+                else:
+                    rep = words_to_patterns[key] + '_3'
+                    sent = sent.replace(key, rep)
+                    rep_dict[rep] = key
+
+        sent_dict[idx] = (sent, rep_dict)
+
+    return sent_dict
