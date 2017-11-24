@@ -34,49 +34,49 @@ all_same_attribute	2	set<?>	func<?>	bool
 
 ## boolean Item functions
 
-is_yellow	1	Item	bool	:	yellow
+is_yellow	1	Item	bool
 
-is_blue	1	Item	bool	:	blue
+is_blue	1	Item	bool
 
-is_black	1	Item	bool	:	black
+is_black	1	Item	bool
 
-is_circle	1	Item	bool	:	circle
+is_circle	1	Item	bool
 
-is_square	1	Item	bool	:	square rectangle
+is_square	1	Item	bool
 
-is_triangle	1	Item	bool	:	triangle
+is_triangle	1	Item	bool
 
-is_big	1	Item	bool	:	big
+is_big	1	Item	bool
 
-is_medium	1	Item	bool	: medium
+is_medium	1	Item	bool
 
-is_small	1	Item	bool	: small
+is_small	1	Item	bool
 
-is_top	1	Item	bool	:	top	first
+is_top	1	Item	bool
 
-is_bottom	1	Item	bool	:	bottom first base lower
+is_bottom	1	Item	bool
 
-is_second	1	Item	bool	:	second middle
+is_second	1	Item	bool
 
-is_third	1	Item	bool	: third
+is_third	1	Item	bool
 
-is_touching_wall	2	Item	Side	bool	: edge touch wall attach line
+is_touching_wall	2	Item	Side	bool
 
-is_touching_corner	2	Item	Side	bool	: corner
+is_touching_corner	2	Item	Side	bool
 
-query_color	1	Item|set<Item>	set<Color>	: color black yellow blue
+query_color	1	Item|set<Item>	set<Color>
 
-query_size	1	Item|set<Item>	set<Size>	: size big small medium
+query_size	1	Item|set<Item>	set<Size>
 
-query_shape	1	Item|set<Item>	set<Shape>	: shape square triangle circle rectangle kind type
+query_shape	1	Item|set<Item>	set<Shape>
 
 le	2	int int	bool
 
-ge	2	int int	bool	: most
+ge	2	int int	bool
 
-lt	2	int int	bool	: more
+lt	2	int int	bool
 
-gt	2	int int	bool	: less
+gt	2	int int	bool
 
 equal_int	2	int int	bool
 
@@ -90,19 +90,17 @@ AND	2	bool	bool	bool
 
 OR	2	bool	bool	bool
 
-NOT	1	bool	bool	:  no not none different without
-
+NOT	1	bool	bool
 
 all_same	1	set<?>	bool
 
 union_all	1	set<set<Item>>	set<Item>
 
+get_above	1	set<Item>|Item	set<Item>
 
-get_above	1	set<Item>|Item	set<Item>	:	on over above top
+get_below	1	set<Item>|Item	set<Item>
 
-get_below	1	set<Item>|Item	set<Item>	:	below under underneath beneath
-
-get_touching	1	set<Item>|Item	set<Item>	:	touch stack attach
+get_touching	1	set<Item>|Item	set<Item>
 
 select 2	int	set<?>	set<set<?>>
 
@@ -110,26 +108,26 @@ select 2	int	set<?>	set<set<?>>
 
 ALL_ITEMS 	0	set<Item>
 
-ALL_BOXES	0	set<set<Item>>	: box tower square grey
+ALL_BOXES	0	set<set<Item>>
 
-Color.BLUE	0	set<Color>	:	blue
+Color.BLUE	0	set<Color>
 
-Color.BLACK	0	set<Color>	:	black
+Color.BLACK	0	set<Color>
 
-Color.YELLOW	0	set<Color>	:	yellow
+Color.YELLOW	0	set<Color>
 
-Shape.TRIANGLE	0	set<Shape>	:	triangle
+Shape.TRIANGLE	0	set<Shape>
 
-Shape.SQUARE	0	set<Shape>	:	square rectangle
+Shape.SQUARE	0	set<Shape>
 
-Shape.CIRCLE	0	set<Shape>	:	circle
+Shape.CIRCLE	0	set<Shape>
 
-Side.RIGHT	0	Side	:	right
+Side.RIGHT	0	Side
 
-Side.LEFT	0	Side	:	left
+Side.LEFT	0	Side
 
-Side.TOP	0	Side	:	top first roof
+Side.TOP	0	Side
 
-Side.BOTTOM	0	Side	:	bottom first base lower
+Side.BOTTOM	0	Side
 
 Side.ANY	0	Side
