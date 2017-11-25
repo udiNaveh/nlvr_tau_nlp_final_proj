@@ -6,6 +6,7 @@ from structured_rep import *
 from logical_forms import TokenTypes
 from sentence_processing import preprocess_sentences, replace_rare_words_with_unk
 
+np.random.seed(1)
 
 class DataSet(Enum):
     TRAIN = 'train',
@@ -86,7 +87,11 @@ class CNLVRDataSet:
         self._index_in_epoch = 0
         self.epochs_completed = 0
         self.__ids_by_complexity = []
+        self.pictures = {}
+        self.sentences_quardpled_ids = []
+        self.processed_sentences_singles = {}
         self.get_data(paths[dataset])
+
 
     @property
     def name(self):  # i.e. 'TRAIN'
@@ -96,9 +101,31 @@ class CNLVRDataSet:
     def num_examples(self):
         return len(self.__ids)
 
+    @property
+    def num_single_examples(self):
+        return len(self.sentences_quardpled_ids)
+
+    def build_single_lists(self):
+        # created new ids for treating the sentences and pictures in 1:1 ratio
+        sents_num = len(self.original_sentences.keys())
+        k=0
+        for i in range(sents_num):
+            for j in range(4):
+
+                sample_original_name="{0}-{1}".format(list(self.original_sentences.keys())[i], j)
+                sample_new_name = "{0}".format(k)
+                if sample_original_name in self.samples:
+                    self.pictures[sample_new_name] = self.samples[sample_original_name]
+                    self.sentences_quardpled_ids.append(k)
+                    self.processed_sentences_singles[k] = self.processed_sentences[list(self.original_sentences.keys())[i]]
+                    k += 1
+
     def get_samples_by_sentence_id(self, sentence_id):
         samples_ids = ["{0}-{1}".format(sentence_id, i) for i in range(4)]
         return [self.samples[sample_id] for sample_id in samples_ids if sample_id in self.samples]
+
+    def get_single_sample_for_sentence(self,sentence_id_q):
+        return [self.pictures["{0}".format(sentence_id_q)]]
 
     def get_sentence_by_id(self, sentence_id, original=False):
         if original:
@@ -143,6 +170,8 @@ class CNLVRDataSet:
             s.sentence = self.processed_sentences[s_index]
 
         self.__ids = [k for k in self.original_sentences.keys()]
+        #self.sentences_quardpled_ids = []
+        self.build_single_lists()
 
     def use_subset_by_sentnce_condition(self, f_s):
         """
@@ -200,9 +229,10 @@ class CNLVRDataSet:
         '''
         restart the state of the data set (the is no need to reload it from disk - just call this method)
         '''
-        self.__ids = [k for k in self.original_sentences.keys()]
+        self.__ids = [k for k in self.self.original_sentences.keys()]
         self._index_in_epoch = 0
         self.epochs_completed = 0
+        self.sentences_quardpled_ids=[x for x in self.processed_sentences_singles.keys()]
 
     def next_batch(self, batch_size):
         '''
@@ -228,6 +258,35 @@ class CNLVRDataSet:
         batch = {k: (self.processed_sentences[k], self.get_samples_by_sentence_id(k)) for k in indices}
 
         if end == self.num_examples:
+            self.epochs_completed += 1
+            self._index_in_epoch = 0
+
+        return batch, self._index_in_epoch == 0
+
+    def next_batch_singles(self, batch_size):
+        '''
+
+        return the next batch of  (sentence, related samples) pairs.
+        also habdles the logic of moving between epochs.
+        '''
+
+        if batch_size <= 0 or batch_size > self.num_single_examples:
+            raise ValueError("invalid argument for batch size:  {}".format(batch_size))
+
+        if self._index_in_epoch == 0:
+            np.random.shuffle(self.sentences_quardpled_ids)  # shuffle index
+
+        start = self._index_in_epoch
+        # go to the next batch
+        if start + batch_size > self.num_single_examples:
+            batch_size = self.num_single_examples - start
+
+        self._index_in_epoch += batch_size
+        end = self._index_in_epoch
+        indices = self.sentences_quardpled_ids[start: end]
+        batch = {k: (self.processed_sentences_singles[k], self.get_single_sample_for_sentence(k)) for k in indices}
+
+        if end == self.num_single_examples:
             self.epochs_completed += 1
             self._index_in_epoch = 0
 
