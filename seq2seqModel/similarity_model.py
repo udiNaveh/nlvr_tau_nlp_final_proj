@@ -1,23 +1,15 @@
-"""
-This module contains the TensorFlow model itself, as well as the logic for training and testing
-it in strongly supervised and weakly supervised frameworks.
-"""
 import sys
 
 sys.path.append('../')
 import tensorflow as tf
 from tensorflow.contrib.rnn import BasicLSTMCell
 import pickle
-import numpy as np
-import os
-import time
 import definitions
 from seq2seqModel.utils import *
 from seq2seqModel.partial_program import *
 from data_manager import CNLVRDataSet, DataSetForSupervised, DataSet, load_functions
 from seq2seqModel.beam_search import *
 from seq2seqModel.hyper_params import *
-from general_utils import increment_count, union_dicts
 from seq2seqModel.beam_classification import *
 
 
@@ -44,20 +36,10 @@ def load_meta_data():
     return logical_tokens_ids, logical_tokens_mapping, embeddings_dict, one_hot_dict, embeddings_matrix
 
 
-logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
-if definitions.MANUAL_REPLACEMENTS:
-    words_to_tokens = pickle.load(open(os.path.join(definitions.DATA_DIR, 'logical forms', 'words_to_tokens'), 'rb'))
-else:
-    words_to_tokens = pickle.load(
-        open(os.path.join(definitions.DATA_DIR, 'logical forms', 'new_words_to_tokens'), 'rb'))
-
-n_logical_tokens = len(logical_tokens_ids)
-
-if USE_BOW_HISTORY:
-    HISTORY_EMB_SIZE += n_logical_tokens
 
 
-def build_sentence_encoder(vocabulary_size):
+
+def build_sentence_encoder(vocabulary_size, embeddings_matrix):
     """
     build the computational graph for the lstm sentence encoder. Return only the palceholders and tensors
     that are called from other methods
@@ -137,179 +119,109 @@ def build_batchGrad():
 
 
 
+def run_similarity_model(sess, examples_file, current_logical_tokens_embeddings, load_params_path=None, save_model_path=None,
+              inference=False):
 
-def get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder, sentence_words_bow,
-                                 encoder_output_tensors, learn_embeddings=False):
-    """
-    creates the values needed and feed-dicts that depend on the sentence.
-    these feed dicts are used to run or to compute gradients.
-    """
+    tf.set_random_seed(1)
+    np.random.seed(1)
+    # build the computaional graph:
 
-    sentence_matrix = np.stack([one_hot_dict.get(w, one_hot_dict['<UNK>']) for w in sentence.split()])
-    bow_words = np.reshape(np.sum([words_array == x for x in sentence.split()], axis=0), [1, len(words_vocabulary)])
+    with tf.variable_scope("similarity", reuse=inference):
+        logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
+        sentence_placeholder, sent_lengths_placeholder, sentence_words_bow, h, e_m = build_sentence_encoder(
+            len(one_hot_dict), embeddings_matrix)
 
-    length = [len(sentence.split())]
-    encoder_feed_dict = {sentence_placeholder: sentence_matrix, sent_lengths_placeholder: length,
-                         sentence_words_bow: bow_words}
-    sentence_encoder_outputs = sess.run(encoder_output_tensors, feed_dict=encoder_feed_dict)
-    decoder_feed_dict = {encoder_output_tensors[i]: sentence_encoder_outputs[i]
-                         for i in range(len(encoder_output_tensors))}
+        history_embedding_placeholder, token_unnormalized_dist, W_hidden = build_decoder(h, e_m)
 
-    if not learn_embeddings:
-        W_we = tf.get_default_graph().get_tensor_by_name('W_we:0')
-        encoder_feed_dict = union_dicts(encoder_feed_dict, {W_we: embeddings_matrix})
-    return encoder_feed_dict, decoder_feed_dict
+        logits = tf.transpose(token_unnormalized_dist)
 
+        labels_placeholder = tf.placeholder(tf.float32, shape=(BEAM_SIZE, 1))
+        logits = tf.reshape(logits, (1, BEAM_SIZE))
+        labels_cur = tf.reshape(labels_placeholder, (1, BEAM_SIZE))
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
+            labels=labels_cur, logits=logits, name='xentropy')
+        loss = tf.reduce_mean(cross_entropy, name='xentropy_mean')
 
-def get_feed_dicts_from_program(program, logical_tokens_embeddings_dict, program_dependent_placeholders, label,
-                                skipped_indices=[]):
-    """
-    creates the values needed and feed-dicts that depend on the program. (these include the history embeddings
-    and the chosen tokens, represented as one-hot vectors)
-    both used for computing gradients and the the first used also in every forward run.
-    """
+        # initialization
+        theta = tf.trainable_variables()
+        optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
+        compute_program_grads = optimizer.compute_gradients(cross_entropy)
+        batch_grad = build_batchGrad()
+        update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
+        sess.run(tf.global_variables_initializer())
 
-    histories = []
-    tokens_one_hot = []
-    for i in range(len(program)):
-        if i in skipped_indices:
-            continue
-        history_tokens = ['<s>' for _ in range(MAX_DECODING_LENGTH - i)] + \
-                         program[max(0, i - MAX_DECODING_LENGTH): i]
+        # load pre-trained variables, if given
+        if load_params_path:
+            tf.train.Saver(var_list=theta).restore(sess, load_params_path)
+        if save_model_path:
+            saver = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
 
-        BOW_history = [sparse_vector_from_indices(n_logical_tokens,
-                                                  [logical_tokens_ids[tok] for tok in program])] \
-            if USE_BOW_HISTORY else []
-        history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens] + BOW_history
-        history_embs = np.reshape(np.concatenate(history_embs), [1, MAX_DECODING_LENGTH])
-        histories.append(history_embs)
-        tokens_one_hot.append(one_hot(n_logical_tokens, logical_tokens_ids[program[i]]))
+        # initialize gradient buffers to zero
+        gradList = sess.run(theta)
+        gradBuffer = {}
+        for i, grad in enumerate(gradList):
+            gradBuffer[i] = grad * 0
 
-    one_hot_stacked = np.stack(tokens_one_hot)
-    histories_stacked = np.squeeze(np.stack(histories), axis=1)
-    return {
-        program_dependent_placeholders[0]: histories_stacked,
-        program_dependent_placeholders[1]: one_hot_stacked,
-        labels_placeholder: label
-    }
+        epochs = 0
 
-
-# build the computaional graph:
-# bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
-# and returns the lstm outputs.
-
-sentence_placeholder, sent_lengths_placeholder, sentence_words_bow, h, e_m = build_sentence_encoder(
-    vocabulary_size=len(one_hot_dict))
-
-# ff decoder - given the outputs of the encoder, and an embedding of the decoding history,
-# computes a probability distribution over the tokens.
-history_embedding_placeholder, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
-
-#not used
-valid_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                      name="valid_logical_tokens")
-token_prob_dist_tensor = tf.nn.softmax(token_unnormalized_dist, dim=0)
-chosen_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                       name="chosen_logical_tokens")  # a one-hot vector represents the action taken at each step
-invalid_logical_tokens_mask = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                             name="invalid_logical_tokens_mask")
-
-program_dependent_placeholders = (history_embedding_placeholder,
-                                  chosen_logical_tokens,
-                                  invalid_logical_tokens_mask)
-
-logits = tf.transpose(token_unnormalized_dist)  # + invalid_logical_tokens_mask
-
-labels_placeholder = tf.placeholder(tf.float32, shape=(BEAM_SIZE,1))
-logits = tf.reshape(logits,(1,BEAM_SIZE))
-labels_cur = tf.reshape(labels_placeholder,(1,BEAM_SIZE))
-cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
-    labels=labels_cur, logits=logits, name='xentropy')
-loss = tf.reduce_mean(cross_entropy, name='xentropy_mean')
-
-
-def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=None, save_model_path=None,
-              return_sentences_results=None, beam_classifier=False, beam_classifier_test=False, clf_params_path=None,
-              beam_reranking_train=False):
-
-
-    modes = ('train', 'test')
-    assert mode in modes
-    test_between_training_epochs = validation_dataset is not None
-    if (mode == 'test'):
-        test_between_training_epochs = False
-
-    # initialization
-    theta = tf.trainable_variables()
-    optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
-    compute_program_grads = optimizer.compute_gradients(cross_entropy)
-    batch_grad = build_batchGrad()
-    update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
-    sess.run(tf.global_variables_initializer())
-
-    # load pre-trained variables, if given
-    if load_params_path:
-        tf.train.Saver(var_list=theta).restore(sess, load_params_path)
-    if save_model_path:
-        saver = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
-
-    # initialize gradient buffers to zero
-    gradList = sess.run(theta)
-    gradBuffer = {}
-    for i, grad in enumerate(gradList):
-        gradBuffer[i] = grad * 0
-
-
-    curr_dataset, other_dataset = dataset, validation_dataset
-    curr_mode = mode
-    epochs = 0
-
-    while epochs < 30:
-
-        # get a mini-batch of sentences and their related images
-        batch, is_last_batch_in_epoch = curr_dataset.next_batch(BATCH_SIZE_UNSUPERVISED)
-        batch_sentence_ids = [key for key in batch.keys()]
-        sentences, samples = zip(*[batch[k] for k in batch_sentence_ids])
-
-        # get a dictionary of the current embeddings of the logical tokens
-        # (in train they are change after every mini batch - as they are also trainable variables)
-        current_logical_tokens_embeddings = sess.run(W_logical_tokens)
+        examples = pickle.load(open(examples_file, 'rb'))
+        #current_logical_tokens_embeddings = pickle.load(open(logical_tokens_embeddings_file,'rb'))#TODO can also initialize word embeddings
         logical_tokens_embeddings_dict = \
             {token: current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens_ids}
 
-        sum_loss = 0
-        total = 0
-        epochs += 1
+        while epochs < 30:
 
-        for step in range(len(sentences)):
+            np.shuffle(examples)
 
-            sentence_id = batch_sentence_ids[step]
-            sentence = (sentences[step])
-            related_samples = samples[step]
-            program = programs[step]
-            label = labels[step]
+            sum_loss = 0
+            total = 0
+            epochs += 1
 
-            encoder_feed_dict, decoder_feed_dict = \
-                get_feed_dicts_from_sentence(sentence, sentence_placeholder, sent_lengths_placeholder,
-                                             sentence_words_bow, (h, e_m), LEARN_EMBEDDINGS)
+            for step in range(len(examples)):
 
-            program_dependent_feed_dict = get_feed_dicts_from_program(
-                program, logical_tokens_embeddings_dict, program_dependent_placeholders, label)
-            program_grad, ce = sess.run([compute_program_grads,loss], feed_dict=union_dicts(encoder_feed_dict, program_dependent_feed_dict))
-            for i, grad in enumerate(program_grad):
-                gradBuffer[i] += grad[0]
-            sum_loss += ce
-            total += 1
+                sentence = (examples[step][0])
+                program = examples[step][1]
+                label = examples[step][2]
 
-            if step % BATCH_SIZE_UNSUPERVISED == 0:
-                sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
-                print("average loss in batch:",sum_loss/total)
-                for i, grad in enumerate(gradBuffer):
-                    gradBuffer[i] = gradBuffer[i] * 0
-                sum_loss = 0
-                total = 0
+                label_one_hot = np.zeros(2)
+                label_one_hot[label] = 1
+
+                sentence_matrix = np.stack([one_hot_dict.get(w, one_hot_dict['<UNK>']) for w in sentence.split()])
+                bow_words = np.reshape(np.sum([words_array == x for x in sentence.split()], axis=0),
+                                       [1, len(words_vocabulary)])
+
+                length = [len(sentence.split())]
+
+                history_tokens = ['<s>' for _ in range(MAX_DECODING_LENGTH - len(program))] + \
+                                 program[-MAX_DECODING_LENGTH:]
+
+                history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens]
+                history_embs = np.reshape(np.concatenate(history_embs), [1, MAX_DECODING_LENGTH])
+
+                feed_dict = {sentence_placeholder: sentence_matrix, sent_lengths_placeholder: length,
+                             sentence_words_bow: bow_words, history_embedding_placeholder: history_embs,
+                             labels_placeholder: label_one_hot}
+
+                if inference:
+                    # if the model is used in inference, it returns the probability of the sentence and the program to be consistent
+                    result = tf.nn.softmax(sess.run(logits, feed_dict=feed_dict))[1]
+                    return result
+
+                program_grad, ce = sess.run([compute_program_grads,loss], feed_dict=feed_dict)
+                for i, grad in enumerate(program_grad):
+                    gradBuffer[i] += grad[0]
+                sum_loss += ce
+                total += 1
+
+                if step % BATCH_SIZE_UNSUPERVISED == 0:
+                    sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
+                    print("average loss in batch:",sum_loss/total)
+                    for i, grad in enumerate(gradBuffer):
+                        gradBuffer[i] = gradBuffer[i] * 0
+                    sum_loss = 0
+                    total = 0
     time_stamp = time.strftime("%Y-%m-%d_%H_%M")
-    saver.save(sess,open('beamClassificationWeights'+time_stamp+'.ckpt','wb'))
+    saver.save(sess,open('similarityModelWeights'+time_stamp+'.ckpt','wb'))
 
     return {}
 
