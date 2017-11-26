@@ -190,6 +190,7 @@ class Sample:
         self.sentence = line["sentence"]
         self.label = line["label"] == 'true'
         self.structured_rep = Image(line["structured_rep"])
+        self.abstraction_dict = {}
 
 
 

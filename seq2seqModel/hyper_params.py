@@ -5,6 +5,7 @@ import definitions
 ###hyperparameters
 ####
 
+
 #dimensions
 WORD_EMB_SIZE = 12
 LOG_TOKEN_EMB_SIZE = 12
@@ -41,9 +42,6 @@ N_CACHED_PROGRAMS = 10 if USE_CACHED_PROGRAMS else 0
 LOAD_CACHED_PROGRAMS = False
 SAVE_CACHED_PROGRAMS = False
 
-SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
-    # if true, the set of logical tokens that can be used in a parogram is reduced to tokens
-    # that can relate to the content of the sentence ()
 
 AVOID_ALL_TRUE_SENTENCES = False
     # if true, the data set of the trainning will incluse only sentences that have also images labeles false.
@@ -64,8 +62,12 @@ SKIP_AUTO_TOKENS = True
 INJECT_TO_BEAM = True and USE_CACHED_PROGRAMS
     # if true, the prefixes of suggested cached programs are injected to the beam at each step, if not in th beam already.
 
-
-
+if definitions.version1:
+    SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = True
+    # if true, the set of logical tokens that can be used in a parogram is reduced to tokens
+    # that can relate to the content of the sentence ()
+else:
+    SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH = False
 
 #paths
 
@@ -73,11 +75,11 @@ if definitions.MANUAL_REPLACEMENTS:
     WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'embeddings_10iters_12dim')
     PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeightsPreTrain', 'trained_variables_sup_with_embeddings.ckpt')
 else:
-    WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'new_embeddings_10iters_12dim_unk3')
+    WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'new_embeddings')
     PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_trained_variables_sup_with_embeddings.ckpt')
 
 TRAINED_WEIGHTS_BEST = \
-    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_cached_auto_inj_with_embeddings.ckpt')
+    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_best_8_replacements')
 LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
 CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',

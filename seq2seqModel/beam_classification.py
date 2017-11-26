@@ -1,4 +1,5 @@
 import tensorflow as tf
+import math
 import numpy as np
 
 g_2 = tf.Graph()
@@ -8,12 +9,13 @@ def run_beam_classification(sess,features,labels,beam_size,save_path=None,infere
     input_index = 0
     sentence_num = len(labels)
     feat_length = len(features[0][0])
-    learning_rate = 0.001
+    learning_rate = 0.005
     hidden_layer_size = 100
     hidden_layer_size2 = 70
 
+    #tf.reset_default_graph()
     with tf.variable_scope("classification", reuse=reuse):
-
+        #with g_2.as_default():
         # input placeholders
         feats_placeholder = tf.placeholder(tf.float32, shape=(beam_size,feat_length))
         labels_placeholder = tf.placeholder(tf.float32, shape=(beam_size,1))
@@ -68,6 +70,7 @@ def run_beam_classification(sess,features,labels,beam_size,save_path=None,infere
         b1grad = tf.placeholder(tf.float32, name="b1grad")
         b2grad = tf.placeholder(tf.float32, name="b2grad")
         b3grad = tf.placeholder(tf.float32, name="b3grad")
+        #batch_grad = [w1grad,b1grad,w2grad,b2grad,w3grad,b3grad]
         batch_grad = [w1grad,b1grad,w2grad,b2grad,w3grad,b3grad,w4grad]
         update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
 
@@ -80,9 +83,10 @@ def run_beam_classification(sess,features,labels,beam_size,save_path=None,infere
         gradBuffer = {}
         for i, grad in enumerate(gradList):
             gradBuffer[i] = grad * 0
-
+        #sum_loss=0
+        #total=0
         if not inference:
-            for epoch in range(1000):
+            for epoch in range(100):
                 input_index = 0
                 correct = 0
                 sum_loss = 0
@@ -119,7 +123,7 @@ def run_beam_classification(sess,features,labels,beam_size,save_path=None,infere
                         feed_dict = {labels_placeholder: np.reshape(batch_labels[index_in_batch],(beam_size,1)),
                                      feats_placeholder: batch_features[index_in_batch]}
 
-                        probs, ce = sess.run([logits,cross_entropy],feed_dict=feed_dict)
+                        probs,  ce = sess.run([logits,cross_entropy],feed_dict=feed_dict)
                         if batch_labels[index_in_batch][np.argmax(probs)] > 0:
                             correct += 1
                         if batch_labels[index_in_batch][0] == 0: # in how  many cases the best by the model is wrong
@@ -127,7 +131,9 @@ def run_beam_classification(sess,features,labels,beam_size,save_path=None,infere
                         if batch_labels[index_in_batch][np.argmax(probs)] > 0 and batch_labels[index_in_batch][0] == 0:
                             # in how many cases the reranker was right and the model was wrong
                             fulfilled_potential += 1
-
+                        #print("probs:",probs)
+                        #if input_index > 100:"classification/xentropy_mean"
+                        #params = sess.run(theta)
                         loss_cur, program_grad = sess.run([regularized_loss,compute_program_grads], feed_dict=feed_dict)
                         sum_loss += loss_cur
                         total += 1
@@ -138,12 +144,14 @@ def run_beam_classification(sess,features,labels,beam_size,save_path=None,infere
                     sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
                     for var, grad in enumerate(gradBuffer):
                         gradBuffer[var] = gradBuffer[var] * 0
-
+                #if epoch%5 == 0:
                 print("epoch: ",epoch)
                 print("average loss: {0:.3f}".format(sum_loss/total))
                 print("epoch training accuracy: {0:.3f}".format(correct/total * 100))
                 print("reranker potential: {0:.3f}".format(potential / total * 100))
                 print("reranker fulfilled potential: {0:.3f}".format(fulfilled_potential / total * 100))
+                    #sum_loss = 0
+                    #total = 0
 
 
             if save_path:
@@ -158,8 +166,8 @@ def run_beam_classification(sess,features,labels,beam_size,save_path=None,infere
         if np.sum(labels[0]) > 0:
             labels[0] = labels[0] / np.sum(labels[0])
         labels[0] = np.reshape(labels[0],(beam_size,1))
-        probs = sess.run([logits], feed_dict={feats_placeholder:features[0]})
+        probs = sess.run([logits], feed_dict={feats_placeholder:features[0]})#, labels_placeholder:labels[0]
         result = np.argmax(probs[:original_len])
         print(result)
-    return result
+        return result
 

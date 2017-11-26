@@ -79,21 +79,21 @@ def build_decoder(lstm_outputs, final_utterance_embedding):
     that are called from other methods. Names of marics and vectors follow those in the paper.
     """
 
-    history_embedding = tf.placeholder(shape=[None, MAX_DECODING_LENGTH], dtype=tf.float32, name="history_embedding")
+    history_embedding = tf.placeholder(shape=[None, MAX_DECODING_LENGTH*LOG_TOKEN_EMB_SIZE], dtype=tf.float32, name="history_embedding")
     num_rows = tf.shape(history_embedding)[0]
     e_m_tiled = tf.tile(final_utterance_embedding, ([num_rows, 1]))
     decoder_input = tf.concat([e_m_tiled, history_embedding], axis=1)
-    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE + MAX_DECODING_LENGTH + len(words_vocabulary)],
+    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE_NEW, SENT_EMB_SIZE + MAX_DECODING_LENGTH*LOG_TOKEN_EMB_SIZE + len(words_vocabulary)],
                           initializer=tf.contrib.layers.xavier_initializer())
     q_t = tf.nn.relu(tf.matmul(W_q, tf.transpose(decoder_input)))
-    W_a = tf.get_variable("W_a", shape=[DECODER_HIDDEN_SIZE, SENT_EMB_SIZE],
+    W_a = tf.get_variable("W_a", shape=[DECODER_HIDDEN_SIZE_NEW, SENT_EMB_SIZE],
                           initializer=tf.contrib.layers.xavier_initializer())
     alpha = tf.nn.softmax(tf.matmul(tf.matmul(tf.transpose(q_t), W_a), tf.transpose(lstm_outputs)))
     c_t = tf.matmul(alpha, lstm_outputs)  # attention vector
-    W_s = tf.get_variable("W_s", shape=[HIDDEN_SIZE_NEW, DECODER_HIDDEN_SIZE + SENT_EMB_SIZE],
+    W_s = tf.get_variable("W_s", shape=[DECODER_HIDDEN_SIZE_NEW, DECODER_HIDDEN_SIZE_NEW + SENT_EMB_SIZE],
                           initializer=tf.contrib.layers.xavier_initializer())
     W_hidden = tf.get_variable("W_hidden", dtype=tf.float32,
-                                       shape=[2, HIDDEN_SIZE_NEW],
+                                       shape=[2, DECODER_HIDDEN_SIZE_NEW],
                                        initializer=tf.contrib.layers.xavier_initializer())
     token_unnormalized_dist = tf.matmul(W_hidden, tf.matmul(W_s, tf.concat([q_t, tf.transpose(c_t)], 0)))
     return history_embedding, token_unnormalized_dist, W_hidden
@@ -119,14 +119,14 @@ def build_batchGrad():
 
 
 
-def run_similarity_model(sess, examples_file, current_logical_tokens_embeddings, load_params_path=None, save_model_path=None,
-              inference=False):
+def run_similarity_model(sess, examples, current_logical_tokens_embeddings, load_params_path=None, save_model_path=None,
+              inference=False, reuse=False):
 
     tf.set_random_seed(1)
     np.random.seed(1)
     # build the computaional graph:
 
-    with tf.variable_scope("similarity", reuse=inference):
+    with tf.variable_scope("similarity", reuse=reuse):
         logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
         sentence_placeholder, sent_lengths_placeholder, sentence_words_bow, h, e_m = build_sentence_encoder(
             len(one_hot_dict), embeddings_matrix)
@@ -135,9 +135,9 @@ def run_similarity_model(sess, examples_file, current_logical_tokens_embeddings,
 
         logits = tf.transpose(token_unnormalized_dist)
 
-        labels_placeholder = tf.placeholder(tf.float32, shape=(BEAM_SIZE, 1))
-        logits = tf.reshape(logits, (1, BEAM_SIZE))
-        labels_cur = tf.reshape(labels_placeholder, (1, BEAM_SIZE))
+        labels_placeholder = tf.placeholder(tf.float32, shape=(2,1))
+        logits = tf.reshape(logits, (1, 2))
+        labels_cur = tf.reshape(labels_placeholder, (1, 2))
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
             labels=labels_cur, logits=logits, name='xentropy')
         loss = tf.reduce_mean(cross_entropy, name='xentropy_mean')
@@ -145,7 +145,7 @@ def run_similarity_model(sess, examples_file, current_logical_tokens_embeddings,
         # initialization
         theta = tf.trainable_variables()
         optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
-        compute_program_grads = optimizer.compute_gradients(cross_entropy)
+        compute_program_grads = optimizer.compute_gradients(cross_entropy)#TODO loss?
         batch_grad = build_batchGrad()
         update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
         sess.run(tf.global_variables_initializer())
@@ -164,14 +164,14 @@ def run_similarity_model(sess, examples_file, current_logical_tokens_embeddings,
 
         epochs = 0
 
-        examples = pickle.load(open(examples_file, 'rb'))
+        #examples = pickle.load(open(examples_file, 'rb'))
         #current_logical_tokens_embeddings = pickle.load(open(logical_tokens_embeddings_file,'rb'))#TODO can also initialize word embeddings
         logical_tokens_embeddings_dict = \
             {token: current_logical_tokens_embeddings[logical_tokens_ids[token]] for token in logical_tokens_ids}
 
         while epochs < 30:
 
-            np.shuffle(examples)
+            np.random.shuffle(examples)
 
             sum_loss = 0
             total = 0
@@ -183,8 +183,10 @@ def run_similarity_model(sess, examples_file, current_logical_tokens_embeddings,
                 program = examples[step][1]
                 label = examples[step][2]
 
-                label_one_hot = np.zeros(2)
-                label_one_hot[label] = 1
+                label_one_hot = np.zeros((2,1))
+                label_one_hot[int(label)][0] = 1
+                if np.sum(label_one_hot)!= 1:
+                    print("invalid label")
 
                 sentence_matrix = np.stack([one_hot_dict.get(w, one_hot_dict['<UNK>']) for w in sentence.split()])
                 bow_words = np.reshape(np.sum([words_array == x for x in sentence.split()], axis=0),
@@ -196,7 +198,7 @@ def run_similarity_model(sess, examples_file, current_logical_tokens_embeddings,
                                  program[-MAX_DECODING_LENGTH:]
 
                 history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens]
-                history_embs = np.reshape(np.concatenate(history_embs), [1, MAX_DECODING_LENGTH])
+                history_embs = np.reshape(np.concatenate(history_embs), [1, MAX_DECODING_LENGTH*LOG_TOKEN_EMB_SIZE])
 
                 feed_dict = {sentence_placeholder: sentence_matrix, sent_lengths_placeholder: length,
                              sentence_words_bow: bow_words, history_embedding_placeholder: history_embs,
@@ -204,8 +206,8 @@ def run_similarity_model(sess, examples_file, current_logical_tokens_embeddings,
 
                 if inference:
                     # if the model is used in inference, it returns the probability of the sentence and the program to be consistent
-                    result = tf.nn.softmax(sess.run(logits, feed_dict=feed_dict))[1]
-                    return result
+                    result = tf.nn.softmax(sess.run(logits, feed_dict=feed_dict)).eval()
+                    return result[0,1]
 
                 program_grad, ce = sess.run([compute_program_grads,loss], feed_dict=feed_dict)
                 for i, grad in enumerate(program_grad):
@@ -215,13 +217,16 @@ def run_similarity_model(sess, examples_file, current_logical_tokens_embeddings,
 
                 if step % BATCH_SIZE_UNSUPERVISED == 0:
                     sess.run(update_grads, feed_dict={g: gradBuffer[i] for i, g in enumerate(batch_grad)})
-                    print("average loss in batch:",sum_loss/total)
+
                     for i, grad in enumerate(gradBuffer):
                         gradBuffer[i] = gradBuffer[i] * 0
-                    sum_loss = 0
-                    total = 0
+                    if step % (BATCH_SIZE_UNSUPERVISED*10) ==0:
+                        print("epoch: ", epochs, "average loss in epoch so far:", sum_loss / total)
+                        #sum_loss = 0
+                        #total = 0
     time_stamp = time.strftime("%Y-%m-%d_%H_%M")
-    saver.save(sess,open('similarityModelWeights'+time_stamp+'.ckpt','wb'))
+    if save_model_path:
+        saver.save(sess,save_model_path)
 
     return {}
 

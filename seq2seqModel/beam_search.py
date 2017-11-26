@@ -10,7 +10,8 @@ from seq2seqModel.partial_program import *
 from seq2seqModel.hyper_params import MAX_DECODING_LENGTH, MAX_STEPS, BEAM_SIZE, SKIP_AUTO_TOKENS, INJECT_TO_BEAM
 from seq2seqModel.beam_boosting import *
 
-
+np.random.seed(1)
+random.seed(1)
 
 decoding_steps_from_sentence_length = lambda n : 5 + n
 

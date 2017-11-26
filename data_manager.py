@@ -60,12 +60,17 @@ def build_data(data, preprocessing_type=None, use_unk=True):
             sentences[s_index] = line["sentence"]
 
     sentences = preprocess_sentences(sentences, mode=None, processing_type=preprocessing_type)
+    if preprocessing_type == 'abstraction':
+        dicts_dict = {idx: sent[1] for idx, sent in sentences.items()}
+        sentences = {idx: sent[0] for idx, sent in sentences.items()}
     if use_unk:
         sentences = replace_rare_words_with_unk(sentences)
 
     for s in samples:
         s_index = int(str.split(s.identifier, "-")[0])
         s.sentence = sentences[s_index]
+        if preprocessing_type == 'abstraction':
+            s.abstraction_dict = dicts_dict[s_index]
 
     return samples, sentences
 
@@ -147,27 +152,42 @@ class CNLVRDataSet:
         self.original_sentences = preprocess_sentences(sentences, processing_type='shallow')
 
         if self.__dataset == DataSet.TRAIN:
-            if definitions.MANUAL_REPLACEMENTS:
-                self.processed_sentences = \
-                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='deep'))
-            else:
-                self.processed_sentences = \
-                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode=None, processing_type='lemmatize'))
-
-
+            mode = None
+            counts_file = None
         else:
-            if definitions.MANUAL_REPLACEMENTS:
-                self.processed_sentences = \
-                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='deep'),
-                                                definitions.TOKEN_COUNTS_PROCESSED)
-            else:
-                self.processed_sentences = \
-                    replace_rare_words_with_unk(preprocess_sentences(sentences, mode='r', processing_type='lemmatize'),
-                                                definitions.TOKEN_COUNTS_PROCESSED)
+            mode = 'r'
+            counts_file = definitions.TOKEN_COUNTS_PROCESSED
+
+        if definitions.ABSTRACTION:
+            self.processed_sentences = preprocess_sentences(sentences, mode=mode, processing_type='abstraction')
+            dicts_dict = {idx: sent[1] for idx, sent in self.processed_sentences.items()}
+            self.processed_sentences = {idx: sent[0] for idx, sent in self.processed_sentences.items()}
+        else:
+            self.processed_sentences = preprocess_sentences(sentences, mode=mode, processing_type='deep')
+        self.processed_sentences = replace_rare_words_with_unk(self.processed_sentences, counts_file)
+
+        # if self.__dataset == DataSet.TRAIN:
+        #     self.processed_sentences = \
+        #         preprocess_sentences(sentences, mode=None, processing_type='deep')
+        #
+        # else:
+        #     self.processed_sentences = \
+        #         preprocess_sentences(sentences, mode='r', processing_type='deep')
+        #
+        # if self.__dataset == DataSet.TRAIN:
+        #     self.processed_sentences = replace_rare_words_with_unk(self.processed_sentences)
+        #
+        # else:
+        #     self.processed_sentences = \
+        #         replace_rare_words_with_unk(self.processed_sentences,
+        #                                     definitions.TOKEN_COUNTS_PROCESSED)
+
 
         for s in self.samples.values():
             s_index = int(str.split(s.identifier, "-")[0])
             s.sentence = self.processed_sentences[s_index]
+            if definitions.ABSTRACTION:
+                s.abstraction_dict = dicts_dict[s_index]
 
         self.__ids = [k for k in self.original_sentences.keys()]
         #self.sentences_quardpled_ids = []

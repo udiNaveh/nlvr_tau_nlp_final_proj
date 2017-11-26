@@ -5,10 +5,10 @@ import json
 import pickle
 import definitions
 from data_manager import *
-
+from seq2seqModel.hyper_params import *
 
 # sents_path = None
-EMBED_DIM = 20
+EMBED_DIM = 12
 LR = 0.1
 ITERNUM = 10
 
@@ -155,6 +155,10 @@ def word2vec_form_path(trainpath, savepath, embed_dim = EMBED_DIM, iternum = ITE
 if __name__=='__main__':
     train = definitions.TRAIN_JSON
     data = read_data(train)
-    samples, sents_dict = build_data(data, preprocessing_type='lemmatize')
+    if definitions.ABSTRACTION:
+        # TODO right now this will learn 2 different embeddings for T_COLOR and T_COLOR_2. should be fixed
+        samples, sents_dict = build_data(data, preprocessing_type='abstraction')
+    else:
+        samples, sents_dict = build_data(data, preprocessing_type='deep')
     sents_to_parse = sents_dict.values()
-    embed_dict = word2vec(sents_to_parse,'new_word_embeddings_20dim_unk3')
+    embed_dict = word2vec(sents_to_parse, WORD_EMBEDDINGS_PATH)
