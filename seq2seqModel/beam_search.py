@@ -50,7 +50,7 @@ def e_greedy_randomized_beam_search(next_token_probs_getter, logical_tokens_mapp
 
         max_decoding_steps = decoding_steps_from_sentence_length(len(original_sentence.split()))
     else:
-            max_decoding_steps = MAX_STEPS
+        max_decoding_steps = MAX_STEPS
 
     suggested_programs = {}
     for decoding in suggested_decodings:

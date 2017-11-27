@@ -1,0 +1,125 @@
+## Token inventory for a logical formal language.
+## Each line has the structure:
+## <token_name>	 <number of arguments>  [<types of arguments>] <return type> [: <necessary words>]
+## Note that the number of arguments can be deduced, but was kept anyway just to be on the safe side.
+## Tokens that represent known entities, like ALL_BOXES, or Color.BLUE are treated as
+## Functions that take no arguments, and their return type is their own type, i.e.
+## set<set<Item>>, and set<Color>, respectively.
+## Question marks are used as 'wildcards'. So for example, 'count' gets an argument of type set<?>,
+## which means that any set can be given as an argument to 'count'.
+## Note that in order to generate logical forms that complie, all tokens here must correspond to
+## functions defined in logical_forms.py. However, the opposite is not true, which means that we can have here
+## only a subset of the possible functions defined in logical_forms.py.
+## The optional list of necessary words is used for sentence driven constraints on the beam search.
+## So for example, the line:
+## is_bottom	1	Item	bool	:	bottom	first
+## mean that the token is_bottom takes 1 argument of type 'Item', it returns a boolean,
+## and if sentence-driven constraints are applied, it can only be used for parsing sentences that
+## contain at least one of the words 'bottom' or 'first'
+
+
+exist	1	set<?>	bool
+
+#unique	1	set<Item>	Item
+
+count	1	set<?>	int
+
+filter	2	set<?> bool_func<?>	set<?>
+
+All	2	set<?>	bool_func<?>	bool
+
+Any	2	set<?>	bool_func<?>	bool
+
+all_same_attribute	2	set<?>	func<?>	bool
+
+## boolean Item functions
+
+is_T_COLOR	1	Item	bool
+
+is_T_COLOR_2	1	Item	bool
+
+is_T_COLOR_3	1	Item	bool
+
+is_T_SHAPE	1	Item	bool
+
+is_T_SHAPE_2	1	Item	bool
+
+is_T_SHAPE_3	1	Item	bool
+
+is_T_SIZE	1	Item	bool
+
+is_T_SIZE_2	1	Item	bool
+
+is_T_SIZE_3	1	Item	bool
+
+is_T_LOC	1	Item	bool
+
+is_T_LOC_2	1	Item	bool
+
+is_touching_wall	2	Item	Side	bool
+
+is_touching_corner	2	Item	Side	bool
+
+query_color	1	Item|set<Item>	set<Color>
+
+query_size	1	Item|set<Item>	set<Size>
+
+query_shape	1	Item|set<Item>	set<Shape>
+
+T_QUANTITY_COMPARE	2	int int	bool
+
+T_QUANTITY_COMPARE_2	2	int int	bool
+
+T_QUANTITY_COMPARE_3	2	int int	bool
+
+equal	2	? ?  bool
+
+get_box_inclusive	1	Item	set<Item>
+
+get_box_exclusive	1	Item	set<Item>
+
+AND	2	bool	bool	bool
+
+OR	2	bool	bool	bool
+
+NOT	1	bool	bool
+
+all_same	1	set<?>	bool
+
+union_all	1	set<set<Item>>	set<Item>
+
+get_T_REL	1	set<Item>|Item	set<Item>
+
+get_T_REL_2	1	set<Item>|Item	set<Item>
+
+get_touching	1	set<Item>|Item	set<Item>
+
+select 2	int	set<?>	set<set<?>>
+
+## known entities
+
+ALL_ITEMS 	0	set<Item>
+
+ALL_BOXES	0	set<set<Item>>
+
+Color.T_COLOR	0	set<Color>
+
+Color.T_COLOR_2	0	set<Color>
+
+Color.T_COLOR_3	0	set<Color>
+
+Shape.T_SHAPE	0	set<Shape>
+
+Shape.T_SHAPE_2	0	set<Shape>
+
+Shape.T_SHAPE_3	0	set<Shape>
+
+Side.RIGHT	0	Side
+
+Side.LEFT	0	Side
+
+Side.T_LOC	0	Side
+
+Side.T_LOC_2	0	Side
+
+Side.ANY	0	Side

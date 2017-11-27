@@ -5,6 +5,7 @@ import definitions
 from structured_rep import *
 from logical_forms import TokenTypes
 from sentence_processing import preprocess_sentences, replace_rare_words_with_unk
+from seq2seqModel.hyper_params import SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH
 
 np.random.seed(1)
 
@@ -319,8 +320,15 @@ def load_functions(filename):
             token, return_type, args_types = entry[0], entry[-1], entry[2:-1]
             functions_dict[token] = TokenTypes(return_type=return_type, args_types=args_types,
                                                necessity=necessary_words)
-        functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one', 'a'])
-        functions_dict.update(
-            {str(i): TokenTypes(return_type='int', args_types=[], necessity=[str(i)]) for i in range(2, 10)})
+
+        if SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH:
+            functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=['1', 'one', 'a'])
+            functions_dict.update(
+                {str(i): TokenTypes(return_type='int', args_types=[], necessity=[str(i)]) for i in range(2, 10)})
+        else:
+            functions_dict['1'] = TokenTypes(return_type='int', args_types=[], necessity=[])
+            functions_dict.update(
+                {str(i): TokenTypes(return_type='int', args_types=[], necessity=[]) for i in range(2, 10)})
+
 
     return functions_dict

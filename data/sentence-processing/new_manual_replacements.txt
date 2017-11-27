@@ -4,9 +4,7 @@
 
 block : item
 base: bottom
-object : item
-any : a
-wall : edge
 grey square : box
 contains : contain
-above : on
+wall : edge
+any : a

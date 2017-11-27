@@ -3,7 +3,7 @@ import numpy as np
 import os
 import re
 import pickle
-
+import random
 
 from sentence_processing import get_ngrams_counts
 import definitions
@@ -16,6 +16,13 @@ from seq2seqModel.hyper_params import MAX_DECODING_LENGTH
 
 token_mapping = load_functions(definitions.LOGICAL_TOKENS_MAPPING_PATH)
 
+rand_dict = {'T_COLOR': ['yellow', 'blue', 'black'], 'T_COLOR_2': ['yellow', 'blue', 'black'], 'T_COLOR_3': ['yellow', 'blue', 'black'],
+             'T_SHAPE': ['circle', 'square', 'triangle'], 'T_SHAPE_2': ['circle', 'square', 'triangle'], 'T_SHAPE_3': ['circle', 'square', 'triangle'],
+             'T_LOC': ['top', 'bottom'], 'T_LOC_2': ['top', 'bottom'], 'T_QUANTITY_COMPARE': ['lt', 'gt', 'le', 'ge'],
+             'T_QUANTITY_COMPARE_2': ['lt', 'gt', 'le', 'ge'], 'T_QUANTITY_COMPARE_3': ['lt', 'gt', 'le', 'ge'],
+             'T_REL': ['above', 'below'], 'T_REL_2': ['above', 'below'], 'T_INT': [str(i) for i in range(9)],
+             'T_INT_2': [str(i) for i in range(9)], 'T_INT_3': [str(i) for i in range(9)], 'T_SIZE': ['big', 'medium', 'small'],
+             'T_SIZE_2': ['big', 'medium', 'small'], 'T_SIZE_3': ['big', 'medium', 'small']}
 
 
 class PartialProgram:
@@ -254,6 +261,30 @@ class PartialProgram:
             prefix_program.add_token(tok, log_p)
 
         return prefix_program
+
+    def create_unabstract_tokseq(self, abstraction_dict):
+        '''
+        :param abstraction_dict: {'yellow': 'T_COLOR'}
+        :return:
+        '''
+        unabs_dict = {v: k for k,v in abstraction_dict.items()}
+        new_token_seq = []
+        for token in self.token_seq:
+            if 'T' not in token or any([token == k for k in ['NOT', 'ALL_ITEMS', 'Side.RIGHT', 'Side.LEFT']]):
+                new_token_seq.append(token)
+            else:
+                key = token[token.index('T'):]
+                if key in unabs_dict:
+                    rep = unabs_dict[key]
+                else:
+                    rep = random.choice(rand_dict[key])
+                if '.' in token:
+                    t = token.replace(key, rep.upper())
+                else:
+                    t = token.replace(key, rep)
+                new_token_seq.append(t)
+        self.unabstact_token_seq = new_token_seq
+
 
 
 ## utility methods for PartialProgram

@@ -29,7 +29,7 @@ def load_meta_data():
     embeddings_file = open(WORD_EMBEDDINGS_PATH, 'rb')
     embeddings_dict = pickle.load(embeddings_file)
     embeddings_file.close()
-    assert WORD_EMB_SIZE == np.size(embeddings_dict['blue'])
+    assert WORD_EMB_SIZE == np.size(embeddings_dict['there'])
     vocab_size = len(embeddings_dict)
     vocab_list = [k for k in sorted(embeddings_dict.keys())]
     one_hot_dict = {w: one_hot(vocab_size, i) for i, w in enumerate(vocab_list)}
@@ -37,17 +37,29 @@ def load_meta_data():
 
     # load logical tokens inventory
     logical_tokens_mapping = load_functions(LOGICAL_TOKENS_MAPPING_PATH)
+    if ABSTRACTION:
+        abstract_tokes_mapping = load_functions(ABSTRACT_TOKENS_MAPPING_PATH)
     logical_tokens = pickle.load(open(LOGICAL_TOKENS_LIST, 'rb'))
-    assert set(logical_tokens) == set(logical_tokens_mapping.keys())
+    if ABSTRACTION:
+        assert set(logical_tokens) == set(abstract_tokes_mapping.keys())
+    else:
+        assert set(logical_tokens) == set(logical_tokens_mapping.keys())
 
     for var in "xyzwuv":
         logical_tokens.extend([var, 'lambda_{}_:'.format(var)])
     logical_tokens.extend(['<s>', '<EOS>'])
     logical_tokens_ids = {lt: i for i, lt in enumerate(logical_tokens)}
-    return logical_tokens_ids, logical_tokens_mapping, embeddings_dict, one_hot_dict, embeddings_matrix
+    if ABSTRACTION:
+        return logical_tokens_ids, logical_tokens_mapping, abstract_tokes_mapping, embeddings_dict, one_hot_dict, embeddings_matrix
+    else:
+        return logical_tokens_ids, logical_tokens_mapping, embeddings_dict, one_hot_dict, embeddings_matrix
+
+if ABSTRACTION:
+    logical_tokens_ids, logical_tokens_mapping, abstract_tokes_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
+else:
+    logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
 
 
-logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
 if definitions.MANUAL_REPLACEMENTS:
     words_to_tokens = pickle.load(open(os.path.join(definitions.DATA_DIR, 'logical forms', 'words_to_tokens'), 'rb'))
 else:
@@ -154,6 +166,7 @@ def get_next_token_probs_from_nn(partial_program, logical_tokens_embeddings_dict
     if len(valid_next_tokens) == 1:
         return valid_next_tokens, [1.0]
 
+    # pad with '<s>' in case that HISTORY_LENGTH > len(partial_program)
     history_tokens = ['<s>' for _ in range(HISTORY_LENGTH - len(partial_program))] + \
                      partial_program[-HISTORY_LENGTH:]
 
@@ -408,11 +421,18 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
             original_sentence_for_beam = sentence if SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH else None
 
             # perform beam search to obtain candidate parsings for the sentence
-            beam = e_greedy_randomized_beam_search(next_token_probs_getter,
-                                                   logical_tokens_mapping,
-                                                   original_sentence=original_sentence_for_beam,
-                                                   epsilon=epsilon_for_beam,
-                                                   suggested_decodings=decodings_from_cache)
+            if ABSTRACTION:
+                beam = e_greedy_randomized_beam_search(next_token_probs_getter,
+                                                       abstract_tokes_mapping,
+                                                       original_sentence=original_sentence_for_beam,
+                                                       epsilon=epsilon_for_beam,
+                                                       suggested_decodings=decodings_from_cache)
+            else:
+                beam = e_greedy_randomized_beam_search(next_token_probs_getter,
+                                                       logical_tokens_mapping,
+                                                       original_sentence=original_sentence_for_beam,
+                                                       epsilon=epsilon_for_beam,
+                                                       suggested_decodings=decodings_from_cache)
 
             programs_execution_results = {}
             programs_from_cache = []
@@ -422,8 +442,14 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
                 if prog.token_seq in decodings_from_cache:
                     programs_from_cache.append(prog)
 
-                programs_execution_results[prog] = get_program_execution_stats(
-                    prog.token_seq, related_samples, logical_tokens_mapping)
+                if ABSTRACTION:
+                    # we assume that all related samples have the same abstraction_dict
+                    prog.create_unabstract_tokseq(related_samples[0].abstraction_dict)
+                    programs_execution_results[prog] = get_program_execution_stats(
+                        prog.unabstact_token_seq, related_samples, logical_tokens_mapping)
+                else:
+                    programs_execution_results[prog] = get_program_execution_stats(
+                        prog.token_seq, related_samples, logical_tokens_mapping)
 
             # update the dictionary of cached programs by sentence pattern according to
             # the execution results of the programs in the beam
@@ -737,8 +763,12 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
 
             golden_parsing = labels[step].split()
             try:
-                golden_program, (valid_tokens_history, greedy_choices) = \
-                    program_from_token_sequence(next_token_probs_getter, golden_parsing, logical_tokens_mapping)
+                if ABSTRACTION:
+                    golden_program, (valid_tokens_history, greedy_choices) = \
+                        program_from_token_sequence(next_token_probs_getter, golden_parsing, abstract_tokes_mapping)
+                else:
+                    golden_program, (valid_tokens_history, greedy_choices) = \
+                        program_from_token_sequence(next_token_probs_getter, golden_parsing, logical_tokens_mapping)
             except(ValueError) as ve:
                 continue
 
@@ -799,13 +829,13 @@ if __name__ == '__main__':
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
-    test_dataset2 = CNLVRDataSet(DataSet.TEST2)
+    # test_dataset2 = CNLVRDataSet(DataSet.TEST2)
 
     run_pre_train = False
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
-            run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training, num_epochs=7)
+            run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training, num_epochs=40)
         # evaluate supervised pre-training
         dev_dataset.restart()
         with tf.Session() as sess:
@@ -819,11 +849,12 @@ if __name__ == '__main__':
                                                  load_params_path=weights_from_supervised_pre_training,
                                                  return_sentences_results=False)
 
-        with tf.Session() as sess:
-            train_results_by_sentence = run_model(sess, train_dataset, mode='test',
-                                                  load_params_path=weights_from_supervised_pre_training,
-                                                  return_sentences_results=False)
-    run_train = False  # change to True if you really want to run the whole thing...
+        # with tf.Session() as sess:
+        #     train_results_by_sentence = run_model(sess, train_dataset, mode='test',
+        #                                           load_params_path=weights_from_supervised_pre_training,
+        #                                           return_sentences_results=False)
+
+    run_train = True  # change to True if you really want to run the whole thing...
 
     if run_train:
         # training the weakly supervised model with weights initialized to the values learned in the supervises learning.
@@ -889,18 +920,18 @@ if __name__ == '__main__':
 
         # weights = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_2017-11-01_12_21.ckpt-13')
 
-        # train_dataset.restart()
-        # with tf.Session() as sess:
-        #    train_results_by_sentence = run_model(sess, train_dataset, mode='test',
-        #                                        load_params_path=weights, return_sentences_results=False)
+        train_dataset.restart()
+        with tf.Session() as sess:
+           train_results_by_sentence = run_model(sess, train_dataset, mode='test',
+                                               load_params_path=best_weights_so_far, return_sentences_results=False)
 
-        # dev_dataset.restart()
-        # with tf.Session() as sess:
-        #     dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
-        #                                         load_params_path=best_weights_so_far, return_sentences_results=False)
-        #
+        dev_dataset.restart()
+        with tf.Session() as sess:
+            dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
+                                                load_params_path=best_weights_so_far, return_sentences_results=False)
+
         # save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
-        #
+
         # test_dataset.restart()
         # with tf.Session() as sess:
         #     test_results_by_sentence = run_model(sess, test_dataset, mode='test',
@@ -908,9 +939,9 @@ if __name__ == '__main__':
         #
         #     save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
 
-        test_dataset2.restart()
-        with tf.Session() as sess:
-            test_results_by_sentence = run_model(sess, test_dataset2, mode='test',
-                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
-
-            save_sentences_test_results(test_results_by_sentence, test_dataset2, SENTENCES_RESULTS_FILE_TEST2)
+        # test_dataset2.restart()
+        # with tf.Session() as sess:
+        #     test_results_by_sentence = run_model(sess, test_dataset2, mode='test',
+        #                                          load_params_path=best_weights_so_far, return_sentences_results=False)
+        #
+        #     save_sentences_test_results(test_results_by_sentence, test_dataset2, SENTENCES_RESULTS_FILE_TEST2)

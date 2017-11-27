@@ -38,8 +38,11 @@ if MANUAL_REPLACEMENTS:
 else:
     SUPERVISED_TRAIN_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'new_pairs_train_final')
     SUPERVISED_VALIDATION_PICKLE = os.path.join(DATA_DIR, 'parsed sentences', 'new_pairs_validation_final')
+    # TODO check usages of LOGICAL_TOKENS_MAPPING_PATH
     LOGICAL_TOKENS_MAPPING_PATH = os.path.join(DATA_DIR, 'logical forms', 'new token mapping.txt')
     SYNONYMS_PATH = os.path.join(DATA_DIR, 'sentence-processing', 'new_manual_replacements.txt')
     OLD_SYNONYMS_PATH = os.path.join(DATA_DIR, 'sentence-processing', 'manual_replacements.txt')
 
-ABSTRACTION = False
+ABSTRACTION = True
+if ABSTRACTION:
+    ABSTRACT_TOKENS_MAPPING_PATH = os.path.join(DATA_DIR, 'logical forms', 'abstract token mapping.txt')

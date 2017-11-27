@@ -14,8 +14,8 @@
   bottom : T_LOC
   base : T_LOC
   first : T_LOC
-  second : T_LOC
-  third : T_LOC
+#  second : T_LOC
+#  third : T_LOC
 
 # quantity_words
   at most : T_QUANTITY_COMPARE

@@ -196,7 +196,7 @@ def replace_rare_words_with_unk(sentences, tokens_file=None):
     else:
         unigrams = load_ngrams(tokens_file, 1)
     for k, s in sentences.items():
-        sentences[k] = " ".join([w  if unigrams.get(w,0)>=MIN_COUNT else '<UNK>' for w in s])
+        sentences[k] = " ".join([w  if unigrams.get(w,0)>=MIN_COUNT or 'T' in w else '<UNK>' for w in s])
     return sentences
 
 
@@ -208,7 +208,7 @@ def preprocess_sentences(sentences_dic, mode = None, processing_type= None):
     phases are done sequentially one after the other.
     :return: r
     """
-    # TODO right now it's either 'abstraction' *or* 'deep'. nee to amend here if we want both
+    # TODO right now it's either 'abstraction' *or* 'deep'. need to amend here if we want both
 
     if processing_type is None:
         return sentences_dic # no processing
@@ -350,24 +350,25 @@ def abstract(sent_dict):
     for idx in sent_dict:
         rep_dict = {}
         sent = sent_dict[idx]
+        sent = ' ' + sent + ' '
         for key in words_to_patterns.keys():
-            if key in sent:
-                if words_to_patterns[key] not in rep_dict.values():
-                    sent = sent.replace(key, words_to_patterns[key])
+            rep_key = ' ' + key + ' '
+            if rep_key in sent:
+                # TODO maybe think about the policy for duplicated abstract words
+                if words_to_patterns[key] not in rep_dict.keys():
+                    sent = sent.replace(rep_key, ' ' + words_to_patterns[key] + ' ')
                     rep_dict[words_to_patterns[key]] = key
-                elif words_to_patterns[key] in rep_dict.values() and words_to_patterns[key]+'_1' not in rep_dict.values():
-                    rep = words_to_patterns[key] + '_1'
-                    sent = sent.replace(key, rep)
-                    rep_dict[rep] = key
-                elif words_to_patterns[key]+'_1' in rep_dict.values() and words_to_patterns[key]+'_2' not in rep_dict.values():
+                elif words_to_patterns[key] in rep_dict.keys() and words_to_patterns[key]+'_2' not in rep_dict.keys():
                     rep = words_to_patterns[key] + '_2'
-                    sent = sent.replace(key, rep)
+                    sent = sent.replace(rep_key, ' ' + rep + ' ')
+                    rep_dict[rep] = key
+                elif words_to_patterns[key]+'_2' in rep_dict.keys() and words_to_patterns[key]+'_3' not in rep_dict.keys():
+                    rep = words_to_patterns[key] + '_3'
+                    sent = sent.replace(rep_key, ' ' + rep + ' ')
                     rep_dict[rep] = key
                 else:
-                    rep = words_to_patterns[key] + '_3'
-                    sent = sent.replace(key, rep)
-                    rep_dict[rep] = key
-
+                    raise NotImplementedError
+        sent = sent.strip()
         sent_dict[idx] = (sent, rep_dict)
 
     return sent_dict

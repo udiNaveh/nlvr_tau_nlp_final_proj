@@ -23,7 +23,7 @@ MAX_N_EPOCHS = 15
 BATCH_SIZE_UNSUPERVISED = 8
 BATCH_SIZE_SUPERVISED = 10
 LEARN_EMBEDDINGS = True
-LEARN_EMBEDDINGS_IN_PRETRAIN = False #TODO check False
+LEARN_EMBEDDINGS_IN_PRETRAIN = True #TODO check False
 USE_BOW_HISTORY = False
     # if true, a binary vector representing the tokens outputted so far in the program is concatenated
     # to the history embedding
@@ -80,9 +80,13 @@ else:
 
 TRAINED_WEIGHTS_BEST = \
     os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_best_8_replacements')
-LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
 CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',
                                         'cached_programs_based_on_pretrain')
 NGRAM_PROBS =  os.path.join(definitions.DATA_DIR, 'sentence-processing', 'ngram_logprobs')
+if definitions.ABSTRACTION:
+    #TODO carix lehaxin
+    LOGICAL_TOKENS_LIST = os.path.join(definitions.DATA_DIR, 'logical forms', 'abstract_logical_tokens_list')
+else:
+    LOGICAL_TOKENS_LIST = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 

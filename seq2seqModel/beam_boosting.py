@@ -81,6 +81,9 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
     :param patterns_dict: dict of english formalized sents and formalized logical forms, {str: str}
     :return: a *string* that is a suggested program based on the dict
     '''
+    if ABSTRACTION:
+        return patterns_dict.get(sentence, {})
+
     words = sentence.split()
     formalized_sent = get_formalized_sentence(sentence)
     formalized_words = formalized_sent.split()
@@ -140,51 +143,69 @@ def update_programs_cache(cached_programs, sentence, prog, prog_stats):
             'there is a T_COLOR item', {'exist filter ALL_ITEMS lambda_x_: is_T_COLOR x': None}
             and adding both to patterns_dict
     '''
-    token_seq = prog.token_seq if isinstance(prog, PartialProgram) else prog
-    formalized_sentence = get_formalized_sentence(sentence)
-    if formalized_sentence not in cached_programs:
-        cached_programs[formalized_sentence] = {}
-    matching_cached_patterns = cached_programs.get(formalized_sentence)
+    if ABSTRACTION:
+        token_seq = prog.token_seq if isinstance(prog, PartialProgram) else prog
+        if sentence not in cached_programs:
+            cached_programs[sentence] = {}
+        matching_cached_patterns = cached_programs.get(sentence)
+        p = ' '.join(token_seq)
+        if p not in matching_cached_patterns:
+            matching_cached_patterns[p] = [0,0]
+
+        matching_cached_patterns[p][0] += prog_stats.n_correct
+        matching_cached_patterns[p][1] += prog_stats.n_incorrect
+
+        total_n_correct, total_n_incorrect = matching_cached_patterns[p]
+        if total_n_incorrect>0 and (total_n_correct / total_n_incorrect) <3:
+            del matching_cached_patterns [p]
+        return
+
+    else:
+        token_seq = prog.token_seq if isinstance(prog, PartialProgram) else prog
+        formalized_sentence = get_formalized_sentence(sentence)
+        if formalized_sentence not in cached_programs:
+            cached_programs[formalized_sentence] = {}
+        matching_cached_patterns = cached_programs.get(formalized_sentence)
 
 
-    manualy_chosen_replacements = sorted(words_to_patterns.items(), key = lambda x : sentence.find(x[0]))
-    manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
-    formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
-    formalized_program = " {} ".format(" ".join(token_seq))  # pad with whitespaces
+        manualy_chosen_replacements = sorted(words_to_patterns.items(), key = lambda x : sentence.find(x[0]))
+        manualy_chosen_replacements = [(" {} ".format(entry[0]) , " {} ".format(entry[1])) for entry in manualy_chosen_replacements]
+        formalized_sentence = " {} ".format(sentence)  # pad with whitespaces
+        formalized_program = " {} ".format(" ".join(token_seq))  # pad with whitespaces
 
-    temp_dict = {}
-    for exp, replacement in manualy_chosen_replacements:
-        if exp in formalized_sentence and replacement not in temp_dict.values():
-            temp_dict[exp] = replacement
-        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') not in temp_dict.values():
-            temp_dict[exp] = replacement.rstrip() + '_$ '
-        elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') in temp_dict.values():
-            temp_dict[exp] = replacement.rstrip() + '_^ '
-    temp_dict = [(k, temp_dict[k]) for k in temp_dict]
-
-
-    for exp, replacement in temp_dict:
-        exp = exp.strip()
-        if exp in log_dict: #
-            formalized_program = formalized_program.replace(" {} ".format(log_dict[exp]), replacement)
-            if log_dict[exp] is not 'le':
-                formalized_program = formalized_program.replace(str.upper(log_dict[exp]),replacement.strip())
-            formalized_program = formalized_program.replace("_{}".format(log_dict[exp]), '_'+replacement.strip())
-    formalized_program = formalized_program.strip()
-    formalized_program = formalized_program.replace('$', '1')
-    formalized_program = formalized_program.replace('^', '2')
-
-    if formalized_program not in matching_cached_patterns:
-        matching_cached_patterns[formalized_program] = [0,0]
-
-    matching_cached_patterns[formalized_program][0] += prog_stats.n_correct
-    matching_cached_patterns[formalized_program][1] += prog_stats.n_incorrect
+        temp_dict = {}
+        for exp, replacement in manualy_chosen_replacements:
+            if exp in formalized_sentence and replacement not in temp_dict.values():
+                temp_dict[exp] = replacement
+            elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') not in temp_dict.values():
+                temp_dict[exp] = replacement.rstrip() + '_$ '
+            elif exp in formalized_sentence and replacement in temp_dict.values() and (replacement.rstrip() + '_$ ') in temp_dict.values():
+                temp_dict[exp] = replacement.rstrip() + '_^ '
+        temp_dict = [(k, temp_dict[k]) for k in temp_dict]
 
 
-    total_n_correct, total_n_incorrect = matching_cached_patterns[formalized_program]
-    if total_n_incorrect>0 and (total_n_correct / total_n_incorrect) <3:
-        del matching_cached_patterns [formalized_program]
-    return
+        for exp, replacement in temp_dict:
+            exp = exp.strip()
+            if exp in log_dict: #
+                formalized_program = formalized_program.replace(" {} ".format(log_dict[exp]), replacement)
+                if log_dict[exp] is not 'le':
+                    formalized_program = formalized_program.replace(str.upper(log_dict[exp]),replacement.strip())
+                formalized_program = formalized_program.replace("_{}".format(log_dict[exp]), '_'+replacement.strip())
+        formalized_program = formalized_program.strip()
+        formalized_program = formalized_program.replace('$', '1')
+        formalized_program = formalized_program.replace('^', '2')
+
+        if formalized_program not in matching_cached_patterns:
+            matching_cached_patterns[formalized_program] = [0,0]
+
+        matching_cached_patterns[formalized_program][0] += prog_stats.n_correct
+        matching_cached_patterns[formalized_program][1] += prog_stats.n_incorrect
+
+
+        total_n_correct, total_n_incorrect = matching_cached_patterns[formalized_program]
+        if total_n_incorrect>0 and (total_n_correct / total_n_incorrect) <3:
+            del matching_cached_patterns [formalized_program]
+        return
 
 
 def sentence_program_relevance_score(sentence, program, words_to_tokens, recurring = False):

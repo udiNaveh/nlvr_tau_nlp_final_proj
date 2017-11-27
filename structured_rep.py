@@ -191,6 +191,7 @@ class Sample:
         self.label = line["label"] == 'true'
         self.structured_rep = Image(line["structured_rep"])
         self.abstraction_dict = {}
+            # abstraction_dict is of the form {'yellow': 'T_COLOR'}
 
 
 
