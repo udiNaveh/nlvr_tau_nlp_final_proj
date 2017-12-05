@@ -766,7 +766,9 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
                         for param_name in ['EPSILON_FOR_BEAM_SEARCH', 'BETA', 'SKIP_AUTO_TOKENS', 'N_CACHED_PROGRAMS',
                                            'INJECT_TO_BEAM',
                                            'SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH',
-                                           'AVOID_ALL_TRUE_SENTENCES', 'definitions.MANUAL_REPLACEMENTS','beam_similarity_test', 'beam_classifier_test']:
+                                           'AVOID_ALL_TRUE_SENTENCES', 'definitions.MANUAL_REPLACEMENTS','beam_similarity_test',
+                                           'beam_classifier_test', 'REWARD_EVERY', 'SIMILARITY_WITH_P', 'TRAINED_WEIGHTS_BEST',
+                                           'WORD_EMBEDDINGS_PATH']:
                             print("{0} : {1}".format(param_name, eval(param_name)))
                     print("stats for this epoch:")
 
