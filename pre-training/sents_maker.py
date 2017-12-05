@@ -138,6 +138,7 @@ def test_generated_forms(forms_dictionary, samples):
 
 
 def generate_pairs_for_supervised_learning(forms_dictionary):
+    forms_dictionary = {a: (b, [c[0]]) for a, (b, c) in forms_dictionary.items()}
     all_pairs =[]
     parsing_dict = {}
     for engsent, (form_count, logsents) in sorted(forms_dictionary.items(), key=lambda k: - k[1][0]):
@@ -222,14 +223,14 @@ def pairs_for_abstract_supervised_learning(new_dict):
 
     pairs = []
     for abs_sent in new_dict:
-        for abs_prog in new_dict[abs_sent][1]:
-            pairs.append((abs_sent, abs_prog))
+        pairs.append((abs_sent, new_dict[abs_sent][1][0]))
+        # for abs_prog in new_dict[abs_sent][1]:
+        #     pairs.append((abs_sent, abs_prog))
 
-    # TODO still need to decide what's the best way to divide. right now the same abs_sent can appear in both train and validation
     n = len(pairs)
     np.random.shuffle(pairs)
     pairs_train = pairs[: int( 0.9 * n)]
-    pairs_validation = pairs[int( 0.1 * n) :]
+    pairs_validation = pairs[int( 0.9 * n) :]
 
     return pairs_train, pairs_validation
 
@@ -262,6 +263,7 @@ if __name__ == '__main__':
     #     print(len(quads), include)
     #     print(include/len(quads))
 
+    np.random.seed(0)
     new_dict = create_new_patterns_dict()
     if ABSTRACTION:
         pairs_train, pairs_validation = pairs_for_abstract_supervised_learning(new_dict)
