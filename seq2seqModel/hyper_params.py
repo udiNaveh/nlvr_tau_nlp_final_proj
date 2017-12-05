@@ -10,11 +10,13 @@ import definitions
 WORD_EMB_SIZE = 12
 LOG_TOKEN_EMB_SIZE = 12
 DECODER_HIDDEN_SIZE = 50
+DECODER_HIDDEN_SIZE_NEW = 500
 LSTM_HIDDEN_SIZE = 30
 SENT_EMB_SIZE = 2 * LSTM_HIDDEN_SIZE
 HISTORY_LENGTH = 4
 
 #other hyper parameters
+REWARD_EVERY = 4
 LEARNING_RATE = 0.001
 BETA = 0.5
 EPSILON_FOR_BEAM_SEARCH = 0
@@ -27,7 +29,7 @@ LEARN_EMBEDDINGS_IN_PRETRAIN = False #TODO check False
 USE_BOW_HISTORY = False
     # if true, a binary vector representing the tokens outputted so far in the program is concatenated
     # to the history embedding
-
+SIMILARITY_WITH_P = False
 IRRELEVANT_TOKENS_IN_GRAD = True
     # if false, a masking is used so that invalid tokens do not affect the gradient.
 

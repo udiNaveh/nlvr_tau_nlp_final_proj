@@ -78,13 +78,21 @@ def build_decoder(lstm_outputs, final_utterance_embedding):
     build the computational graph for the FF decoder, based on Guu et al. Return only the palceholders and tensors
     that are called from other methods. Names of marics and vectors follow those in the paper.
     """
-
+    model_p = tf.placeholder(shape=[None,1], dtype=tf.float32, name="model_p")
     history_embedding = tf.placeholder(shape=[None, MAX_DECODING_LENGTH*LOG_TOKEN_EMB_SIZE], dtype=tf.float32, name="history_embedding")
     num_rows = tf.shape(history_embedding)[0]
     e_m_tiled = tf.tile(final_utterance_embedding, ([num_rows, 1]))
-    decoder_input = tf.concat([e_m_tiled, history_embedding], axis=1)
-    W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE_NEW, SENT_EMB_SIZE + MAX_DECODING_LENGTH*LOG_TOKEN_EMB_SIZE + len(words_vocabulary)],
-                          initializer=tf.contrib.layers.xavier_initializer())
+    if SIMILARITY_WITH_P:
+        decoder_input = tf.concat([e_m_tiled, model_p, history_embedding], axis=1)
+        W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE_NEW,
+                                            SENT_EMB_SIZE + 1 + MAX_DECODING_LENGTH * LOG_TOKEN_EMB_SIZE + len(
+                                                words_vocabulary)], initializer=tf.contrib.layers.xavier_initializer())
+    else:
+        decoder_input = tf.concat([e_m_tiled, history_embedding], axis=1)
+        W_q = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE_NEW,
+                                            SENT_EMB_SIZE + MAX_DECODING_LENGTH * LOG_TOKEN_EMB_SIZE + len(
+                                                words_vocabulary)], initializer=tf.contrib.layers.xavier_initializer())
+
     q_t = tf.nn.relu(tf.matmul(W_q, tf.transpose(decoder_input)))
     W_a = tf.get_variable("W_a", shape=[DECODER_HIDDEN_SIZE_NEW, SENT_EMB_SIZE],
                           initializer=tf.contrib.layers.xavier_initializer())
@@ -96,7 +104,7 @@ def build_decoder(lstm_outputs, final_utterance_embedding):
                                        shape=[2, DECODER_HIDDEN_SIZE_NEW],
                                        initializer=tf.contrib.layers.xavier_initializer())
     token_unnormalized_dist = tf.matmul(W_hidden, tf.matmul(W_s, tf.concat([q_t, tf.transpose(c_t)], 0)))
-    return history_embedding, token_unnormalized_dist, W_hidden
+    return model_p, history_embedding, token_unnormalized_dist, W_hidden
 
 
 def build_batchGrad():
@@ -131,7 +139,7 @@ def run_similarity_model(sess, examples, current_logical_tokens_embeddings, load
         sentence_placeholder, sent_lengths_placeholder, sentence_words_bow, h, e_m = build_sentence_encoder(
             len(one_hot_dict), embeddings_matrix)
 
-        history_embedding_placeholder, token_unnormalized_dist, W_hidden = build_decoder(h, e_m)
+        model_p, history_embedding_placeholder, token_unnormalized_dist, W_hidden = build_decoder(h, e_m)
 
         logits = tf.transpose(token_unnormalized_dist)
 
@@ -182,6 +190,9 @@ def run_similarity_model(sess, examples, current_logical_tokens_embeddings, load
                 sentence = (examples[step][0])
                 program = examples[step][1]
                 label = examples[step][2]
+                if SIMILARITY_WITH_P:
+                    modelp = examples[step][3]
+                    modelp = np.reshape(modelp, [1,1])
 
                 label_one_hot = np.zeros((2,1))
                 label_one_hot[int(label)][0] = 1
@@ -200,9 +211,14 @@ def run_similarity_model(sess, examples, current_logical_tokens_embeddings, load
                 history_embs = [logical_tokens_embeddings_dict[tok] for tok in history_tokens]
                 history_embs = np.reshape(np.concatenate(history_embs), [1, MAX_DECODING_LENGTH*LOG_TOKEN_EMB_SIZE])
 
-                feed_dict = {sentence_placeholder: sentence_matrix, sent_lengths_placeholder: length,
-                             sentence_words_bow: bow_words, history_embedding_placeholder: history_embs,
-                             labels_placeholder: label_one_hot}
+                if SIMILARITY_WITH_P:
+                    feed_dict = {sentence_placeholder: sentence_matrix, sent_lengths_placeholder: length,
+                                 sentence_words_bow: bow_words, history_embedding_placeholder: history_embs,
+                                 labels_placeholder: label_one_hot, model_p: modelp}
+                else:
+                    feed_dict = {sentence_placeholder: sentence_matrix, sent_lengths_placeholder: length,
+                                 sentence_words_bow: bow_words, history_embedding_placeholder: history_embs,
+                                 labels_placeholder: label_one_hot}
 
                 if inference:
                     # if the model is used in inference, it returns the probability of the sentence and the program to be consistent
@@ -224,6 +240,7 @@ def run_similarity_model(sess, examples, current_logical_tokens_embeddings, load
                         print("epoch: ", epochs, "average loss in epoch so far:", sum_loss / total)
                         #sum_loss = 0
                         #total = 0
+            saver.save(sess, save_model_path, global_step=epochs, write_meta_graph=False)
     time_stamp = time.strftime("%Y-%m-%d_%H_%M")
     if save_model_path:
         saver.save(sess,save_model_path)

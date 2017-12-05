@@ -249,7 +249,7 @@ class CNLVRDataSet:
         '''
         restart the state of the data set (the is no need to reload it from disk - just call this method)
         '''
-        self.__ids = [k for k in self.self.original_sentences.keys()]
+        self.__ids = [k for k in self.original_sentences.keys()]
         self._index_in_epoch = 0
         self.epochs_completed = 0
         self.sentences_quardpled_ids=[x for x in self.processed_sentences_singles.keys()]

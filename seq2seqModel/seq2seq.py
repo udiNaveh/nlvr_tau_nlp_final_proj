@@ -21,6 +21,8 @@ from seq2seqModel.hyper_params import *
 from general_utils import increment_count, union_dicts
 from seq2seqModel.beam_classification import *
 from seq2seqModel.similarity_model import run_similarity_model
+import matplotlib.pyplot as plt
+#import seaborn as sns
 
 tf.set_random_seed(1)
 np.random.seed(1)
@@ -341,13 +343,21 @@ def build_decoder2(lstm_outputs, final_utterance_embedding):
     build the computational graph for the FF decoder, based on Guu et al. Return only the palceholders and tensors
     that are called from other methods. Names of marics and vectors follow those in the paper.
     """
-
+    model_p = tf.placeholder(shape=[None,1], dtype=tf.float32, name="model_p")
     history_embedding2 = tf.placeholder(shape=[None, MAX_DECODING_LENGTH*LOG_TOKEN_EMB_SIZE], dtype=tf.float32, name="history_embedding")
     num_rows2 = tf.shape(history_embedding2)[0]
     e_m_tiled2 = tf.tile(final_utterance_embedding, ([num_rows2, 1]))
-    decoder_input2 = tf.concat([e_m_tiled2, history_embedding2], axis=1)
-    W_q2 = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE_NEW, SENT_EMB_SIZE + MAX_DECODING_LENGTH*LOG_TOKEN_EMB_SIZE + len(words_vocabulary)],
-                          initializer=tf.contrib.layers.xavier_initializer())
+    if SIMILARITY_WITH_P:
+        decoder_input2 = tf.concat([e_m_tiled2, model_p, history_embedding2], axis=1)
+        W_q2 = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE_NEW,
+                                            SENT_EMB_SIZE + 1 + MAX_DECODING_LENGTH * LOG_TOKEN_EMB_SIZE + len(
+                                                words_vocabulary)], initializer=tf.contrib.layers.xavier_initializer())
+    else:
+        decoder_input2 = tf.concat([e_m_tiled2, history_embedding2], axis=1)
+        W_q2 = tf.get_variable("W_q", shape=[DECODER_HIDDEN_SIZE_NEW,
+                                            SENT_EMB_SIZE + MAX_DECODING_LENGTH * LOG_TOKEN_EMB_SIZE + len(
+                                                words_vocabulary)], initializer=tf.contrib.layers.xavier_initializer())
+
     q_t2 = tf.nn.relu(tf.matmul(W_q2, tf.transpose(decoder_input2)))
     W_a2 = tf.get_variable("W_a", shape=[DECODER_HIDDEN_SIZE_NEW, SENT_EMB_SIZE],
                           initializer=tf.contrib.layers.xavier_initializer())
@@ -359,7 +369,7 @@ def build_decoder2(lstm_outputs, final_utterance_embedding):
                                        shape=[2, DECODER_HIDDEN_SIZE_NEW],
                                        initializer=tf.contrib.layers.xavier_initializer())
     token_unnormalized_dist2 = tf.matmul(W_hidden2, tf.matmul(W_s2, tf.concat([q_t2, tf.transpose(c_t2)], 0)))
-    return history_embedding2, token_unnormalized_dist2, W_hidden2
+    return model_p, history_embedding2, token_unnormalized_dist2, W_hidden2
 
 
 
@@ -368,7 +378,7 @@ with tf.variable_scope("similarity", reuse=False):
     sentence_placeholder2, sent_lengths_placeholder2, sentence_words_bow2, h2, e_m2 = build_sentence_encoder2(
         len(one_hot_dict2), embeddings_matrix2)
 
-    history_embedding_placeholder2, token_unnormalized_dist2, W_hidden = build_decoder2(h2, e_m2)
+    model_p, history_embedding_placeholder2, token_unnormalized_dist2, W_hidden = build_decoder2(h2, e_m2)
 
     logits2 = tf.transpose(token_unnormalized_dist2)
 
@@ -382,7 +392,7 @@ with tf.variable_scope("similarity", reuse=False):
     # initialization
     theta2 = [k for k in tf.trainable_variables() if k.name.startswith("similarity")]
     optimizer2 = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
-    compute_program_grads = optimizer2.compute_gradients(cross_entropy2)
+    compute_program_grads2 = optimizer2.compute_gradients(cross_entropy2)
 
 
 def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=None, save_model_path=None,
@@ -454,6 +464,7 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
     top_by_similarity_stats = 0
     top_program_by_classifier = 0
     top_by_classifier_stats = 0
+    sim_probs1, sim_probs2, model_probs = [], [], []
 
     # a dictionary for cached programs
     if USE_CACHED_PROGRAMS and LOAD_CACHED_PROGRAMS and mode == 'train':
@@ -479,7 +490,10 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
     while dataset.epochs_completed < n_epochs and not stopping_criterion_met:
 
         # get a mini-batch of sentences and their related images
-        batch, is_last_batch_in_epoch = curr_dataset.next_batch(BATCH_SIZE_UNSUPERVISED)
+        if REWARD_EVERY == 1:
+            batch, is_last_batch_in_epoch = curr_dataset.next_batch_singles(BATCH_SIZE_UNSUPERVISED)
+        else:
+            batch, is_last_batch_in_epoch = curr_dataset.next_batch(BATCH_SIZE_UNSUPERVISED)
         batch_sentence_ids = [key for key in batch.keys()]
         sentences, samples = zip(*[batch[k] for k in batch_sentence_ids])
 
@@ -607,10 +621,16 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
                     similarity_scores = []
                     for prog in beam:
                         label = programs_execution_results[prog].is_consistent
-                        examples.append((sentence,prog.token_seq,label))
+                        if SIMILARITY_WITH_P:
+                            examples.append((sentence, prog.token_seq, label, prog.logprob))
+                        else:
+                            examples.append((sentence,prog.token_seq,label))
                         if beam_similarity_test:
                             curr_example = []
-                            curr_example.append((sentence,prog.token_seq,label))
+                            if SIMILARITY_WITH_P:
+                                curr_example.append((sentence, prog.token_seq, label, prog.logprob))
+                            else:
+                                curr_example.append((sentence,prog.token_seq,label))
                             #with tf.Session(graph=g_3) as sess3:
                                 #similarity_scores.append(run_similarity_model(sess3,curr_example,
                                                                               #sess.run(W_logical_tokens),
@@ -634,12 +654,16 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
 
                             feed_dict = {sentence_placeholder2: sentence_matrix, sent_lengths_placeholder2: length,
                                          sentence_words_bow2: bow_words, history_embedding_placeholder2: history_embs,
-                                         }
+                                         model_p: np.reshape([prog.logprob], [1,1])}
+
 
 
                             # if the model is used in inference, it returns the probability of the sentence and the program to be consistent
                             sim_result = tf.nn.softmax(sess.run(logits2, feed_dict=feed_dict)).eval()
-                            similarity_scores.append(sim_result[0, 1])
+                            sim_probs1.append(np.log(sim_result[0, 1]) if sim_result[0, 1] != 0 else -100)
+                            sim_probs2.append(np.log(sim_result[0, 0]))
+                            model_probs.append(prog.logprob)
+                            similarity_scores.append(np.log(sim_result[0, 1]) + prog.logprob)#+ prog.logprob
 
                     if beam_similarity_test:
                         top_program_by_similarity = beam[np.argmax(similarity_scores)]
@@ -674,7 +698,7 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
                             top_by_classifier_stats = programs_execution_results[top_program_by_classifier]
 
             if not beam:  # no valid program was found by the beam - default is to guess 'True' for all images
-                top_by_model_stats = top_by_reranking_stats = get_program_execution_stats(
+                top_by_model_stats = top_by_reranking_stats = top_by_classifier_stats = top_by_similarity_stats = get_program_execution_stats(
                     ["ERR"], related_samples, logical_tokens_mapping)
 
             if mode == 'test' and not beam_reranking_train:
@@ -742,7 +766,7 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
                         for param_name in ['EPSILON_FOR_BEAM_SEARCH', 'BETA', 'SKIP_AUTO_TOKENS', 'N_CACHED_PROGRAMS',
                                            'INJECT_TO_BEAM',
                                            'SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH',
-                                           'AVOID_ALL_TRUE_SENTENCES', 'definitions.MANUAL_REPLACEMENTS']:
+                                           'AVOID_ALL_TRUE_SENTENCES', 'definitions.MANUAL_REPLACEMENTS','beam_similarity_test', 'beam_classifier_test']:
                             print("{0} : {1}".format(param_name, eval(param_name)))
                     print("stats for this epoch:")
 
@@ -809,6 +833,10 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
             num_consistent_per_sentence, beam_final_sizes, n_ccorrect_top_by_model, n_correct_top_by_reranking \
                 = [], [], [], []
             n_consistent_top_by_reranking, n_consistent_top_by_model, timer = [], [], []
+            n_consistent_top_by_classifier = []
+            n_correct_top_by_classifier = []
+            n_consistent_top_by_similarity = []
+            n_correct_top_by_similarity = []
             n_samples, iter = 0, 0
 
             batch_num_in_epoch = 0
@@ -829,6 +857,15 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
             curr_dataset, other_dataset = other_dataset, curr_dataset
 
     if beam_similarity:
+        #sns.jointplot(x=np.array(model_probs), y=np.array(sim_probs1), kind='kde')
+        plt.plot(model_probs, sim_probs1)
+        plt.ylim(-30, 1)
+        plt.ylabel("reranker logprob")
+        plt.xlabel("model logprob")
+        plt.savefig('logconsistent_logmodel_withp.png')
+        #plt.scatter(model_probs, sim_probs2)
+        #plt.savefig('logNOTconsistent_logmodel.png')
+
         return examples, sess.run(W_logical_tokens)
 
     if mode == 'test' and return_sentences_results:
@@ -858,11 +895,11 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
     optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
     compute_program_grads = optimizer.compute_gradients(cross_entropy)
     batch_grad = build_batchGrad()
-    update_grads = optimizer.apply_gradients(zip(batch_grad, theta))
+    update_grads = optimizer.apply_gradients(zip(batch_grad, theta1))
 
     init = tf.global_variables_initializer()
     sess.run(init)
-    saver = tf.train.Saver(theta)
+    saver = tf.train.Saver(theta1)
 
     if load_params_path:
         saver.restore(sess, load_params_path)
@@ -872,7 +909,7 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
     validation_set = DataSetForSupervised(definitions.SUPERVISED_VALIDATION_PICKLE)
 
     # initialize gradients
-    gradList = sess.run(theta)  # just to get dimensions
+    gradList = sess.run(theta1)  # just to get dimensions
     gradBuffer = {}
     for var, grad in enumerate(gradList):
         gradBuffer[var] = grad * 0
@@ -1001,10 +1038,10 @@ if __name__ == '__main__':
                                                  load_params_path=weights_from_supervised_pre_training,
                                                  return_sentences_results=False)
 
-        with tf.Session() as sess:
-            train_results_by_sentence = run_model(sess, train_dataset, mode='test',
-                                                  load_params_path=weights_from_supervised_pre_training,
-                                                  return_sentences_results=False)
+        # with tf.Session() as sess:
+        #     train_results_by_sentence = run_model(sess, train_dataset, mode='test',
+        #                                           load_params_path=weights_from_supervised_pre_training,
+        #                                           return_sentences_results=False)
     run_train = False  # change to True if you really want to run the whole thing...
 
     if run_train:
@@ -1014,7 +1051,7 @@ if __name__ == '__main__':
         # beam re-reanking, auto-completion of tokens etc.) are all set in hyper_params.py.
         # the results are printed to STATS_FILE after every epoch
 
-
+        train_dataset.restart()
         with tf.Session() as sess:
             run_model(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
                       load_params_path=weights_from_supervised_pre_training, save_model_path=OUTPUT_WEIGHTS)
@@ -1023,20 +1060,21 @@ if __name__ == '__main__':
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
 
-    beam_similarity_train = False
+    beam_similarity_train = True
     beam_similarity_test = True
-    beam_similarity_weights_path = os.path.join(SEQ2SEQ_DIR, 'beamSimilarityWeights2017-11-25_22_15.ckpt')
+    #beam_similarity_weights_path = os.path.join(SEQ2SEQ_DIR, 'beamSimilarityWeights2017-11-26_23_22.ckpt-29')
+    beam_similarity_weights_path = os.path.join(SEQ2SEQ_DIR,'beamSimilarityWeights'+ time_stamp + '.ckpt')
     if beam_similarity_train:
-        #with tf.Session() as sess:
-            #examples, logical_tokens_embedding = run_model(sess, train_dataset, mode='test',
-            #load_params_path=best_weights_so_far, beam_similarity=beam_similarity_train)
-            #pickle.dump(examples, open(os.path.join(SEQ2SEQ_DIR, 'examples_for_beam_similarity' + time_stamp), 'wb'))
-            #pickle.dump(logical_tokens_embedding, open(os.path.join(SEQ2SEQ_DIR, 'log_embeddings_for_beam_similarity' + time_stamp), 'wb'))
+        with tf.Session() as sess:
+            examples, logical_tokens_embedding = run_model(sess, train_dataset, mode='test',
+            load_params_path=best_weights_so_far, beam_similarity=beam_similarity_train)
+            pickle.dump(examples, open(os.path.join(SEQ2SEQ_DIR, 'examples_for_beam_similarity' + time_stamp), 'wb'))
+            pickle.dump(logical_tokens_embedding, open(os.path.join(SEQ2SEQ_DIR, 'log_embeddings_for_beam_similarity' + time_stamp), 'wb'))
         tf.reset_default_graph()
         with tf.Session() as sess:
-            examples = pickle.load(open(os.path.join(SEQ2SEQ_DIR, 'examples_for_beam_similarity2017-11-25_20_44'), 'rb'))
-            logical_tokens_embedding = pickle.load(
-                open(os.path.join(SEQ2SEQ_DIR, 'log_embeddings_for_beam_similarity2017-11-25_20_44'), 'rb'))
+            #examples = pickle.load(open(os.path.join(SEQ2SEQ_DIR, 'examples_for_beam_similarity2017-11-25_20_44'), 'rb'))
+            #logical_tokens_embedding = pickle.load(
+                #open(os.path.join(SEQ2SEQ_DIR, 'log_embeddings_for_beam_similarity2017-11-25_20_44'), 'rb'))
             run_similarity_model(sess,examples,logical_tokens_embedding,save_model_path=beam_similarity_weights_path)
 
     if beam_similarity_test:
@@ -1102,23 +1140,23 @@ if __name__ == '__main__':
         #    train_results_by_sentence = run_model(sess, train_dataset, mode='test',
         #                                        load_params_path=weights, return_sentences_results=False)
 
-        # dev_dataset.restart()
-        # with tf.Session() as sess:
-        #     dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
-        #                                         load_params_path=best_weights_so_far, return_sentences_results=False)
-        #
-        # save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
-        #
-        # test_dataset.restart()
-        # with tf.Session() as sess:
-        #     test_results_by_sentence = run_model(sess, test_dataset, mode='test',
-        #                                          load_params_path=best_weights_so_far, return_sentences_results=False)
+        dev_dataset.restart()
+        with tf.Session() as sess:
+            dev_results_by_sentence = run_model(sess, dev_dataset, mode='test',
+                                                load_params_path=best_weights_so_far, return_sentences_results=False)
+
+        save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
+
+        test_dataset.restart()
+        with tf.Session() as sess:
+            test_results_by_sentence = run_model(sess, test_dataset, mode='test',
+                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
         #
         #     save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
 
-        test_dataset2.restart()
-        with tf.Session() as sess:
-            test_results_by_sentence = run_model(sess, test_dataset2, mode='test',
-                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
-
-            save_sentences_test_results(test_results_by_sentence, test_dataset2, SENTENCES_RESULTS_FILE_TEST2)
+        # test_dataset2.restart()
+        # with tf.Session() as sess:
+        #     test_results_by_sentence = run_model(sess, test_dataset2, mode='test',
+        #                                          load_params_path=best_weights_so_far, return_sentences_results=False)
+        #
+        #     save_sentences_test_results(test_results_by_sentence, test_dataset2, SENTENCES_RESULTS_FILE_TEST2)
