@@ -270,9 +270,8 @@ if __name__ == '__main__':
     else:
         pairs_train, pairs_validation = generate_pairs_for_supervised_learning(new_dict)
 
-        # pickle.dump(pairs_train, open(definitions.SUPERVISED_TRAIN_PICKLE, 'wb'))
-        # pickle.dump(pairs_validation, open(definitions.SUPERVISED_VALIDATION_PICKLE, 'wb'))
-        pass
+    pickle.dump(pairs_train, open(definitions.SUPERVISED_TRAIN_PICKLE, 'wb'))
+    pickle.dump(pairs_validation, open(definitions.SUPERVISED_VALIDATION_PICKLE, 'wb'))
 
     # newpath = definitions.DATA_DIR + r'\parsed sentences\new_formalized_parsed_sentences_for_supervised_training.txt'
     # with open(newpath, 'w') as f:

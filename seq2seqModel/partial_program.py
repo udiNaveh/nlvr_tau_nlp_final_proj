@@ -143,11 +143,11 @@ class PartialProgram:
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                 if not ('Color' in v.return_type or 'Shape' in v.return_type)])
 
-            if 'select' in self.token_seq:
-                impossible_continuations.append('select')
-
-            if last == 'select':
-                impossible_continuations.append([t for t, v in self.logical_tokens_mapping.items() if t not in ('2','3')])
+            # if 'select' in self.token_seq:
+            #     impossible_continuations.append('select')
+            #
+            # if last == 'select':
+            #     impossible_continuations.append([t for t, v in self.logical_tokens_mapping.items() if t not in ('2','3')])
 
         return impossible_continuations
 
