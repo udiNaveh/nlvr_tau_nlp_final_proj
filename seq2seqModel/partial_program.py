@@ -150,11 +150,34 @@ class PartialProgram:
                 impossible_continuations.extend([t for t, v in self.logical_tokens_mapping.items()
                                                 if not ('Color' in v.return_type or 'Shape' in v.return_type)])
 
-            if 'select' in self.token_seq:
-                impossible_continuations.append('select')
+            # if 'select' in self.token_seq:
+            #     impossible_continuations.append('select')
+            #
+            # if last == 'select':
+            #     impossible_continuations.append([t for t, v in self.logical_tokens_mapping.items() if t not in ('2','3')])
 
-            if last == 'select':
-                impossible_continuations.append([t for t, v in self.logical_tokens_mapping.items() if t not in ('2','3')])
+        if ABSTRACTION:
+            if 'T_QUANTITY_COMPARE' not in self.token_seq:
+                impossible_continuations += ['T_QUANTITY_COMPARE_2']
+            if 'T_QUANTITY_COMPARE_2' not in self.token_seq:
+                impossible_continuations += ['T_QUANTITY_COMPARE_3']
+            if 'get_T_REL' not in self.token_seq:
+                impossible_continuations += ['get_T_REL_2']
+            if ('is_T_COLOR' or 'Color.T_COLOR') not in self.token_seq:
+                impossible_continuations += ['is_T_COLOR_2', 'Color.T_COLOR_2']
+            if ('is_T_COLOR_2' or 'Color.T_COLOR_2') not in self.token_seq:
+                impossible_continuations += ['is_T_COLOR_3', 'Color.T_COLOR_3']
+            if ('is_T_SHAPE' or 'Shape.T_SHAPE') not in self.token_seq:
+                impossible_continuations += ['is_T_SHAPE_2', 'Shape.T_SHAPE_2']
+            if ('is_T_SHAPE_2' or 'Shape.T_SHAPE_2') not in self.token_seq:
+                impossible_continuations += ['is_T_SHAPE_3', 'Shape.T_SHAPE_3']
+            if ('is_T_LOC' or 'Side.T_LOC') not in self.token_seq:
+                impossible_continuations += ['is_T_LOC_2', 'Side.T_LOC_2']
+            if 'is_T_SIZE' not in self.token_seq:
+                impossible_continuations += ['is_T_SIZE_2']
+            if 'is_T_SIZE_2' not in self.token_seq:
+                impossible_continuations += ['is_T_SIZE_3']
+
 
         return impossible_continuations
 

@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from random import shuffle
+from random import shuffle, seed
 import json
 import pickle
 import definitions
@@ -161,4 +161,5 @@ if __name__=='__main__':
     else:
         samples, sents_dict = build_data(data, preprocessing_type='deep')
     sents_to_parse = sents_dict.values()
+    seed(0)
     embed_dict = word2vec(sents_to_parse, WORD_EMBEDDINGS_PATH)

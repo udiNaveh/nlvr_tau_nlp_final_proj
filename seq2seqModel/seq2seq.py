@@ -353,7 +353,11 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
         cpf = open(CACHED_PROGRAMS, 'rb')
         all_cached_programs = pickle.load(cpf)
     else:
-        all_cached_programs = {}
+        try:
+            all_cached_programs = pickle.load(open(TEMP_CACHED_PROGRAMS, 'rb')) # TODO erase this
+        except:
+            all_cached_programs = {}
+
 
     start = time.time()
 
@@ -722,6 +726,7 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
         gradBuffer[var] = grad * 0
 
     accuracy, accuracy_chosen_tokens, epoch_losses, epoch_log_prob = [], [], [], []
+    total_accuracy = []
     batch_num, epoch_num = 0, 0
     current_data_set = train_set
     statistics = {train_set: [], validation_set: []}
@@ -732,10 +737,11 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
                 (np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens)))
             print(
                 "epoch number {0}: mean loss = {1:.3f}, mean accuracy = {2:.3f}, mean accuracy ignore automatic = {3:.3f},"
-                "epoch mean log probability = {4:.4f}".
+                "epoch mean log probability = {4:.4f}, mean total accuracy {5:.3f}".
                 format(epoch_num, np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens),
-                       np.mean(epoch_log_prob)))
+                       np.mean(epoch_log_prob), np.mean(total_accuracy)))
             accuracy, accuracy_chosen_tokens, epoch_losses, epoch_log_prob = [], [], [], []
+            total_accuracy = []
             if current_data_set == train_set:
                 current_data_set = validation_set
             else:
@@ -782,6 +788,8 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
                                                                       skipped_indices=skipped)
 
             correct_greedy_choices = [golden_parsing[i] == greedy_choices[i] for i in range(len(golden_parsing))]
+            correct_all = all(correct_greedy_choices)
+            total_accuracy.append(correct_all)
             accuracy.append(sum(correct_greedy_choices) / len(golden_parsing))
             accuracy_chosen_tokens.append(sum(correct_greedy_choices[i] for i in range(len(golden_parsing))
                                               if i not in no_real_choice_indices) / (
@@ -831,11 +839,11 @@ if __name__ == '__main__':
     test_dataset = CNLVRDataSet(DataSet.TEST)
     # test_dataset2 = CNLVRDataSet(DataSet.TEST2)
 
-    run_pre_train = False
+    run_pre_train = True
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
-            run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training, num_epochs=40)
+            run_supervised_training(sess, save_params_path=weights_from_supervised_pre_training, num_epochs=7)
         # evaluate supervised pre-training
         dev_dataset.restart()
         with tf.Session() as sess:
@@ -863,11 +871,12 @@ if __name__ == '__main__':
         # beam re-reanking, auto-completion of tokens etc.) are all set in hyper_params.py.
         # the results are printed to STATS_FILE after every epoch
 
-
         with tf.Session() as sess:
             run_model(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
                       load_params_path=weights_from_supervised_pre_training, save_model_path=OUTPUT_WEIGHTS)
             best_weights_so_far = OUTPUT_WEIGHTS + '-' + str(MAX_N_EPOCHS)
+
+
     # running a test on the dev and test datasets, using the weights that achieved the best accuracy and consistency
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.

@@ -82,7 +82,10 @@ def get_programs_for_sentence_by_pattern(sentence, patterns_dict):
     :return: a *string* that is a suggested program based on the dict
     '''
     if ABSTRACTION:
-        return patterns_dict.get(sentence, {})
+
+        matching_patterns = patterns_dict.get(sentence, {})
+        suggested_decodings = [prog[0] for prog in sorted(matching_patterns.items(), key=lambda item: binomial_prob(item[1][0], item[1][1]))]
+        return suggested_decodings
 
     words = sentence.split()
     formalized_sent = get_formalized_sentence(sentence)
