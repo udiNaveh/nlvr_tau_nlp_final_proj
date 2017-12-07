@@ -80,11 +80,12 @@ else:
     WORD_EMBEDDINGS_PATH = os.path.join(definitions.SEQ2SEQ_DIR, 'word2vec', 'new_embeddings')
     PRE_TRAINED_WEIGHTS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'learnedWeights', 'new_trained_variables_sup_with_embeddings.ckpt')
 
-TRAINED_WEIGHTS_BEST = \
-    os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_best_8_replacements')
-LOGICAL_TOKENS_LIST =  os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
+# TRAINED_WEIGHTS_BEST = \
+#     os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_best_8_replacements')
+TRAINED_WEIGHTS_BEST = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_best_08_12')
+LOGICAL_TOKENS_LIST = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
 CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',
                                         'cached_programs_based_on_pretrain')
-NGRAM_PROBS =  os.path.join(definitions.DATA_DIR, 'sentence-processing', 'ngram_logprobs')
+NGRAM_PROBS = os.path.join(definitions.DATA_DIR, 'sentence-processing', 'ngram_logprobs')
 

@@ -917,6 +917,7 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
         gradBuffer[var] = grad * 0
 
     accuracy, accuracy_chosen_tokens, epoch_losses, epoch_log_prob = [], [], [], []
+    total_accuracy = []
     batch_num, epoch_num = 0, 0
     current_data_set = train_set
     statistics = {train_set: [], validation_set: []}
@@ -927,10 +928,11 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
                 (np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens)))
             print(
                 "epoch number {0}: mean loss = {1:.3f}, mean accuracy = {2:.3f}, mean accuracy ignore automatic = {3:.3f},"
-                "epoch mean log probability = {4:.4f}".
+                "epoch mean log probability = {4:.4f}, mean parsing accuracy {5:.3f}".
                 format(epoch_num, np.mean(epoch_losses), np.mean(accuracy), np.mean(accuracy_chosen_tokens),
-                       np.mean(epoch_log_prob)))
+                       np.mean(epoch_log_prob), np.mean(total_accuracy)))
             accuracy, accuracy_chosen_tokens, epoch_losses, epoch_log_prob = [], [], [], []
+            total_accuracy = []
             if current_data_set == train_set:
                 current_data_set = validation_set
             else:
@@ -973,6 +975,8 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
                                                                       skipped_indices=skipped)
 
             correct_greedy_choices = [golden_parsing[i] == greedy_choices[i] for i in range(len(golden_parsing))]
+            correct_all = all(correct_greedy_choices)
+            total_accuracy.append(correct_all)
             accuracy.append(sum(correct_greedy_choices) / len(golden_parsing))
             accuracy_chosen_tokens.append(sum(correct_greedy_choices[i] for i in range(len(golden_parsing))
                                               if i not in no_real_choice_indices) / (
@@ -1022,7 +1026,7 @@ if __name__ == '__main__':
     test_dataset = CNLVRDataSet(DataSet.TEST)
     #test_dataset2 = CNLVRDataSet(DataSet.TEST2)
 
-    run_pre_train = False
+    run_pre_train = True
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
@@ -1044,7 +1048,7 @@ if __name__ == '__main__':
         #     train_results_by_sentence = run_model(sess, train_dataset, mode='test',
         #                                           load_params_path=weights_from_supervised_pre_training,
         #                                           return_sentences_results=False)
-    run_train = False  # change to True if you really want to run the whole thing...
+    run_train = True  # change to True if you really want to run the whole thing...
 
     if run_train:
         # training the weakly supervised model with weights initialized to the values learned in the supervises learning.
@@ -1062,8 +1066,8 @@ if __name__ == '__main__':
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
 
-    beam_similarity_train = True
-    beam_similarity_test = True
+    beam_similarity_train = False
+    beam_similarity_test = False
     #beam_similarity_weights_path = os.path.join(SEQ2SEQ_DIR, 'beamSimilarityWeights2017-11-26_23_22.ckpt-29')
     beam_similarity_weights_path = os.path.join(SEQ2SEQ_DIR,'beamSimilarityWeights'+ time_stamp + '.ckpt')
     if beam_similarity_train:
@@ -1131,16 +1135,16 @@ if __name__ == '__main__':
 
     dev_results_by_sentence, test_results_by_sentence, test2_results_by_sentence = {}, {}, {}
 
-    run_test = False
+    run_test = True
     if run_test:
         dev_results_by_sentence, test_results_by_sentence, test2_results_by_sentence = {}, {}, {}
 
         # weights = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_2017-11-01_12_21.ckpt-13')
 
-        # train_dataset.restart()
-        # with tf.Session() as sess:
-        #    train_results_by_sentence = run_model(sess, train_dataset, mode='test',
-        #                                        load_params_path=weights, return_sentences_results=False)
+        train_dataset.restart()
+        with tf.Session() as sess:
+           train_results_by_sentence = run_model(sess, train_dataset, mode='test',
+                                               load_params_path=best_weights_so_far, return_sentences_results=False)
 
         dev_dataset.restart()
         with tf.Session() as sess:
@@ -1149,11 +1153,11 @@ if __name__ == '__main__':
 
         save_sentences_test_results(dev_results_by_sentence, dev_dataset, SENTENCES_RESULTS_FILE_DEV)
 
-        test_dataset.restart()
-        with tf.Session() as sess:
-            test_results_by_sentence = run_model(sess, test_dataset, mode='test',
-                                                 load_params_path=best_weights_so_far, return_sentences_results=False)
-        #
+        # test_dataset.restart()
+        # with tf.Session() as sess:
+        #     test_results_by_sentence = run_model(sess, test_dataset, mode='test',
+        #                                          load_params_path=best_weights_so_far, return_sentences_results=False)
+
         #     save_sentences_test_results(test_results_by_sentence, test_dataset, SENTENCES_RESULTS_FILE_TEST)
 
         # test_dataset2.restart()
