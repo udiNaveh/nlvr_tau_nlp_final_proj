@@ -20,7 +20,7 @@ REWARD_EVERY = 4
 LEARNING_RATE = 0.001
 BETA = 0.5
 EPSILON_FOR_BEAM_SEARCH = 0
-MAX_N_EPOCHS = 15
+MAX_N_EPOCHS = 20
 
 BATCH_SIZE_UNSUPERVISED = 8
 BATCH_SIZE_SUPERVISED = 10
@@ -82,7 +82,7 @@ else:
 
 # TRAINED_WEIGHTS_BEST = \
 #     os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_best_8_replacements')
-TRAINED_WEIGHTS_BEST = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_best_08_12')
+TRAINED_WEIGHTS_BEST = os.path.join(definitions.ROOT_DIR, 'seq2seqModel' ,'learnedWeightsWeaklySupervised','weights_best_10_12')
 LOGICAL_TOKENS_LIST = os.path.join(definitions.DATA_DIR, 'logical forms', 'logical_tokens_list')
 CACHED_PROGRAMS = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'output decodings', 'cached_programs')
 CACHED_PROGRAMS_PRETRAIN = os.path.join(definitions.ROOT_DIR, 'seq2seqModel', 'outputs',

@@ -19,7 +19,8 @@ TEST_IMAGES = os.path.join(NLVR_DATA, 'test', 'images')
 ENG_VOCAB_60K = os.path.join(DATA_DIR, 'sentence-processing', 'en-vocabulary-60k.txt')
 TOKEN_COUNTS = os.path.join(DATA_DIR, 'sentence-processing', 'tokens_spellproofed.txt')
 BIGRAM_COUNTS = os.path.join(DATA_DIR, 'sentence-processing', 'bigrams_spellproofed.txt')
-TOKEN_COUNTS_PROCESSED = os.path.join(DATA_DIR, 'sentence-processing', 'tokens_processed.txt')
+# TOKEN_COUNTS_PROCESSED = os.path.join(DATA_DIR, 'sentence-processing', 'tokens_processed.txt')
+TOKEN_COUNTS_PROCESSED = os.path.join(DATA_DIR, 'sentence-processing', 'new_tokens_counts.txt')
 BIGRAM_COUNTS_PROCESSED = os.path.join(DATA_DIR, 'sentence-processing', 'bigrams_processed.txt')
 
 

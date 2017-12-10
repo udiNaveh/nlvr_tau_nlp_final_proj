@@ -1061,7 +1061,7 @@ if __name__ == '__main__':
         with tf.Session() as sess:
             run_model(sess, train_dataset, mode='train', validation_dataset=dev_dataset,
                       load_params_path=weights_from_supervised_pre_training, save_model_path=OUTPUT_WEIGHTS)
-            best_weights_so_far = OUTPUT_WEIGHTS + '-' + str(MAX_N_EPOCHS)
+            # best_weights_so_far = OUTPUT_WEIGHTS + '-' + str(MAX_N_EPOCHS)
     # running a test on the dev and test datasets, using the weights that achieved the best accuracy and consistency
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
@@ -1122,12 +1122,12 @@ if __name__ == '__main__':
                 # clf_params_path=beam_classifier_weights_path,beam_reranking_train=True)
         else:
             with tf.Session() as sess:
-                run_model(sess, test_dataset, mode='test',
+                run_model(sess, dev_dataset, mode='test',
                           load_params_path=best_weights_so_far, return_sentences_results=True, beam_classifier=True,
                           beam_classifier_test=True,
                           clf_params_path=os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights2017-11-11_13_27.ckpt'))
             with tf.Session() as sess:
-                run_model(sess, dev_dataset, mode='test',
+                run_model(sess, test_dataset, mode='test',
                           load_params_path=best_weights_so_far, return_sentences_results=True, beam_classifier=True,
                           beam_classifier_test=True,
                           clf_params_path=os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights2017-11-11_13_27.ckpt'))
