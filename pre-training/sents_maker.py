@@ -154,7 +154,7 @@ def generate_pairs_for_supervised_learning(forms_dictionary):
     n = len(pairs)
     np.random.shuffle(pairs)
     pairs_train = pairs[: int( 0.9 * n)]
-    pairs_validation = pairs[int( 0.1 * n): ]
+    pairs_validation = pairs[int( 0.9 * n): ]
 
     return pairs_train, pairs_validation
 
@@ -270,6 +270,7 @@ if __name__ == '__main__':
     else:
         pairs_train, pairs_validation = generate_pairs_for_supervised_learning(new_dict)
 
+    print(len(pairs_train), len(pairs_validation))
     pickle.dump(pairs_train, open(definitions.SUPERVISED_TRAIN_PICKLE, 'wb'))
     pickle.dump(pairs_validation, open(definitions.SUPERVISED_VALIDATION_PICKLE, 'wb'))
 
