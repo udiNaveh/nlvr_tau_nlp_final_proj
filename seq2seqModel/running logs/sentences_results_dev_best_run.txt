@@ -1,0 +1,1737 @@
+sentence: one of the grey box has exactly six objects
+model prediction:
+log_prob = -1.22, program = le 1 count filter ALL_BOXES lambda_x_: equal_int 6 count x
+consistent
+##############
+
+sentence: there are two towers that has two blue blocks
+model prediction:
+log_prob = -1.86, program = NOT equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -2.12, program = NOT equal_int 1 count filter ALL_BOXES lambda_x_: le 2 count filter x lambda_y_: is_blue y
+##############
+
+sentence: there are 2 blue blocks
+model prediction:
+log_prob = -2.32, program = le 2 count filter ALL_ITEMS lambda_x_: is_blue x
+consistent
+##############
+
+sentence: there is 1 tower with 2 black blocks stacked together
+model prediction:
+log_prob = -4.32, program = le 1 count filter ALL_BOXES lambda_x_: le 2 count filter get_touching filter x lambda_y_: is_black y lambda_z_: is_black z
+consistent
+##############
+
+sentence: there is a blue block as the base of a tower with more than two blocks
+model prediction:
+log_prob = -1.39, program = exist filter ALL_BOXES lambda_x_: AND lt 2 count x exist filter x lambda_y_: AND is_blue y is_bottom y
+consistent
+##############
+
+sentence: there are 2 boxes with a triangle closely touching a corner
+model prediction:
+log_prob = -3.69, program = equal_int 2 count filter ALL_ITEMS lambda_x_: AND is_triangle x is_touching_corner x Side.ANY
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is 1 box with only blue and yellow items
+model prediction:
+log_prob = -3.53, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -2.39, program = exist filter ALL_BOXES lambda_x_: equal_int 2 count query_color x
+##############
+
+sentence: there is no yellow circle closely touching the bottom of a box
+model prediction:
+log_prob = -2.43, program = NOT exist filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_circle x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is only one blue block as the base of a tower
+model prediction:
+log_prob = -3.74, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_blue x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is 1 tower with blocks of all 3 colours
+model prediction:
+log_prob = -1.43, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 3 count query_color x
+consistent
+##############
+
+sentence: there is a tower with exactly three blocks with a yellow block at the top
+model prediction:
+log_prob = -1.52, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_yellow y is_top y
+consistent
+##############
+
+sentence: there are 2 towers with a blue block at the top
+model prediction:
+log_prob = -1.79, program = equal_int 2 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_blue y is_top y
+consistent
+##############
+
+sentence: there is a tower with a yellow block over a blue block
+model prediction:
+log_prob = -2.12, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there are three black blocks as the base of a tower
+model prediction:
+log_prob = -6.05, program = le 3 count filter ALL_ITEMS lambda_x_: AND AND is_black x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is 1 tower with 2 yellow blocks
+model prediction:
+log_prob = -1.38, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there are exactly three blue objects not touching any edge
+model prediction:
+log_prob = -0.39, program = equal_int 3 count filter ALL_ITEMS lambda_x_: AND is_blue x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is exactly one tower with a black block at the base
+model prediction:
+log_prob = -1.49, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_black x is_bottom x
+consistent
+##############
+
+sentence: there is a box with a black circle and a yellow cirlce not being of small size
+model prediction:
+log_prob = -3.82, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_circle y
+inconsistent
+consistent program from beam : 
+log_prob = -4.90, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_circle y
+##############
+
+sentence: there are two blue blocks as the base of a tower
+model prediction:
+log_prob = -4.24, program = le 2 count filter ALL_ITEMS lambda_x_: AND AND is_blue x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is a tower with exactly two blocks with a black block at the top
+model prediction:
+log_prob = -1.30, program = exist filter ALL_BOXES lambda_x_: AND equal_int 2 count x exist filter x lambda_y_: AND is_top y is_black y
+consistent
+##############
+
+sentence: one of the grey square has exactly four objects
+model prediction:
+log_prob = -1.25, program = le 1 count filter ALL_BOXES lambda_x_: equal_int 4 count x
+consistent
+##############
+
+sentence: there is exactly one tower which has a blue block over a black block
+model prediction:
+log_prob = -1.26, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there are two towers with a blue block at the top
+model prediction:
+log_prob = -1.79, program = equal_int 2 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_blue y is_top y
+consistent
+##############
+
+sentence: one tower has a yellow block on top of a blue block
+model prediction:
+log_prob = -3.86, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -3.44, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: all_same query_color y
+##############
+
+sentence: there is a box with 2 items and a yellow one touching the wall
+model prediction:
+log_prob = -3.44, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: AND is_yellow x is_touching_wall x Side.ANY lambda_y_: is_top y
+consistent
+##############
+
+sentence: there is at least 1 square closely tocuhing a box corner
+model prediction:
+log_prob = -2.52, program = le 1 count filter ALL_ITEMS lambda_x_: AND is_square x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is a circle with four items and the one is yellow
+model prediction:
+log_prob = -4.12, program = exist filter ALL_BOXES lambda_x_: AND equal_int 4 count x equal_int 2 count filter x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there is a tower which has only two blocks
+model prediction:
+log_prob = -1.07, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count x
+consistent
+##############
+
+sentence: there is a tower with a blue block above a blue block
+model prediction:
+log_prob = -1.01, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there is 1 box with only black items
+model prediction:
+log_prob = -1.38, program = le 1 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there are at least three yellow triangles not touching any edge
+model prediction:
+log_prob = -2.39, program = le 3 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x NOT is_touching_wall x Side.ANY is_triangle x
+consistent
+##############
+
+sentence: there are 2 boxes with a black item on top
+model prediction:
+log_prob = -1.23, program = equal_int 2 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_top y is_black y
+consistent
+##############
+
+sentence: t least two of the towers ha yellow bases
+model prediction:
+log_prob = -3.64, program = le 2 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there are at least two towers with the same height
+model prediction:
+log_prob = -2.49, program = exist filter ALL_BOXES lambda_x_: le 2 count x
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is 1 tower with a blue block at the base
+model prediction:
+log_prob = -1.82, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there are 3 blue blocks
+model prediction:
+log_prob = -2.89, program = le 3 count filter ALL_ITEMS lambda_x_: is_blue x
+consistent
+##############
+
+sentence: there is a box that has four items and the three are touching the side
+model prediction:
+log_prob = -2.82, program = equal_int 3 count filter ALL_ITEMS lambda_x_: is_touching_wall x Side.ANY
+inconsistent
+consistent program from beam : 
+log_prob = -4.64, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_touching_wall y Side.ANY
+##############
+
+sentence: the top of the three blocks tower is blue
+model prediction:
+log_prob = -1.48, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_blue y is_top y
+consistent
+##############
+
+sentence: there is a box with a yellow circle and three blue items
+model prediction:
+log_prob = -1.76, program = exist filter ALL_BOXES lambda_x_: equal_int 3 count filter x lambda_y_: is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -3.95, program = exist filter ALL_BOXES lambda_x_: equal_int 3 count filter x lambda_y_: is_touching_wall y Side.ANY
+##############
+
+sentence: there are two black blocks as the top of a tower
+model prediction:
+log_prob = -1.82, program = le 2 count filter ALL_ITEMS lambda_x_: AND is_black x is_top x
+consistent
+##############
+
+sentence: one of the grey square contains exactly three objects
+model prediction:
+log_prob = -1.24, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 3 count x
+consistent
+##############
+
+sentence: there is only one yellow block as the base of a tower
+model prediction:
+log_prob = -3.46, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there are 2 black circles
+model prediction:
+log_prob = -4.67, program = le 2 count filter ALL_ITEMS lambda_x_: AND is_black x is_circle x
+consistent
+##############
+
+sentence: there is a three blocks tower which has only one blue block
+model prediction:
+log_prob = -2.16, program = equal_int 1 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -1.83, program = exist filter ALL_BOXES lambda_x_: equal_int 3 count query_color x
+##############
+
+sentence: there are two towers with more than one block where all the blocks are of same color
+model prediction:
+log_prob = -3.58, program = equal_int 2 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: all_same query_color y
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: one of the grey square contains exactly one object which is black
+model prediction:
+log_prob = -3.10, program = equal_int 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_black y lambda_z_: is_top z
+consistent
+##############
+
+sentence: the tower with four blocks has a black block at the top
+model prediction:
+log_prob = -0.72, program = exist filter ALL_BOXES lambda_x_: AND equal_int 4 count x exist filter x lambda_y_: AND is_black y is_top y
+consistent
+##############
+
+sentence: there is a tower with a four block which has a blue block over a blue block
+model prediction:
+log_prob = -2.14, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there is a yellow square touching the wall
+model prediction:
+log_prob = -2.11, program = exist filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_square x is_touching_wall x Side.RIGHT
+inconsistent
+consistent program from beam : 
+log_prob = -2.28, program = exist filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_square x is_touching_wall x Side.ANY
+##############
+
+sentence: there is a blue circle touching an edge
+model prediction:
+log_prob = -1.74, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_blue x is_circle x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is no tower with exactly two blocks
+model prediction:
+log_prob = -1.58, program = NOT equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_square y
+inconsistent
+consistent program from beam : 
+log_prob = -2.17, program = NOT equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_blue y
+##############
+
+sentence: there is 1 black circle
+model prediction:
+log_prob = -5.23, program = le 1 count filter ALL_ITEMS lambda_x_: AND is_black x is_circle x
+consistent
+##############
+
+sentence: there is a box with 4 items and the black one is on top
+model prediction:
+log_prob = -1.05, program = exist filter ALL_BOXES lambda_x_: AND equal_int 4 count x exist filter x lambda_y_: AND is_black y is_top y
+consistent
+##############
+
+sentence: there is exactly one black triangle not touching any edge
+model prediction:
+log_prob = -0.71, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_black x is_triangle x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is no square closely touching the bottom of a box
+model prediction:
+log_prob = -1.54, program = NOT exist filter ALL_ITEMS lambda_x_: AND is_square x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: ll 3 towers have at least 1 blue block
+model prediction:
+log_prob = -3.25, program = le 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_blue y lambda_z_: is_top z
+consistent
+##############
+
+sentence: each box has at least 1 black item
+model prediction:
+log_prob = -4.05, program = le 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_black y lambda_z_: is_top z
+inconsistent
+consistent program from beam : 
+log_prob = -4.57, program = exist filter ALL_BOXES lambda_x_: equal_int 2 count x
+##############
+
+sentence: there is an item that is touching the corner
+model prediction:
+log_prob = -1.92, program = equal_int 1 count filter ALL_ITEMS lambda_x_: is_touching_corner x Side.ANY
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is exactly one tower with a blue block at the base
+model prediction:
+log_prob = -1.50, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_bottom x
+consistent
+##############
+
+sentence: there is no yellow block above a blue block
+model prediction:
+log_prob = -2.36, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -2.92, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+##############
+
+sentence: there are two black items closely touching the bottom of a box
+model prediction:
+log_prob = -4.69, program = le 2 count filter ALL_ITEMS lambda_x_: AND AND is_black x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there are two tower with different height and the base is yellow
+model prediction:
+log_prob = -2.73, program = equal_int 2 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_bottom y is_yellow y
+inconsistent
+consistent program from beam : 
+log_prob = -3.46, program = equal_int 2 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_yellow y lambda_z_: is_bottom z
+##############
+
+sentence: there is a box with a yellow triangle and no blue squares
+model prediction:
+log_prob = -4.79, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: AND is_blue x NOT is_touching_wall x Side.ANY lambda_y_: is_yellow y
+inconsistent
+consistent program from beam : 
+log_prob = -4.06, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_touching_wall y Side.ANY
+##############
+
+sentence: there is one tower with a black block above a black block
+model prediction:
+log_prob = -1.18, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -1.48, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_black y
+##############
+
+sentence: there is exactly one tower with a yellow block at base
+model prediction:
+log_prob = -1.57, program = equal_int 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_bottom y is_yellow y
+consistent
+##############
+
+sentence: there is at least one yellow circle touching the edge
+model prediction:
+log_prob = -3.51, program = le 1 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_circle x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a box with a black square touching the wall and another one on top of it all
+model prediction:
+log_prob = -2.47, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_touching_wall x Side.ANY lambda_y_: is_black y
+consistent
+##############
+
+sentence: each grey box contains atleast one yellow object touching the edge
+model prediction:
+log_prob = -6.74, program = le 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_yellow y is_touching_wall y Side.ANY
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is a box which a blue triangle and at least two black items
+model prediction:
+log_prob = -4.19, program = le 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_black y is_triangle y
+inconsistent
+consistent program from beam : 
+log_prob = -4.47, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_triangle y
+##############
+
+sentence: there is no yellow item closely touching right wall of a box
+model prediction:
+log_prob = -0.73, program = NOT exist filter ALL_ITEMS lambda_x_: AND is_yellow x is_touching_wall x Side.RIGHT
+consistent
+##############
+
+sentence: there is exactly one tower with a blue block at the base
+model prediction:
+log_prob = -1.50, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_bottom x
+consistent
+##############
+
+sentence: there is 1 tower with a blue block at the base
+model prediction:
+log_prob = -1.82, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there are 2 towers with a black block at the base
+model prediction:
+log_prob = -1.75, program = equal_int 2 count filter ALL_ITEMS lambda_x_: AND is_black x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a blue block as the top of a tower with at least three blocks
+model prediction:
+log_prob = -1.00, program = exist filter ALL_BOXES lambda_x_: AND le 3 count x exist filter x lambda_y_: AND is_top y is_blue y
+consistent
+##############
+
+sentence: there is only one tower with at least two yellow blocks
+model prediction:
+log_prob = -1.20, program = equal_int 1 count filter ALL_BOXES lambda_x_: le 2 count filter x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there is a black tower
+model prediction:
+log_prob = -0.92, program = exist filter ALL_BOXES lambda_x_: All x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is a black block as the base of a tower with exactly three blocks
+model prediction:
+log_prob = -0.77, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_bottom y is_black y
+consistent
+##############
+
+sentence: there is a tower that the second block from the base is blue
+model prediction:
+log_prob = -1.68, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_bottom x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there is a box with 4 items and the black one is on top
+model prediction:
+log_prob = -1.05, program = exist filter ALL_BOXES lambda_x_: AND equal_int 4 count x exist filter x lambda_y_: AND is_black y is_top y
+consistent
+##############
+
+sentence: only 2 yellow and one black item are touching the wall
+model prediction:
+log_prob = -3.78, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: AND is_black x is_touching_wall x Side.ANY lambda_y_: is_yellow y
+inconsistent
+consistent program from beam : 
+log_prob = -2.51, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_black x is_touching_wall x Side.ANY
+##############
+
+sentence: there is a box with 3 items and a yellow one on top
+model prediction:
+log_prob = -2.65, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_yellow y is_top y
+consistent
+##############
+
+sentence: there is a box with a yellow triangle and 2 black squares
+model prediction:
+log_prob = -3.17, program = exist filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_triangle y
+inconsistent
+consistent program from beam : 
+log_prob = -3.69, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_triangle y
+##############
+
+sentence: there is a box with 3 items of all 3 different colors
+model prediction:
+log_prob = -2.98, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x equal_int 3 count query_color x
+consistent
+##############
+
+sentence: there is at least 1 tower with a blue block at the top
+model prediction:
+log_prob = -2.24, program = le 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_top y is_blue y
+consistent
+##############
+
+sentence: there is a box with a yellow item and three black items
+model prediction:
+log_prob = -1.14, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_yellow y
+inconsistent
+consistent program from beam : 
+log_prob = -3.08, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_black y
+##############
+
+sentence: there are two towers which has three and four blocks each
+model prediction:
+log_prob = -1.08, program = le 2 count filter ALL_BOXES lambda_x_: equal_int 4 count x
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is exactly one yellow triangle touching the edge
+model prediction:
+log_prob = -1.78, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_triangle x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is 1 tower with a black block at the top
+model prediction:
+log_prob = -1.84, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_black x is_top x
+consistent
+##############
+
+sentence: there are exactly three squares not touching any edge
+model prediction:
+log_prob = -2.27, program = equal_int 3 count filter ALL_ITEMS lambda_x_: AND is_square x NOT is_touching_wall x Side.ANY
+inconsistent
+consistent program from beam : 
+log_prob = -5.43, program = equal_int 3 count filter ALL_ITEMS lambda_x_: AND is_black x NOT is_touching_wall x Side.ANY
+##############
+
+sentence: there is at least one tower with exactly two blocks having a blue block at the top
+model prediction:
+log_prob = -1.34, program = exist filter ALL_BOXES lambda_x_: AND equal_int 2 count x exist filter x lambda_y_: AND is_top y is_blue y
+consistent
+##############
+
+sentence: there are 2 towers with a black block at the top
+model prediction:
+log_prob = -1.75, program = equal_int 2 count filter ALL_ITEMS lambda_x_: AND is_black x is_top x
+consistent
+##############
+
+sentence: the tower with four blocks has a black block at the top
+model prediction:
+log_prob = -0.72, program = exist filter ALL_BOXES lambda_x_: AND equal_int 4 count x exist filter x lambda_y_: AND is_black y is_top y
+consistent
+##############
+
+sentence: there is 1 tower with a yellow block at the top
+model prediction:
+log_prob = -2.06, program = equal_int 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_yellow y is_top y
+consistent
+##############
+
+sentence: there are 2 blue blocks
+model prediction:
+log_prob = -2.32, program = le 2 count filter ALL_ITEMS lambda_x_: is_blue x
+consistent
+##############
+
+sentence: there are at least 3 blue blocks
+model prediction:
+log_prob = -3.03, program = le 3 count filter ALL_ITEMS lambda_x_: is_blue x
+consistent
+##############
+
+sentence: there are at least two towers with a yellow block at the top
+model prediction:
+log_prob = -2.52, program = le 2 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_yellow y is_top y
+consistent
+##############
+
+sentence: there is a black block as the base of a tower with at least two blocks
+model prediction:
+log_prob = -0.87, program = exist filter ALL_BOXES lambda_x_: AND le 2 count x exist filter x lambda_y_: AND is_bottom y is_black y
+consistent
+##############
+
+sentence: there is 1 tower with 2 yellow blocks stacked together
+model prediction:
+log_prob = -3.88, program = le 1 count filter ALL_BOXES lambda_x_: le 2 count filter get_touching filter x lambda_y_: is_yellow y lambda_z_: is_yellow z
+consistent
+##############
+
+sentence: there is a yellow square touching the side
+model prediction:
+log_prob = -2.15, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_square x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is 1 tower with a yellow block at the top
+model prediction:
+log_prob = -2.06, program = equal_int 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_yellow y is_top y
+consistent
+##############
+
+sentence: there is a blue item closely touching right wall of a box
+model prediction:
+log_prob = -1.43, program = exist filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.RIGHT
+consistent
+##############
+
+sentence: there is a box with 3 items and yellow one on top
+model prediction:
+log_prob = -5.65, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_yellow y is_top y
+consistent
+##############
+
+sentence: there is 1 tower with a blue block at the base
+model prediction:
+log_prob = -1.82, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: black circles are touching the edge
+model prediction:
+log_prob = -1.10, program = exist filter ALL_ITEMS lambda_x_: AND AND is_black x is_circle x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a tower with a black block over a blue block
+model prediction:
+log_prob = -1.72, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is a box with 1 black and 1 blue item
+model prediction:
+log_prob = -3.48, program = le 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -1.66, program = exist filter ALL_BOXES lambda_x_: equal_int 1 count filter x lambda_y_: is_blue y
+##############
+
+sentence: there is a black block on a yellow block
+model prediction:
+log_prob = -0.93, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is a yellow block as the top of a tower with exactly three blocks
+model prediction:
+log_prob = -1.50, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_yellow y is_top y
+consistent
+##############
+
+sentence: there is a box with only 3 items of black and yellow color
+model prediction:
+log_prob = -3.42, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_yellow y is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -2.49, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_yellow y is_top y
+##############
+
+sentence: there is only one tower with exactly three blocks
+model prediction:
+log_prob = -0.24, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 3 count x
+consistent
+##############
+
+sentence: there is a tower with only one object which is yellow
+model prediction:
+log_prob = -2.15, program = le 1 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_yellow y
+inconsistent
+consistent program from beam : 
+log_prob = -3.60, program = exist filter ALL_BOXES lambda_x_: All x lambda_y_: AND is_bottom y is_yellow y
+##############
+
+sentence: there are 3 black blocks
+model prediction:
+log_prob = -3.79, program = le 3 count filter ALL_ITEMS lambda_x_: is_black x
+consistent
+##############
+
+sentence: there is a two blocks tower that has only one color
+model prediction:
+log_prob = -2.87, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count query_color x
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is 1 tower with only blue and black blocks
+model prediction:
+log_prob = -2.73, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there is one tower with a black block at the top
+model prediction:
+log_prob = -1.90, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_black x is_top x
+consistent
+##############
+
+sentence: there is at least a yellow block as the top of a tower
+model prediction:
+log_prob = -1.52, program = le 1 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_top x
+consistent
+##############
+
+sentence: there is one tower having a black block over a blue block
+model prediction:
+log_prob = -1.88, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is 1 tower with 1 yellow block at the top
+model prediction:
+log_prob = -1.94, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_top x
+consistent
+##############
+
+sentence: there is a tower with a yellow block a blue block and a black block
+model prediction:
+log_prob = -2.39, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -2.48, program = exist filter ALL_BOXES lambda_x_: equal_int 3 count query_color x
+##############
+
+sentence: there is a tower with only three black blocks
+model prediction:
+log_prob = -1.40, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 3 count filter x lambda_y_: is_black y
+consistent
+##############
+
+sentence: one of the grey square contains exactly five objects
+model prediction:
+log_prob = -1.12, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 5 count x
+consistent
+##############
+
+sentence: there is a black tower with only one block
+model prediction:
+log_prob = -1.40, program = equal_int 1 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -2.30, program = equal_int 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_black y lambda_z_: is_top z
+##############
+
+sentence: there are 2 boxes with only black and yellow items
+model prediction:
+log_prob = -2.19, program = equal_int 2 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -4.64, program = NOT equal_int 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_black y lambda_z_: is_top z
+##############
+
+sentence: there is a yellow block as the top of a tower
+model prediction:
+log_prob = -1.10, program = exist filter ALL_ITEMS lambda_x_: AND is_yellow x is_top x
+consistent
+##############
+
+sentence: there is a blue triangle closely touching the bottom of a box
+model prediction:
+log_prob = -2.12, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_blue x is_triangle x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is 1 tower with a blue block at the top
+model prediction:
+log_prob = -1.78, program = equal_int 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_top y is_blue y
+consistent
+##############
+
+sentence: there is a box with exactly two blue items and at least two black items
+model prediction:
+log_prob = -4.42, program = equal_int 2 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is a black block as the top of a tower with three blocks
+model prediction:
+log_prob = -0.72, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_top y is_black y
+consistent
+##############
+
+sentence: there is a tower that has three the same blocks color
+model prediction:
+log_prob = -2.20, program = exist filter ALL_BOXES lambda_x_: equal_int 3 count query_color x
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is a blue square closely touching the bottom of a box
+model prediction:
+log_prob = -2.04, program = exist filter ALL_ITEMS lambda_x_: AND AND is_blue x is_square x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there are exactly two towers with a yellow block at the top
+model prediction:
+log_prob = -1.77, program = equal_int 2 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_yellow y is_top y
+consistent
+##############
+
+sentence: there is a square closely touching a corner of a box
+model prediction:
+log_prob = -1.73, program = exist filter ALL_ITEMS lambda_x_: AND is_square x is_touching_corner x Side.ANY
+consistent
+##############
+
+sentence: there are two yellow items touching the wall
+model prediction:
+log_prob = -1.87, program = le 2 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_touching_wall x Side.RIGHT
+inconsistent
+consistent program from beam : 
+log_prob = -1.93, program = le 2 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_touching_wall x Side.ANY
+##############
+
+sentence: there is a box with a black item between 2 items of the same color and no item on top of that
+model prediction:
+log_prob = -2.62, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: all_same query_color y
+inconsistent
+consistent program from beam : 
+log_prob = -3.42, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_top y
+##############
+
+sentence: there is 1 tower with 1 yellow block at the base
+model prediction:
+log_prob = -2.04, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_bottom x
+consistent
+##############
+
+sentence: one of the grey square contains exactly one object
+model prediction:
+log_prob = -1.64, program = exist filter ALL_BOXES lambda_x_: equal_int 1 count x
+consistent
+##############
+
+sentence: there is a box with only two items of black and yellow color
+model prediction:
+log_prob = -3.85, program = exist filter ALL_BOXES lambda_x_: AND equal_int 2 count x exist filter x lambda_y_: AND is_yellow y is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -2.20, program = exist filter ALL_BOXES lambda_x_: AND equal_int 2 count x exist filter x lambda_y_: AND is_yellow y is_top y
+##############
+
+sentence: there are 2 towers that contain at least 1 black block
+model prediction:
+log_prob = -5.67, program = NOT equal_int 1 count filter ALL_BOXES lambda_x_: le 2 count filter x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -1.76, program = le 2 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: is_black y
+##############
+
+sentence: there is a box with 2 yellow squares not touching the wall
+model prediction:
+log_prob = -2.45, program = exist filter ALL_BOXES lambda_x_: le 2 count filter x lambda_y_: AND is_yellow y is_touching_wall y Side.ANY
+inconsistent
+consistent program from beam : 
+log_prob = -3.51, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: AND is_yellow x NOT is_touching_wall x Side.ANY lambda_y_: is_top y
+##############
+
+sentence: there are two yellow circles touching the base
+model prediction:
+log_prob = -2.52, program = le 2 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_touching_wall x Side.BOTTOM is_circle x
+consistent
+##############
+
+sentence: there is one tower with a blue block at the top
+model prediction:
+log_prob = -1.96, program = equal_int 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_top y is_blue y
+consistent
+##############
+
+sentence: there are exactly four circles not touching any edge
+model prediction:
+log_prob = -0.82, program = equal_int 4 count filter ALL_ITEMS lambda_x_: AND is_circle x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a blue block above a black block
+model prediction:
+log_prob = -1.30, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there is a box with 4 items and 2 yellow squares in the middle
+model prediction:
+log_prob = -3.61, program = exist filter ALL_BOXES lambda_x_: equal_int 4 count filter x lambda_y_: AND is_yellow y is_square y
+inconsistent
+consistent program from beam : 
+log_prob = -2.36, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: AND is_yellow x NOT is_touching_wall x Side.BOTTOM lambda_y_: is_yellow y
+##############
+
+sentence: there is a black block as the top of a tower with at least two blocks
+model prediction:
+log_prob = -0.61, program = exist filter ALL_BOXES lambda_x_: AND le 2 count x exist filter x lambda_y_: AND is_top y is_black y
+consistent
+##############
+
+sentence: there is exactly one square closely touching the bottom of a box
+model prediction:
+log_prob = -1.26, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_square x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: the tower with two blocks has a yellow block at the top
+model prediction:
+log_prob = -0.52, program = exist filter ALL_BOXES lambda_x_: AND equal_int 2 count x exist filter x lambda_y_: AND is_yellow y is_top y
+consistent
+##############
+
+sentence: there is a box with items of only black and blue color
+model prediction:
+log_prob = -3.44, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: all_same query_color y
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is a tower with four blocks
+model prediction:
+log_prob = -1.23, program = exist filter ALL_BOXES lambda_x_: equal_int 4 count x
+consistent
+##############
+
+sentence: none of the black triangles are touching a edge
+model prediction:
+log_prob = -2.40, program = NOT le 1 count filter ALL_ITEMS lambda_x_: AND AND is_black x is_triangle x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is ablue block on a black block
+model prediction:
+log_prob = -1.24, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there is a yellow block on a blue block
+model prediction:
+log_prob = -1.85, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -2.03, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_yellow y
+##############
+
+sentence: there are 2 black blocks
+model prediction:
+log_prob = -3.24, program = le 2 count filter ALL_ITEMS lambda_x_: is_black x
+consistent
+##############
+
+sentence: there are two yellow blocks as the base of a tower
+model prediction:
+log_prob = -3.89, program = le 2 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is at least one black block as the base of a tower
+model prediction:
+log_prob = -3.15, program = le 1 count filter ALL_ITEMS lambda_x_: AND AND is_black x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is a tower with a black block and two blue blocks
+model prediction:
+log_prob = -5.20, program = le 2 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -2.66, program = exist filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_blue y
+##############
+
+sentence: there are 2 towers that contain black blocks
+model prediction:
+log_prob = -1.36, program = equal_int 2 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is a tower with 2 blue blocks stacked together
+model prediction:
+log_prob = -2.91, program = exist filter ALL_BOXES lambda_x_: le 2 count filter get_touching filter x lambda_y_: is_blue y lambda_z_: is_blue z
+consistent
+##############
+
+sentence: there is 1 tower with a yellow block at the base
+model prediction:
+log_prob = -6.42, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_bottom x NOT is_touching_wall x Side.BOTTOM
+inconsistent
+consistent program from beam : 
+log_prob = -2.22, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_touching_wall x Side.ANY
+##############
+
+sentence: there are exactly two black blocks as the top of a tower
+model prediction:
+log_prob = -1.11, program = equal_int 2 count filter ALL_ITEMS lambda_x_: AND is_black x is_top x
+consistent
+##############
+
+sentence: there is a black square touching the wall with a blue squere right on top of it
+model prediction:
+log_prob = -2.23, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_touching_wall x Side.BOTTOM lambda_y_: is_black y
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is 1 tower with 3 yellow blocks
+model prediction:
+log_prob = -1.45, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 3 count filter x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there is a box with items of only one color
+model prediction:
+log_prob = -2.81, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 1 count query_color x
+consistent
+##############
+
+sentence: there are two yellow blocks as the base of a tower
+model prediction:
+log_prob = -3.89, program = le 2 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there are at least two yellow squares not touching any edge
+model prediction:
+log_prob = -1.37, program = le 2 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_square x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a box with items of 2 different colors and a black square
+model prediction:
+log_prob = -3.62, program = NOT equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_black y
+consistent
+##############
+
+sentence: one of the grey box has exactly three objects one of which is a circle
+model prediction:
+log_prob = -4.22, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 3 count filter x lambda_y_: is_circle y
+inconsistent
+consistent program from beam : 
+log_prob = -5.16, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 1 count filter x lambda_y_: is_blue y
+##############
+
+sentence: yellow block at the top
+model prediction:
+log_prob = -0.73, program = exist filter ALL_ITEMS lambda_x_: AND is_yellow x is_top x
+consistent
+##############
+
+sentence: there is a black square touching the base
+model prediction:
+log_prob = -1.47, program = exist filter ALL_ITEMS lambda_x_: AND AND is_black x is_square x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is a box with items of only one color
+model prediction:
+log_prob = -2.81, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 1 count query_color x
+consistent
+##############
+
+sentence: there is a tower with a black block and two blue blocks
+model prediction:
+log_prob = -5.20, program = le 2 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -3.10, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_blue y
+##############
+
+sentence: there are two blue blocks as the base of a tower with at least two blocks
+model prediction:
+log_prob = -2.80, program = exist filter ALL_BOXES lambda_x_: AND le 2 count x exist filter x lambda_y_: AND is_bottom y is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -2.63, program = exist filter ALL_BOXES lambda_x_: AND equal_int 2 count x exist filter x lambda_y_: AND is_bottom y is_blue y
+##############
+
+sentence: there are exactly two black squares not touching any edge
+model prediction:
+log_prob = -1.03, program = equal_int 2 count filter ALL_ITEMS lambda_x_: AND AND is_black x is_square x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is one tower with only one block which is blue
+model prediction:
+log_prob = -2.13, program = equal_int 1 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there is a tower with a yellow block below a yellow block at the top
+model prediction:
+log_prob = -1.68, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_yellow y
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: one of the grey square has exactly seven objects
+model prediction:
+log_prob = -0.95, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 7 count x
+consistent
+##############
+
+sentence: there is exactly one tower which has a yellow black at the top
+model prediction:
+log_prob = -4.55, program = equal_int 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: AND is_black y is_top y lambda_z_: is_yellow z
+inconsistent
+consistent program from beam : 
+log_prob = -1.62, program = equal_int 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_top y is_yellow y
+##############
+
+sentence: ll 3 different colors are touching the wall
+model prediction:
+log_prob = -2.01, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is 1 tower with a black block at the top
+model prediction:
+log_prob = -1.84, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_black x is_top x
+consistent
+##############
+
+sentence: there are only two towers which has the same base color
+model prediction:
+log_prob = -2.39, program = le 1 count filter ALL_BOXES lambda_x_: equal_int 2 count x
+inconsistent
+consistent program from beam : 
+log_prob = -2.41, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count x
+##############
+
+sentence: there is a box with a blue circle and a blue triangle
+model prediction:
+log_prob = -2.89, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_circle y
+inconsistent
+consistent program from beam : 
+log_prob = -2.98, program = exist filter ALL_BOXES lambda_x_: equal_int 6 count x
+##############
+
+sentence: there are 3 yellow squares
+model prediction:
+log_prob = -3.77, program = exist filter ALL_ITEMS lambda_x_: AND is_yellow x is_square x
+consistent
+##############
+
+sentence: there are 2 black triangles
+model prediction:
+log_prob = -5.07, program = le 2 count filter ALL_ITEMS lambda_x_: AND is_black x is_triangle x
+consistent
+##############
+
+sentence: there is a tower with only one block
+model prediction:
+log_prob = -1.51, program = equal_int 1 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_bottom y
+consistent
+##############
+
+sentence: the top of the two four block towers are yellow
+model prediction:
+log_prob = -3.33, program = exist filter ALL_BOXES lambda_x_: AND equal_int 4 count x exist filter x lambda_y_: AND is_yellow y is_top y
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there are 3 yellow items touching the wall and at least one small circle nearly touching the wall
+model prediction:
+log_prob = -3.76, program = le 3 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is at least 1 tower with a yellow block at the base
+model prediction:
+log_prob = -2.58, program = le 1 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_bottom x
+consistent
+##############
+
+sentence: there are at least two circles touching the edge
+model prediction:
+log_prob = -2.15, program = le 2 count filter ALL_ITEMS lambda_x_: AND is_circle x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a blue object touching the edge
+model prediction:
+log_prob = -1.66, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: the base of a three blocks tower is yellow
+model prediction:
+log_prob = -2.02, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_bottom y is_yellow y
+consistent
+##############
+
+sentence: there is at least one black object above a blue object
+model prediction:
+log_prob = -1.58, program = le 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is a black tower with only one block
+model prediction:
+log_prob = -1.40, program = equal_int 1 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -2.30, program = equal_int 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_black y lambda_z_: is_top z
+##############
+
+sentence: there is only 1 tower than contains black blccks
+model prediction:
+log_prob = -2.95, program = equal_int 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is only one tower where the second block is black
+model prediction:
+log_prob = -3.62, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_bottom x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is a box with a blue triangle a yellow square and a yellow circle
+model prediction:
+log_prob = -4.81, program = exist filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_circle y lambda_z_: is_yellow z
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is a yellow block above a black block
+model prediction:
+log_prob = -1.31, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there is no yellow block as the base of a tower
+model prediction:
+log_prob = -5.04, program = NOT exist filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is a tower which has exactly two black blocks
+model prediction:
+log_prob = -1.31, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_black y
+consistent
+##############
+
+sentence: ll blue items are in the same box
+model prediction:
+log_prob = -3.33, program = exist filter ALL_BOXES lambda_x_: All x lambda_y_: is_blue y
+inconsistent
+consistent program from beam : 
+log_prob = -2.15, program = exist filter ALL_BOXES lambda_x_: All x lambda_y_: is_black y
+##############
+
+sentence: there is one tower with a blue block over a yellow block
+model prediction:
+log_prob = -1.72, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there is 1 box with 2 black circles
+model prediction:
+log_prob = -2.22, program = equal_int 1 count filter ALL_BOXES lambda_x_: le 2 count filter x lambda_y_: AND is_black y is_circle y
+consistent
+##############
+
+sentence: there is at least one tower with three blocks
+model prediction:
+log_prob = -1.44, program = le 1 count filter ALL_BOXES lambda_x_: equal_int 3 count x
+consistent
+##############
+
+sentence: there is at least 1 yellow item in each box
+model prediction:
+log_prob = -4.10, program = le 1 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_yellow y
+inconsistent
+consistent program from beam : 
+log_prob = -4.18, program = le 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_black y
+##############
+
+sentence: there is a tower with exactly two blocks having a blue block at the top
+model prediction:
+log_prob = -1.62, program = exist filter ALL_BOXES lambda_x_: AND equal_int 2 count x exist filter x lambda_y_: AND is_top y is_blue y
+consistent
+##############
+
+sentence: there is a tower with four blocks
+model prediction:
+log_prob = -1.23, program = exist filter ALL_BOXES lambda_x_: equal_int 4 count x
+consistent
+##############
+
+sentence: there is 1 tower with 1 blue block at the base
+model prediction:
+log_prob = -1.98, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is at least one triangle closely touching the bottom of a box
+model prediction:
+log_prob = -2.30, program = le 1 count filter ALL_ITEMS lambda_x_: AND is_triangle x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is one tower with a yellow block over a blue block
+model prediction:
+log_prob = -2.19, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there are two grey boxes with atleast two black objects touching the edge
+model prediction:
+log_prob = -2.61, program = le 2 count filter ALL_ITEMS lambda_x_: AND is_black x is_touching_wall x Side.ANY
+inconsistent
+consistent program from beam : 
+log_prob = -4.66, program = NOT equal_int 2 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+##############
+
+sentence: there are two black triangles not touching any edge
+model prediction:
+log_prob = -1.19, program = le 2 count filter ALL_ITEMS lambda_x_: AND AND is_black x is_triangle x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a box with only two black and blue items
+model prediction:
+log_prob = -5.20, program = equal_int 2 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -5.61, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_square y
+##############
+
+sentence: there is a tower with a blue block over a yellow block
+model prediction:
+log_prob = -1.70, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_blue y
+consistent
+##############
+
+sentence: there is exactly one yellow circle not touching any edge
+model prediction:
+log_prob = -1.08, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_circle x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is 1 tower with a black block at the bottom
+model prediction:
+log_prob = -1.49, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_black x is_bottom x
+consistent
+##############
+
+sentence: ll towers contain 1 blue block
+model prediction:
+log_prob = -2.21, program = le 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_blue y lambda_z_: is_top z
+consistent
+##############
+
+sentence: there is a tower with a yellow block below a different colored block
+model prediction:
+log_prob = -2.90, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_yellow y
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is a box with 3 items and a black item on top
+model prediction:
+log_prob = -2.43, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: AND is_black y is_top y
+consistent
+##############
+
+sentence: there are exactly two towers with a blue block at the base
+model prediction:
+log_prob = -1.62, program = equal_int 2 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_blue y is_bottom y
+consistent
+##############
+
+sentence: there is at least one tower having a yellow block over a yellow block
+model prediction:
+log_prob = -1.05, program = le 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there is a blue block as the top of a tower with at least two blocks
+model prediction:
+log_prob = -0.99, program = exist filter ALL_BOXES lambda_x_: AND le 2 count x exist filter x lambda_y_: AND is_top y is_blue y
+consistent
+##############
+
+sentence: there is a box with multiple items and the two are black
+model prediction:
+log_prob = -1.17, program = le 1 count filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is a box with 4 items
+model prediction:
+log_prob = -0.81, program = exist filter ALL_BOXES lambda_x_: equal_int 4 count x
+consistent
+##############
+
+sentence: there is a box with a yellow item touching the wall with a black and yellow item on top of it
+model prediction:
+log_prob = -1.97, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_yellow y
+inconsistent
+consistent program from beam : 
+log_prob = -5.23, program = NOT equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_black y
+##############
+
+sentence: there are two towers having a yellow block at the base
+model prediction:
+log_prob = -1.23, program = equal_int 2 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_bottom x
+consistent
+##############
+
+sentence: there is a black or yellow triangle closely touching the bottom of a box
+model prediction:
+log_prob = -3.91, program = exist filter ALL_ITEMS lambda_x_: AND AND is_yellow x is_triangle x is_touching_wall x Side.BOTTOM
+inconsistent
+consistent program from beam : 
+log_prob = -4.34, program = exist filter ALL_ITEMS lambda_x_: AND AND is_black x is_triangle x is_touching_wall x Side.BOTTOM
+##############
+
+sentence: there is at least one tower which has a yellow block above a black block
+model prediction:
+log_prob = -0.92, program = le 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there is 1 tower with a yellow block and a blue block
+model prediction:
+log_prob = -2.61, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_yellow y
+inconsistent
+consistent program from beam : 
+log_prob = -2.74, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_yellow x lambda_y_: is_blue y
+##############
+
+sentence: there is one black triangle touching the base
+model prediction:
+log_prob = -1.94, program = le 1 count filter ALL_ITEMS lambda_x_: AND AND is_black x is_triangle x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: there is a black triangle touching the wall
+model prediction:
+log_prob = -1.80, program = exist filter ALL_ITEMS lambda_x_: AND AND is_black x is_triangle x is_touching_wall x Side.RIGHT
+inconsistent
+consistent program from beam : 
+log_prob = -2.27, program = exist filter ALL_ITEMS lambda_x_: AND AND is_black x is_triangle x is_touching_wall x Side.ANY
+##############
+
+sentence: there is a tower with four blocks
+model prediction:
+log_prob = -1.23, program = exist filter ALL_BOXES lambda_x_: equal_int 4 count x
+consistent
+##############
+
+sentence: blue squares are not touching any edge
+model prediction:
+log_prob = -1.11, program = exist filter ALL_ITEMS lambda_x_: AND AND is_blue x is_square x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a black tower
+model prediction:
+log_prob = -0.92, program = exist filter ALL_BOXES lambda_x_: All x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is a tower which has two black blocks as the base and second blocks
+model prediction:
+log_prob = -2.02, program = exist filter ALL_BOXES lambda_x_: AND equal_int 2 count x exist filter x lambda_y_: AND is_black y is_bottom y
+inconsistent
+consistent program from beam : 
+log_prob = -2.19, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count x
+##############
+
+sentence: there is exactly one yellow object touching the edge
+model prediction:
+log_prob = -0.58, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_yellow x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is at least one black block on a blue block
+model prediction:
+log_prob = -2.37, program = le 1 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+consistent
+##############
+
+sentence: there is a tower with a yellow block over a blue block
+model prediction:
+log_prob = -2.12, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there are three triangles touching the edge
+model prediction:
+log_prob = -2.60, program = equal_int 3 count filter ALL_ITEMS lambda_x_: AND is_triangle x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a blue block as the base of a tower
+model prediction:
+log_prob = -3.23, program = exist filter ALL_ITEMS lambda_x_: AND AND is_blue x is_bottom x is_touching_wall x Side.BOTTOM
+consistent
+##############
+
+sentence: tleast one black triangle is not touching the edge
+model prediction:
+log_prob = -1.27, program = le 1 count filter ALL_ITEMS lambda_x_: AND AND is_black x is_triangle x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: two of the three towers has a blue base
+model prediction:
+log_prob = -1.29, program = equal_int 2 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is 1 box with a triangle closely touching a corner
+model prediction:
+log_prob = -2.33, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_bottom x lambda_y_: is_touching_corner y Side.ANY
+consistent
+##############
+
+sentence: there are exactly two towers with blue blocks and one of them has a black block above yellow blocks
+model prediction:
+log_prob = -2.91, program = equal_int 2 count filter get_above filter ALL_ITEMS lambda_x_: is_blue x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -2.56, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count x
+##############
+
+sentence: there are 2 towers with only 1 yellow block
+model prediction:
+log_prob = -1.83, program = equal_int 2 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_yellow y
+consistent
+##############
+
+sentence: there is a box with 2 items of only yellow and black colour
+model prediction:
+log_prob = -1.85, program = exist filter ALL_BOXES lambda_x_: AND equal_int 2 count x equal_int 2 count query_color x
+consistent
+##############
+
+sentence: there is exactly one tower with a black block at the top
+model prediction:
+log_prob = -1.32, program = equal_int 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: AND is_top y is_black y lambda_z_: is_top z
+consistent
+##############
+
+sentence: there are exactly two blue squares not touching the edge
+model prediction:
+log_prob = -1.05, program = equal_int 2 count filter ALL_ITEMS lambda_x_: AND AND is_blue x is_square x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is exactly one black block as the top of a tower
+model prediction:
+log_prob = -1.35, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_black x is_top x
+consistent
+##############
+
+sentence: there is exactly one blue triangle touching the edge
+model prediction:
+log_prob = -0.89, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND AND is_blue x is_triangle x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a small blue square touching the wall
+model prediction:
+log_prob = -2.74, program = exist filter ALL_ITEMS lambda_x_: AND AND is_blue x is_square x is_touching_wall x Side.ANY
+inconsistent
+consistent program from beam : 
+log_prob = -2.97, program = exist filter ALL_ITEMS lambda_x_: AND AND is_blue x is_square x is_touching_wall x Side.RIGHT
+##############
+
+sentence: there are two blue squares not touching any edge
+model prediction:
+log_prob = -1.20, program = le 2 count filter ALL_ITEMS lambda_x_: AND AND is_blue x is_square x NOT is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a box with 3 items of all 3 different colors
+model prediction:
+log_prob = -2.98, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x equal_int 3 count query_color x
+consistent
+##############
+
+sentence: there are two towers that has black block at the top
+model prediction:
+log_prob = -3.25, program = equal_int 2 count filter ALL_ITEMS lambda_x_: AND is_black x is_top x
+consistent
+##############
+
+sentence: there is a box with all 3 colors and a black item on top
+model prediction:
+log_prob = -5.37, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: all_same query_color y
+inconsistent
+consistent program from beam : 
+log_prob = -2.25, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_top y
+##############
+
+sentence: one box has 2 yellow squares
+model prediction:
+log_prob = -2.10, program = equal_int 1 count filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: AND is_yellow y is_square y
+consistent
+##############
+
+sentence: there is a box with a yellow square and at least two black items
+model prediction:
+log_prob = -4.40, program = le 1 count filter ALL_BOXES lambda_x_: equal_int 2 count filter x lambda_y_: is_black y
+inconsistent
+consistent program from beam : 
+log_prob = -3.87, program = equal_int 1 count filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_black y
+##############
+
+sentence: there is a tower with exactly three blocks and it has a yellow block and two blue blocks
+model prediction:
+log_prob = -5.57, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x exist filter x lambda_y_: is_blue y
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: there is a black item on top
+model prediction:
+log_prob = -1.36, program = exist filter get_above filter ALL_ITEMS lambda_x_: is_black x lambda_y_: is_top y
+inconsistent
+consistent program from beam : 
+log_prob = -3.02, program = exist filter ALL_ITEMS lambda_x_: AND is_black x is_top x
+##############
+
+sentence: there are exactly two items closely touching right wall of a box
+model prediction:
+log_prob = -2.28, program = equal_int 2 count filter ALL_ITEMS lambda_x_: is_touching_wall x Side.RIGHT
+consistent
+##############
+
+sentence: there is one tower with a block block at the top
+model prediction:
+log_prob = -2.18, program = equal_int 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_top y lambda_z_: is_top z
+inconsistent
+consistent program from beam : 
+log_prob = -5.21, program = equal_int 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: is_top y lambda_z_: is_black z
+##############
+
+sentence: there is a blue square on top of other items
+model prediction:
+log_prob = -3.29, program = NOT equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_top x
+inconsistent
+consistent program from beam : 
+log_prob = -3.06, program = le 1 count filter ALL_ITEMS lambda_x_: AND is_blue x NOT is_touching_wall x Side.ANY
+##############
+
+sentence: there is 1 tower with a blue block at the base
+model prediction:
+log_prob = -1.82, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+consistent
+##############
+
+sentence: there is a box with 3 items at most of black and blue color
+model prediction:
+log_prob = -1.63, program = exist filter ALL_BOXES lambda_x_: AND equal_int 3 count x equal_int 2 count query_color x
+inconsistent
+consistent program from beam : 
+log_prob = -3.20, program = equal_int 1 count filter ALL_BOXES lambda_x_: AND equal_int 3 count x equal_int 2 count query_color x
+##############
+
+sentence: there is a tower with exactly one block
+model prediction:
+log_prob = -2.31, program = equal_int 1 count filter ALL_BOXES lambda_x_: All x lambda_y_: is_bottom y
+consistent
+##############
+
+sentence: there is only one color touching the wall
+model prediction:
+log_prob = -2.16, program = equal_int 1 count filter ALL_ITEMS lambda_x_: AND is_blue x is_touching_wall x Side.ANY
+inconsistent
+consistent program from beam : 
+log_prob = -5.03, program = equal_int 1 count filter ALL_ITEMS lambda_x_: All filter get_above get_below x lambda_y_: is_top y lambda_z_: is_black z
+##############
+
+sentence: there is a square touching the corner that is not yellow
+model prediction:
+log_prob = -3.48, program = NOT equal_int 1 count filter ALL_ITEMS lambda_x_: is_touching_corner x Side.ANY
+inconsistent
+no consistent programs in beam
+##############
+
+sentence: one tower has a yellow base
+model prediction:
+log_prob = -1.61, program = equal_int 1 count filter ALL_BOXES lambda_x_: exist filter x lambda_y_: AND is_bottom y is_yellow y
+consistent
+##############
+
+sentence: there is exactly one tower with a black block at the top
+model prediction:
+log_prob = -1.32, program = equal_int 1 count filter ALL_BOXES lambda_x_: All filter x lambda_y_: AND is_top y is_black y lambda_z_: is_top z
+consistent
+##############
+
