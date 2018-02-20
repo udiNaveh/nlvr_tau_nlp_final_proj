@@ -788,45 +788,57 @@ def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=Non
                       ",  mean prog length = {2:.2f}".format(
                     mean_consistent, mean_beam_size, np.mean(mean_program_lengths)))
 
-                print('top programs by model had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
-                      '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_ccorrect_top_by_model),
-                                                                                     n_samples,
-                                                                                     (sum(
-                                                                                         n_ccorrect_top_by_model) / n_samples) * 100,
-                                                                                     sum(n_consistent_top_by_model),
-                                                                                     iter,
-                                                                                     (sum(
-                                                                                         n_consistent_top_by_model) / iter) * 100))
-                print('top programs by reranking had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
-                      '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking),
-                                                                                     n_samples,
-                                                                                     (sum(
-                                                                                         n_correct_top_by_reranking) / n_samples) * 100,
-                                                                                     sum(n_consistent_top_by_reranking),
-                                                                                     iter,
-                                                                                     (sum(
-                                                                                         n_consistent_top_by_reranking) / iter) * 100))
-                print('top programs by classifier had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
-                      '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_classifier),
-                                                                                     n_samples,
-                                                                                     (sum(
-                                                                                         n_correct_top_by_classifier) / n_samples) * 100,
-                                                                                     sum(
-                                                                                         n_consistent_top_by_classifier),
-                                                                                     iter,
-                                                                                     (sum(
-                                                                                         n_consistent_top_by_classifier) / iter) * 100))
-                print('top programs by similarity had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
-                      '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_similarity),
-                                                                                     n_samples,
-                                                                                     (sum(
-                                                                                         n_correct_top_by_similarity) / n_samples) * 100,
-                                                                                     sum(
-                                                                                         n_consistent_top_by_similarity),
-                                                                                     iter,
-                                                                                     (sum(
-                                                                                         n_consistent_top_by_similarity) / iter) * 100))
-                #print('reranker potential is {0:.2f}%'.format(total_potential/n_samples * 100))
+                if len(sys.argv) == 2:
+                    print('so far {0} correct parses out of {1} samples ({2:.2f}%), and '
+                          '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_similarity),
+                                                                                         n_samples,
+                                                                                         (sum(
+                                                                                             n_correct_top_by_similarity) / n_samples) * 100,
+                                                                                         sum(
+                                                                                             n_consistent_top_by_similarity),
+                                                                                         iter,
+                                                                                         (sum(
+                                                                                             n_consistent_top_by_similarity) / iter) * 100))
+                else:
+                    print('top programs by model had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
+                          '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_ccorrect_top_by_model),
+                                                                                         n_samples,
+                                                                                         (sum(
+                                                                                             n_ccorrect_top_by_model) / n_samples) * 100,
+                                                                                         sum(n_consistent_top_by_model),
+                                                                                         iter,
+                                                                                         (sum(
+                                                                                             n_consistent_top_by_model) / iter) * 100))
+                    print('top programs by reranking had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
+                          '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_reranking),
+                                                                                         n_samples,
+                                                                                         (sum(
+                                                                                             n_correct_top_by_reranking) / n_samples) * 100,
+                                                                                         sum(n_consistent_top_by_reranking),
+                                                                                         iter,
+                                                                                         (sum(
+                                                                                             n_consistent_top_by_reranking) / iter) * 100))
+                    print('top programs by classifier had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
+                          '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_classifier),
+                                                                                         n_samples,
+                                                                                         (sum(
+                                                                                             n_correct_top_by_classifier) / n_samples) * 100,
+                                                                                         sum(
+                                                                                             n_consistent_top_by_classifier),
+                                                                                         iter,
+                                                                                         (sum(
+                                                                                             n_consistent_top_by_classifier) / iter) * 100))
+                    print('top programs by similarity had so far {0} correct answers out of {1} samples ({2:.2f}%), and '
+                          '{3} consistent parses out of {4} sentences ({5:.2f}%)'.format(sum(n_correct_top_by_similarity),
+                                                                                         n_samples,
+                                                                                         (sum(
+                                                                                             n_correct_top_by_similarity) / n_samples) * 100,
+                                                                                         sum(
+                                                                                             n_consistent_top_by_similarity),
+                                                                                         iter,
+                                                                                         (sum(
+                                                                                             n_consistent_top_by_similarity) / iter) * 100))
+                    #print('reranker potential is {0:.2f}%'.format(total_potential/n_samples * 100))
                 print("##############################")
 
             sys.stdout = orig_stdout
@@ -1008,6 +1020,7 @@ if __name__ == '__main__':
     weights_from_supervised_pre_training = PRE_TRAINED_WEIGHTS
     # weights_from_supervised_pre_training = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsPreTrain', 'weights_' + time_stamp + '.ckpt')
     best_weights_so_far = TRAINED_WEIGHTS_BEST
+    best_reranker_weights = RERANKER_WEIGHTS_BEST
 
     OUTPUT_WEIGHTS = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_' + time_stamp + '.ckpt')
     STATS_FILE = os.path.join(SEQ2SEQ_DIR, 'running logs', 'stats_' + time_stamp + '.txt')
@@ -1024,9 +1037,10 @@ if __name__ == '__main__':
     train_dataset = CNLVRDataSet(DataSet.TRAIN)
     dev_dataset = CNLVRDataSet(DataSet.DEV)
     test_dataset = CNLVRDataSet(DataSet.TEST)
-    #test_dataset2 = CNLVRDataSet(DataSet.TEST2)
+    if len(sys.argv) == 2:
+        test_dataset2 = CNLVRDataSet(DataSet.TEST2)
 
-    run_pre_train = True
+    run_pre_train = False
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
@@ -1048,7 +1062,7 @@ if __name__ == '__main__':
         #     train_results_by_sentence = run_model(sess, train_dataset, mode='test',
         #                                           load_params_path=weights_from_supervised_pre_training,
         #                                           return_sentences_results=False)
-    run_train = True  # change to True if you really want to run the whole thing...
+    run_train = False  # change to True if you really want to run the whole thing...
 
     if run_train:
         # training the weakly supervised model with weights initialized to the values learned in the supervises learning.
@@ -1067,7 +1081,7 @@ if __name__ == '__main__':
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
 
     beam_similarity_train = False
-    beam_similarity_test = False
+    beam_similarity_test = True
     #beam_similarity_weights_path = os.path.join(SEQ2SEQ_DIR, 'beamSimilarityWeights2017-11-26_23_22.ckpt-29')
     beam_similarity_weights_path = os.path.join(SEQ2SEQ_DIR,'beamSimilarityWeights'+ time_stamp + '.ckpt')
     if beam_similarity_train:
@@ -1086,10 +1100,17 @@ if __name__ == '__main__':
     if beam_similarity_test:
         #tf.reset_default_graph()
         with tf.Session() as sess:
-            run_model(sess, dev_dataset, mode='test',
+            if len(sys.argv)==2:
+                run_model(sess, test_dataset2, mode='test',
+                          load_params_path=best_weights_so_far, return_sentences_results=True, beam_similarity=True,
+                          beam_similarity_test=True,
+                          similarity_params_path=best_reranker_weights)
+            else:
+                run_model(sess, test_dataset, mode='test',
                       load_params_path=best_weights_so_far, return_sentences_results=True, beam_similarity=True,
                       beam_similarity_test=True,
-                      similarity_params_path=beam_similarity_weights_path)
+                      # similarity_params_path=beam_similarity_weights_path)
+                      similarity_params_path = best_reranker_weights)
 
 
     if definitions.version1:
@@ -1121,30 +1142,38 @@ if __name__ == '__main__':
                 # beam_classifier_test=True,
                 # clf_params_path=beam_classifier_weights_path,beam_reranking_train=True)
         else:
-            with tf.Session() as sess:
-                run_model(sess, dev_dataset, mode='test',
-                          load_params_path=best_weights_so_far, return_sentences_results=True, beam_classifier=True,
-                          beam_classifier_test=True,
-                          clf_params_path=os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights2017-11-11_13_27.ckpt'))
+            # with tf.Session() as sess:
+            #     run_model(sess, dev_dataset, mode='test',
+            #               load_params_path=best_weights_so_far, return_sentences_results=False, beam_classifier=True,
+            #               beam_classifier_test=True,
+            #               clf_params_path=os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights2017-11-11_13_27.ckpt'))
             with tf.Session() as sess:
                 run_model(sess, test_dataset, mode='test',
-                          load_params_path=best_weights_so_far, return_sentences_results=True, beam_classifier=True,
+                          load_params_path=best_weights_so_far, return_sentences_results=False, beam_classifier=True,
                           beam_classifier_test=True,
-                          clf_params_path=os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights2017-11-11_13_27.ckpt'))
+                          clf_params_path = os.path.join(SEQ2SEQ_DIR, 'beamClassificationWeights2017-11-11_13_27.ckpt'))
+            if len(sys.argv) == 2:
+                with tf.Session() as sess:
+                    run_model(sess, test_dataset2, mode='test',
+                              load_params_path=best_weights_so_far, return_sentences_results=False,
+                              beam_classifier=True,
+                              beam_classifier_test=True,
+                              clf_params_path=os.path.join(SEQ2SEQ_DIR,
+                                                           'beamClassificationWeights2017-11-11_13_27.ckpt'))
         exit(0)
 
     dev_results_by_sentence, test_results_by_sentence, test2_results_by_sentence = {}, {}, {}
 
-    run_test = True
+    run_test = False
     if run_test:
         dev_results_by_sentence, test_results_by_sentence, test2_results_by_sentence = {}, {}, {}
 
         # weights = os.path.join(SEQ2SEQ_DIR, 'learnedWeightsWeaklySupervised', 'weights_2017-11-01_12_21.ckpt-13')
 
-        train_dataset.restart()
-        with tf.Session() as sess:
-           train_results_by_sentence = run_model(sess, train_dataset, mode='test',
-                                               load_params_path=best_weights_so_far, return_sentences_results=False)
+        # train_dataset.restart()
+        # with tf.Session() as sess:
+        #    train_results_by_sentence = run_model(sess, train_dataset, mode='test',
+        #                                        load_params_path=best_weights_so_far, return_sentences_results=False)
 
         dev_dataset.restart()
         with tf.Session() as sess:

@@ -1,4 +1,5 @@
 import os
+import sys
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
@@ -8,8 +9,8 @@ SEQ2SEQ_DIR = os.path.join(ROOT_DIR, 'seq2seqModel')
 TRAIN_JSON = os.path.join(NLVR_DATA, 'train', 'train.json')
 DEV_JSON = os.path.join(NLVR_DATA, 'dev', 'dev.json')
 TEST_JSON = os.path.join(NLVR_DATA, 'test', 'test.json')
-
-TEST2_JSON = '' # '' # ADD THE PATH TO THE HIDDEN TEST JSON HERE
+if len(sys.argv) == 2:
+    TEST2_JSON = sys.argv[1]
 version1 = False
 
 TRAIN_IMAGES = os.path.join(NLVR_DATA, 'train', 'images')

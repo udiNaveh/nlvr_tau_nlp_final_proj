@@ -168,6 +168,6 @@ def run_beam_classification(sess,features,labels,beam_size,save_path=None,infere
         labels[0] = np.reshape(labels[0],(beam_size,1))
         probs = sess.run([logits], feed_dict={feats_placeholder:features[0]})#, labels_placeholder:labels[0]
         result = np.argmax(probs[:original_len])
-        print(result)
+        # print(result)
         return result
 

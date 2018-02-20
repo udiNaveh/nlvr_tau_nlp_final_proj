@@ -64,6 +64,7 @@ def load_forms(path):
 
 
 def generate_eng_log_pairs(engsent, logsent, n_pairs):
+    random.seed(0)
     eng_words = engsent.split()
     forms = set([w for w in eng_words if w == w.upper() and not w.isdigit()])
     result = []

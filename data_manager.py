@@ -6,6 +6,7 @@ from structured_rep import *
 from logical_forms import TokenTypes
 from sentence_processing import preprocess_sentences, replace_rare_words_with_unk
 from seq2seqModel.hyper_params import SENTENCE_DRIVEN_CONSTRAINTS_ON_BEAM_SEARCH
+import sys
 
 np.random.seed(1)
 
@@ -15,11 +16,15 @@ class DataSet(Enum):
     TEST = 'test',
     TEST2 = 'hidden_test'
 
-
-paths = {DataSet.TRAIN: definitions.TRAIN_JSON,
-         DataSet.DEV: definitions.DEV_JSON,
-         DataSet.TEST: definitions.TEST_JSON,
-         DataSet.TEST2: definitions.TEST2_JSON}
+if len(sys.argv) == 2:
+    paths = {DataSet.TRAIN: definitions.TRAIN_JSON,
+             DataSet.DEV: definitions.DEV_JSON,
+             DataSet.TEST: definitions.TEST_JSON,
+             DataSet.TEST2: definitions.TEST2_JSON}
+else:
+    paths = {DataSet.TRAIN: definitions.TRAIN_JSON,
+             DataSet.DEV: definitions.DEV_JSON,
+             DataSet.TEST: definitions.TEST_JSON}
 
 
 def read_data(filename):
