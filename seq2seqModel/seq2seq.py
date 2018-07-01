@@ -50,19 +50,6 @@ def load_meta_data():
     return logical_tokens_ids, logical_tokens_mapping, embeddings_dict, one_hot_dict, embeddings_matrix
 
 
-logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
-if definitions.MANUAL_REPLACEMENTS:
-    words_to_tokens = pickle.load(open(os.path.join(definitions.DATA_DIR, 'logical forms', 'words_to_tokens'), 'rb'))
-else:
-    words_to_tokens = pickle.load(
-        open(os.path.join(definitions.DATA_DIR, 'logical forms', 'new_words_to_tokens'), 'rb'))
-
-n_logical_tokens = len(logical_tokens_ids)
-
-if USE_BOW_HISTORY:
-    HISTORY_EMB_SIZE += n_logical_tokens
-
-
 def build_sentence_encoder(vocabulary_size):
     """
     build the computational graph for the lstm sentence encoder. Return only the palceholders and tensors
@@ -245,39 +232,6 @@ def get_feed_dicts_from_program(program, logical_tokens_embeddings_dict, program
         program_dependent_placeholders[1]: one_hot_stacked
     }
 
-
-# build the computaional graph:
-# bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
-# and returns the lstm outputs.
-
-sentence_placeholder, sent_lengths_placeholder, sentence_words_bow, h, e_m = build_sentence_encoder(
-    vocabulary_size=len(one_hot_dict))
-
-# ff decoder - given the outputs of the encoder, and an embedding of the decoding history,
-# computes a probability distribution over the tokens.
-history_embedding_placeholder, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
-valid_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                      name="valid_logical_tokens")
-token_prob_dist_tensor = tf.nn.softmax(token_unnormalized_dist, dim=0)
-chosen_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                       name="chosen_logical_tokens")  # a one-hot vector represents the action taken at each step
-invalid_logical_tokens_mask = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
-                                             name="invalid_logical_tokens_mask")
-
-program_dependent_placeholders = (history_embedding_placeholder,
-                                  chosen_logical_tokens,
-                                  invalid_logical_tokens_mask)
-
-logits = tf.transpose(token_unnormalized_dist)  # + invalid_logical_tokens_mask
-
-# cross-entropy loss per single token in a single sentence
-cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-    labels=chosen_logical_tokens, logits=logits))
-
-theta1 = tf.trainable_variables()
-g_3 = tf.Graph()
-
-
 def load_meta_data2():
     # load word embeddings
     embeddings_file = open(WORD_EMBEDDINGS_PATH, 'rb')
@@ -370,30 +324,6 @@ def build_decoder2(lstm_outputs, final_utterance_embedding):
                                        initializer=tf.contrib.layers.xavier_initializer())
     token_unnormalized_dist2 = tf.matmul(W_hidden2, tf.matmul(W_s2, tf.concat([q_t2, tf.transpose(c_t2)], 0)))
     return model_p, history_embedding2, token_unnormalized_dist2, W_hidden2
-
-
-
-with tf.variable_scope("similarity", reuse=False):
-    logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict2, embeddings_matrix2 = load_meta_data2()
-    sentence_placeholder2, sent_lengths_placeholder2, sentence_words_bow2, h2, e_m2 = build_sentence_encoder2(
-        len(one_hot_dict2), embeddings_matrix2)
-
-    model_p, history_embedding_placeholder2, token_unnormalized_dist2, W_hidden = build_decoder2(h2, e_m2)
-
-    logits2 = tf.transpose(token_unnormalized_dist2)
-
-    labels_placeholder2 = tf.placeholder(tf.float32, shape=(2, 1))
-    logits2 = tf.reshape(logits2, (1, 2), name="logits")
-    labels_cur2 = tf.reshape(labels_placeholder2, (1, 2))
-    cross_entropy2 = tf.nn.softmax_cross_entropy_with_logits(
-        labels=labels_cur2, logits=logits2, name='xentropy')
-    loss2 = tf.reduce_mean(cross_entropy2, name='xentropy_mean')
-
-    # initialization
-    theta2 = [k for k in tf.trainable_variables() if k.name.startswith("similarity")]
-    optimizer2 = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
-    compute_program_grads2 = optimizer2.compute_gradients(cross_entropy2)
-
 
 def run_model(sess, dataset, mode, validation_dataset=None, load_params_path=None, save_model_path=None,
               return_sentences_results=None, beam_classifier=False, beam_classifier_test=False, clf_params_path=None,
@@ -1013,6 +943,90 @@ def run_supervised_training(sess, load_params_path=None, save_params_path=None, 
 
 if __name__ == '__main__':
 
+    # FLAGS
+    run_pre_train = False
+    run_train = False
+    beam_similarity_train = False
+    beam_similarity_test = False
+    # INFO:
+    # run_pre_train = True means running a supervised training on the augmented data set we created.
+    #       The data set it self can be found in 'data\parsed sentences\new_pairs_train_final' and 'new_pairs_validation_final'
+    #       open them with pickle in 'rb' mode.
+    # run_train = True runs a weakly supervised training on CNLVR data. The model is intialized to the result of the pretraining,
+    #       if you haven't ran pre-training the initialization is to a pre-train done by us.
+    #       For no pre-training at all, change load_params_path=None parameter in line 1089.
+    # to train a re-ranker on top of the final results from the model change the flag beam_similarity_train = True and run_train = False.
+    #       this can be done only after training the basic model as its output is the training data for the re-ranker.
+    #       the re-ranker weights are saved to beam_similarity_weights_path.
+
+
+    # building the network (from here to line 1028)
+    logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict, embeddings_matrix = load_meta_data()
+    if definitions.MANUAL_REPLACEMENTS:
+        words_to_tokens = pickle.load(
+            open(os.path.join(definitions.DATA_DIR, 'logical forms', 'words_to_tokens'), 'rb'))
+    else:
+        words_to_tokens = pickle.load(
+            open(os.path.join(definitions.DATA_DIR, 'logical forms', 'new_words_to_tokens'), 'rb'))
+
+    n_logical_tokens = len(logical_tokens_ids)
+
+    if USE_BOW_HISTORY:
+        HISTORY_EMB_SIZE += n_logical_tokens
+
+    # build the computaional graph:
+    # bi-lstm encoder - given a sentence (of a variable length) as a sequence of word embeddings,
+    # and returns the lstm outputs.
+
+    sentence_placeholder, sent_lengths_placeholder, sentence_words_bow, h, e_m = build_sentence_encoder(
+        vocabulary_size=len(one_hot_dict))
+
+    # ff decoder - given the outputs of the encoder, and an embedding of the decoding history,
+    # computes a probability distribution over the tokens.
+    history_embedding_placeholder, token_unnormalized_dist, W_logical_tokens = build_decoder(h, e_m)
+    valid_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
+                                          name="valid_logical_tokens")
+    token_prob_dist_tensor = tf.nn.softmax(token_unnormalized_dist, dim=0)
+    chosen_logical_tokens = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
+                                           name="chosen_logical_tokens")  # a one-hot vector represents the action taken at each step
+    invalid_logical_tokens_mask = tf.placeholder(tf.float32, [None, n_logical_tokens],  ##
+                                                 name="invalid_logical_tokens_mask")
+
+    program_dependent_placeholders = (history_embedding_placeholder,
+                                      chosen_logical_tokens,
+                                      invalid_logical_tokens_mask)
+
+    logits = tf.transpose(token_unnormalized_dist)  # + invalid_logical_tokens_mask
+
+    # cross-entropy loss per single token in a single sentence
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+        labels=chosen_logical_tokens, logits=logits))
+
+    theta1 = tf.trainable_variables()
+    g_3 = tf.Graph()
+
+    if beam_similarity_train or beam_similarity_test:
+        with tf.variable_scope("similarity", reuse=False):
+            logical_tokens_ids, logical_tokens_mapping, word_embeddings_dict, one_hot_dict2, embeddings_matrix2 = load_meta_data2()
+            sentence_placeholder2, sent_lengths_placeholder2, sentence_words_bow2, h2, e_m2 = build_sentence_encoder2(
+                len(one_hot_dict2), embeddings_matrix2)
+
+            model_p, history_embedding_placeholder2, token_unnormalized_dist2, W_hidden = build_decoder2(h2, e_m2)
+
+            logits2 = tf.transpose(token_unnormalized_dist2)
+
+            labels_placeholder2 = tf.placeholder(tf.float32, shape=(2, 1))
+            logits2 = tf.reshape(logits2, (1, 2), name="logits")
+            labels_cur2 = tf.reshape(labels_placeholder2, (1, 2))
+            cross_entropy2 = tf.nn.softmax_cross_entropy_with_logits(
+                labels=labels_cur2, logits=logits2, name='xentropy')
+            loss2 = tf.reduce_mean(cross_entropy2, name='xentropy_mean')
+
+            # initialization
+            theta2 = [k for k in tf.trainable_variables() if k.name.startswith("similarity")]
+            optimizer2 = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
+            compute_program_grads2 = optimizer2.compute_gradients(cross_entropy2)
+
     orig_stdout = sys.stdout
     time_stamp = time.strftime("%Y-%m-%d_%H_%M")
     # with tf.Session() as sess:
@@ -1040,7 +1054,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         test_dataset2 = CNLVRDataSet(DataSet.TEST2)
 
-    run_pre_train = False
     if run_pre_train:
         # run supervised pre-training
         with tf.Session() as sess:
@@ -1062,7 +1075,6 @@ if __name__ == '__main__':
         #     train_results_by_sentence = run_model(sess, train_dataset, mode='test',
         #                                           load_params_path=weights_from_supervised_pre_training,
         #                                           return_sentences_results=False)
-    run_train = False  # change to True if you really want to run the whole thing...
 
     if run_train:
         # training the weakly supervised model with weights initialized to the values learned in the supervises learning.
@@ -1080,8 +1092,6 @@ if __name__ == '__main__':
     # rates that were presented in our paper. The accuracy results are printed and saved to to STATS_FILE,
     # and the results by sentence are saved to  SENTENCES_RESULTS_FILE_DEV and SENTENCES_RESULTS_FILE_TEST.
 
-    beam_similarity_train = False
-    beam_similarity_test = True
     #beam_similarity_weights_path = os.path.join(SEQ2SEQ_DIR, 'beamSimilarityWeights2017-11-26_23_22.ckpt-29')
     beam_similarity_weights_path = os.path.join(SEQ2SEQ_DIR,'beamSimilarityWeights'+ time_stamp + '.ckpt')
     if beam_similarity_train:
